@@ -54,6 +54,8 @@ class Game {
     this.touchStartX = null;
     this.canDoubleJump = false;
     this.hasDoubleJumped = false;
+    this.tapCount = 0;
+    this.lastTapTime = 0;
     this.keys = {};
     this.praises = [];
     this.milestones = [];
@@ -72,55 +74,59 @@ class Game {
     var half = this.W / 2;
     var threshold = 50;
 
-    // 触摸开始
-    canvas.addEventListener('touchstart', function(e) {
-      e.preventDefault();
+    // 触摸开始 - 使用微信小游戏 API
+    wx.onTouchStart(function(e) {
       var touches = e.touches;
       if (touches && touches.length > 0) {
         var x = touches[0].clientX;
         _this.touchStartX = x;
-        if (x < half - threshold) {
-          _this.keys['ArrowLeft'] = true;
-          _this.keys['ArrowRight'] = false;
-        } else if (x > half + threshold) {
-          _this.keys['ArrowLeft'] = false;
-          _this.keys['ArrowRight'] = true;
-        } else {
-          _this.keys['ArrowLeft'] = false;
-          _this.keys['ArrowRight'] = false;
-        }
+        _this.updateDirection(x, half, threshold);
       }
       // 开始或重新开始游戏
       if (_this.state === 'start' || _this.state === 'gameover') {
         _this.startGame();
       } else if (_this.state === 'playing' && _this.canDoubleJump && !_this.hasDoubleJumped) {
-        _this.doDoubleJump();
+        var now = Date.now();
+        if (now - _this.lastTapTime < 300) {
+          _this.tapCount++;
+          if (_this.tapCount >= 2) {
+            _this.doDoubleJump();
+            _this.tapCount = 0;
+          }
+        } else {
+          _this.tapCount = 1;
+        }
+        _this.lastTapTime = now;
       }
-    }, false);
+    });
 
-    // 触摸移动
-    canvas.addEventListener('touchmove', function(e) {
+    // 触摸移动 - 使用微信小游戏 API
+    wx.onTouchMove(function(e) {
       var touches = e.touches;
       if (touches && touches.length > 0) {
         var x = touches[0].clientX;
-        if (x < half - threshold) {
-          _this.keys['ArrowLeft'] = true;
-          _this.keys['ArrowRight'] = false;
-        } else if (x > half + threshold) {
-          _this.keys['ArrowLeft'] = false;
-          _this.keys['ArrowRight'] = true;
-        } else {
-          _this.keys['ArrowLeft'] = false;
-          _this.keys['ArrowRight'] = false;
-        }
+        _this.updateDirection(x, half, threshold);
       }
-    }, false);
+    });
 
-    // 触摸结束
-    canvas.addEventListener('touchend', function(e) {
+    // 触摸结束 - 使用微信小游戏 API
+    wx.onTouchEnd(function(e) {
       _this.keys['ArrowLeft'] = false;
       _this.keys['ArrowRight'] = false;
-    }, false);
+    });
+  }
+
+  updateDirection(x, half, threshold) {
+    if (x < half - threshold) {
+      this.keys['ArrowLeft'] = true;
+      this.keys['ArrowRight'] = false;
+    } else if (x > half + threshold) {
+      this.keys['ArrowLeft'] = false;
+      this.keys['ArrowRight'] = true;
+    } else {
+      this.keys['ArrowLeft'] = false;
+      this.keys['ArrowRight'] = false;
+    }
   }
 
   initStars() {
@@ -191,7 +197,7 @@ class Game {
 
     for (let i = 0; i < 12; i++) {
       let px = Math.random() * (this.W - 100) + 10;
-      let py = this.H - 100 - i * 55;
+      let py = this.H - 100 - i * 70;
       let type = 'normal';
       if (i > 4 && Math.random() < 0.2) type = 'boost';
       if (i > 6 && Math.random() < 0.15) type = 'moving';
@@ -228,7 +234,7 @@ class Game {
     const topScreen = this.cameraY - 100;
     while (this.platforms.length === 0 || this.platforms[this.platforms.length - 1].y > topScreen - this.H) {
       const lastP = this.platforms[this.platforms.length - 1];
-      let ny = lastP.y - (40 + Math.random() * 35);
+      let ny = lastP.y - (55 + Math.random() * 40);
       let nx = Math.random() * (this.W - 100) + 10;
       let type = 'normal';
       const h = -ny;
@@ -599,7 +605,7 @@ class Game {
     this.ctx.fillStyle = 'rgba(255,255,255,0.5)';
     this.ctx.font = '14px sans-serif';
     this.ctx.textAlign = 'center';
-    this.ctx.fillText('← → 移动 | 空格二段跳', this.W / 2, this.H - 20);
+    this.ctx.fillText('点击屏幕左右移动 | 连点两次二段跳', this.W / 2, this.H - 20);
   }
 
   drawStartScreen() {
@@ -624,7 +630,7 @@ class Game {
     this.ctx.fillText('点击屏幕开始游戏', this.W / 2, this.H / 2 + 10);
     this.ctx.fillStyle = '#aaa';
     this.ctx.font = '14px sans-serif';
-    this.ctx.fillText('← → 方向键移动 | 空格键二段跳', this.W / 2, this.H / 2 + 50);
+    this.ctx.fillText('点击屏幕左右移动 | 连点两次二段跳', this.W / 2, this.H / 2 + 50);
   }
 
   drawGameOverScreen() {
