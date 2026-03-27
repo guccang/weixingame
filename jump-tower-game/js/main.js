@@ -71,16 +71,12 @@ class Game {
 
   initInput() {
     var _this = this;
-    var half = this.W / 2;
-    var threshold = 50;
 
     // 触摸开始 - 使用微信小游戏 API
     wx.onTouchStart(function(e) {
       var touches = e.touches;
       if (touches && touches.length > 0) {
-        var x = touches[0].clientX;
-        _this.touchStartX = x;
-        _this.updateDirection(x, half, threshold);
+        _this.touchStartX = touches[0].clientX;
       }
       // 开始或重新开始游戏
       if (_this.state === 'start' || _this.state === 'gameover') {
@@ -103,9 +99,20 @@ class Game {
     // 触摸移动 - 使用微信小游戏 API
     wx.onTouchMove(function(e) {
       var touches = e.touches;
-      if (touches && touches.length > 0) {
-        var x = touches[0].clientX;
-        _this.updateDirection(x, half, threshold);
+      if (touches && touches.length > 0 && _this.touchStartX !== null) {
+        var currentX = touches[0].clientX;
+        var deltaX = currentX - _this.touchStartX;
+
+        if (deltaX < -30) {
+          _this.keys['ArrowLeft'] = true;
+          _this.keys['ArrowRight'] = false;
+        } else if (deltaX > 30) {
+          _this.keys['ArrowLeft'] = false;
+          _this.keys['ArrowRight'] = true;
+        } else {
+          _this.keys['ArrowLeft'] = false;
+          _this.keys['ArrowRight'] = false;
+        }
       }
     });
 
@@ -113,20 +120,8 @@ class Game {
     wx.onTouchEnd(function(e) {
       _this.keys['ArrowLeft'] = false;
       _this.keys['ArrowRight'] = false;
+      _this.touchStartX = null;
     });
-  }
-
-  updateDirection(x, half, threshold) {
-    if (x < half - threshold) {
-      this.keys['ArrowLeft'] = true;
-      this.keys['ArrowRight'] = false;
-    } else if (x > half + threshold) {
-      this.keys['ArrowLeft'] = false;
-      this.keys['ArrowRight'] = true;
-    } else {
-      this.keys['ArrowLeft'] = false;
-      this.keys['ArrowRight'] = false;
-    }
   }
 
   initStars() {
@@ -234,7 +229,7 @@ class Game {
     const topScreen = this.cameraY - 100;
     while (this.platforms.length === 0 || this.platforms[this.platforms.length - 1].y > topScreen - this.H) {
       const lastP = this.platforms[this.platforms.length - 1];
-      let ny = lastP.y - (55 + Math.random() * 40);
+      let ny = lastP.y - (80 + Math.random() * 60);
       let nx = Math.random() * (this.W - 100) + 10;
       let type = 'normal';
       const h = -ny;
@@ -605,7 +600,7 @@ class Game {
     this.ctx.fillStyle = 'rgba(255,255,255,0.5)';
     this.ctx.font = '14px sans-serif';
     this.ctx.textAlign = 'center';
-    this.ctx.fillText('点击屏幕左右移动 | 连点两次二段跳', this.W / 2, this.H - 20);
+    this.ctx.fillText('滑动屏幕左右移动 | 连点两次二段跳', this.W / 2, this.H - 20);
   }
 
   drawStartScreen() {
@@ -630,7 +625,7 @@ class Game {
     this.ctx.fillText('点击屏幕开始游戏', this.W / 2, this.H / 2 + 10);
     this.ctx.fillStyle = '#aaa';
     this.ctx.font = '14px sans-serif';
-    this.ctx.fillText('点击屏幕左右移动 | 连点两次二段跳', this.W / 2, this.H / 2 + 50);
+    this.ctx.fillText('滑动屏幕左右移动 | 连点两次二段跳', this.W / 2, this.H / 2 + 50);
   }
 
   drawGameOverScreen() {
