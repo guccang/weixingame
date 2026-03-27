@@ -17,7 +17,7 @@ const GRAVITY = 0.45;
 const PLAYER_SPEED = 6;
 const JUMP_FORCE = -15;
 const BOOST_JUMP_FORCE = -22;
-const DOUBLE_JUMP_FORCE = -13;
+const DOUBLE_JUMP_FORCE = -18;
 
 // ==================== 夸奖系统 ====================
 const praiseTemplates = [
