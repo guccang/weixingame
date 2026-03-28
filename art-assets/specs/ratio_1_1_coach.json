@@ -1,0 +1,69 @@
+{
+  "spec_name": "ratio_1_1_coach",
+  "ratio": "1:1",
+  "description": "健身教练角色跳跃序列帧，6帧动画，无Y轴位移",
+  "target_pixel": {
+    "width": 128,
+    "height": 128
+  },
+  "element_size": {
+    "width": 512,
+    "height": 512
+  },
+  "canvas": {
+    "width": 1024,
+    "height": 1536
+  },
+  "grid": {
+    "cols": 2,
+    "rows": 3
+  },
+  "animation": {
+    "type": "sequence",
+    "frame_count": 6,
+    "loop": true,
+    "note": "所有帧角色Y轴位置一致，无高度变化，仅姿态变化"
+  },
+  "elements": [
+    {
+      "name": "coach_01_idle",
+      "name_cn": "健身教练_站立",
+      "frame_desc": "正常站立待机姿态，肌肉发达",
+      "grid_pos": {"col": 0, "row": 0}
+    },
+    {
+      "name": "coach_02_charge",
+      "name_cn": "健身教练_蓄力",
+      "frame_desc": "蹲下压缩，身体压扁，准备起跳",
+      "grid_pos": {"col": 1, "row": 0}
+    },
+    {
+      "name": "coach_03_jump",
+      "name_cn": "健身教练_起跳",
+      "frame_desc": "身体向上舒展，手臂举高，向上动势",
+      "grid_pos": {"col": 0, "row": 1}
+    },
+    {
+      "name": "coach_04_rise",
+      "name_cn": "健身教练_上升",
+      "frame_desc": "空中上升姿态，身体蜷缩或舒展",
+      "grid_pos": {"col": 1, "row": 1}
+    },
+    {
+      "name": "coach_05_fall",
+      "name_cn": "健身教练_下落",
+      "frame_desc": "空中下落姿态，身体略微前倾",
+      "grid_pos": {"col": 0, "row": 2}
+    },
+    {
+      "name": "coach_06_land",
+      "name_cn": "健身教练_落地",
+      "frame_desc": "落地缓冲，膝盖弯曲，身体压扁",
+      "grid_pos": {"col": 1, "row": 2}
+    }
+  ],
+  "compress": {
+    "enabled": true,
+    "quality": "high"
+  }
+}

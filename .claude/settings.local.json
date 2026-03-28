@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git clone:*)",
+      "Bash(python .claude/skills/art-prompt-workflow/scripts/split_atlas.py \"D:/GitWechatGame/art-assets/atlas/Gemini_Generated_Image_g8na07g8na07g8na.png\" \"D:/GitWechatGame/art-assets/specs/64_64_buff.json\" \"D:/GitWechatGame/art-assets/output/\")",
+      "Bash(pip install:*)",
+      "Bash(pip show:*)",
+      "Bash(python .claude/skills/img-rembg/scripts/remove_background.py \"art-assets/output/buff_trace.png\" \"art-assets/output/buff_trace_nobg.png\" --ai)",
+      "Bash(python D:/GitWechatGame/.claude/skills/art-prompt-workflow/scripts/split_atlas.py \"D:/GitWechatGame/art-assets/atlas/Gemini_Generated_Image_isi1taisi1taisi1.png\" \"D:/GitWechatGame/art-assets/specs/64_64.json\" \"D:/GitWechatGame/art-assets/output/\")",
+      "Bash(python \"D:/GitWechatGame/.claude/skills/art-prompt-workflow/scripts/split_atlas.py\" \"D:/GitWechatGame/art-assets/atlas/Gemini_Generated_Image_b9z6w4b9z6w4b9z6.png\" \"D:/GitWechatGame/art-assets/specs/ratio_1_1.json\" \"D:/GitWechatGame/art-assets/output/\")",
+      "Bash(python -c \"import rembg; print\\(''rembg installed''\\)\")",
+      "Bash(python batch_rembg.py)",
+      "Bash(python \"D:/GitWechatGame/.claude/skills/art-prompt-workflow/scripts/split_atlas.py\" \"D:/GitWechatGame/art-assets/atlas/Gemini_Generated_Image_lewiw8lewiw8lewi.png\" \"D:/GitWechatGame/art-assets/specs/ratio_1_1.json\" \"D:/GitWechatGame/art-assets/output/\")",
+      "Bash(python -c \":*)",
+      "Bash(rm -rf D:/GitWechatGame/art-assets/specs/* D:/GitWechatGame/art-assets/prompts/* D:/GitWechatGame/art-assets/atlas/*)",
+      "Bash(mkdir -p D:/GitWechatGame/art-assets/specs D:/GitWechatGame/art-assets/prompts D:/GitWechatGame/art-assets/atlas D:/GitWechatGame/art-assets/output)",
+      "WebSearch",
+      "Bash(python -m py_compile \"D:/GitWechatGame/.claude/skills/art-prompt-workflow/scripts/split_atlas.py\")",
+      "Bash(python \"D:/GitWechatGame/.claude/skills/art-prompt-workflow/scripts/split_atlas.py\" \"D:/GitWechatGame/art-assets/atlas/Gemini_Generated_Image_2bpha12bpha12bph.png\" \"D:/GitWechatGame/art-assets/specs/ratio_1_1.json\" \"D:/GitWechatGame/art-assets/output/\")",
+      "Bash(python \"D:/GitWechatGame/.claude/skills/art-prompt-workflow/scripts/split_atlas.py\" \"D:/GitWechatGame/art-assets/atlas/cleaned_Gemini_Generated_Image_ghcf4tghcf4tghcf.png\" \"D:/GitWechatGame/art-assets/specs/ratio_9_16.json\" \"D:/GitWechatGame/art-assets/output/\" --no-rembg)",
+      "Bash(python \"D:/GitWechatGame/.claude/skills/art-prompt-workflow/scripts/split_atlas.py\" \"D:/GitWechatGame/art-assets/atlas/cleaned_Gemini_Generated_Image_ghcf4tghcf4tghcf.png\" \"D:/GitWechatGame/art-assets/specs/ratio_9_16.json\" \"D:/GitWechatGame/art-assets/output/\" --no-resize)",
+      "Bash(mkdir -p \"D:/GitWechatGame/jump-tower-game/images\")",
+      "Bash(cp \"D:/GitWechatGame/art-assets/output/\"*.png \"D:/GitWechatGame/jump-tower-game/images/\")",
+      "Bash(python -c \"from PIL import Image; img = Image.open\\(''D:/GitWechatGame/art-assets/atlas/Gemini_Generated_Image_gktn8bgktn8bgktn.png''\\); print\\(f''图片尺寸: {img.size[0]}x{img.size[1]}''\\)\")",
+      "Bash(python \"D:/GitWechatGame/.claude/skills/art-prompt-workflow/scripts/split_atlas.py\" \"D:/GitWechatGame/art-assets/atlas/Gemini_Generated_Image_5m76tg5m76tg5m76.png\" \"D:/GitWechatGame/art-assets/specs/ratio_1_1_coach.json\" \"D:/GitWechatGame/art-assets/output/\")",
+      "Bash(rm -rf \"D:/GitWechatGame/jump-tower-game/images/characters/coach/\"*)",
+      "Bash(cp \"D:/GitWechatGame/art-assets/output/coach_\"*.png \"D:/GitWechatGame/jump-tower-game/images/characters/coach/\")",
+      "Bash(python \"D:/GitWechatGame/.claude/skills/art-prompt-workflow/scripts/split_atlas.py\" \"D:/GitWechatGame/art-assets/atlas/Gemini_Generated_Image_5m76tg5m76tg5m76.png\" \"D:/GitWechatGame/art-assets/specs/ratio_1_1_coach.json\" \"D:/GitWechatGame/art-assets/output/\" --no-rembg)"
+    ]
+  }
+}

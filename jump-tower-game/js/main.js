@@ -12,6 +12,111 @@ const ctx = canvas.getContext('2d');
 const W = canvas.width;
 const H = canvas.height;
 
+// ==================== 图片资源加载 ====================
+const images = {
+  bgMain: null,
+  bgShop: null,
+  iconCharacter: null,
+  iconCoin: null,
+  iconLeaderboard: null,
+  iconShop: null,
+  loaded: false,
+  loadCount: 0,
+  totalCount: 6
+};
+
+// ==================== 角色序列帧配置 ====================
+// 状态到帧索引的映射
+const STATE_TO_FRAME_INDEX = {
+  'idle': 0,   // 站立
+  'charge': 1, // 蓄力
+  'jump': 2,   // 起跳
+  'rise': 3,   // 上升
+  'fall': 4,   // 下落
+  'land': 5    // 落地
+};
+
+// 角色配置
+const characterConfig = {
+  // 当前选中的角色
+  current: 'coach',
+  // 角色列表
+  list: ['coach', 'ironman'],
+  // 角色中文名称
+  names: {
+    'coach': '健身教练',
+    'ironman': '钢铁侠'
+  },
+  // 序列帧总数
+  frameCount: 6,
+  // 已加载的角色资源
+  frames: {},
+  // 加载状态
+  loadedCharacters: {}
+};
+
+// 加载指定角色的序列帧
+function loadCharacter(characterName) {
+  if (characterConfig.frames[characterName]) {
+    return; // 已加载
+  }
+
+  characterConfig.frames[characterName] = [];
+  let loadCount = 0;
+
+  for (let i = 0; i < characterConfig.frameCount; i++) {
+    const img = wx.createImage();
+    img.onload = function() {
+      loadCount++;
+      if (loadCount >= characterConfig.frameCount) {
+        characterConfig.loadedCharacters[characterName] = true;
+      }
+    };
+    img.src = `images/characters/${characterName}/jump_${i}.png`;
+    characterConfig.frames[characterName].push(img);
+  }
+}
+
+// 获取角色当前状态对应的帧图片
+function getCharacterFrame(characterName, state) {
+  if (!characterConfig.loadedCharacters[characterName]) {
+    return null;
+  }
+  const frameIndex = STATE_TO_FRAME_INDEX[state];
+  return characterConfig.frames[characterName][frameIndex] || null;
+}
+
+// 切换角色
+function switchCharacter(characterName) {
+  if (characterConfig.list.includes(characterName)) {
+    characterConfig.current = characterName;
+    loadCharacter(characterName);
+  }
+}
+
+function loadImage(name, src) {
+  const img = wx.createImage();
+  img.onload = function() {
+    images[name] = img;
+    images.loadCount++;
+    if (images.loadCount >= images.totalCount) {
+      images.loaded = true;
+    }
+  };
+  img.src = src;
+}
+
+loadImage('bgMain', 'images/bg_main.png');
+loadImage('bgShop', 'images/bg_shop.png');
+loadImage('iconCharacter', 'images/icon_character.png');
+loadImage('iconCoin', 'images/icon_coin.png');
+loadImage('iconLeaderboard', 'images/icon_leaderboard.png');
+loadImage('iconShop', 'images/icon_shop.png');
+
+// 预加载所有角色
+loadCharacter('coach');
+loadCharacter('ironman');
+
 // ==================== 游戏常量 ====================
 const GRAVITY = 0.45;
 const PLAYER_SPEED = 6;
@@ -77,6 +182,16 @@ class Game {
       var touches = e.touches;
       if (touches && touches.length > 0) {
         _this.touchStartX = touches[0].clientX;
+        var touchX = touches[0].clientX;
+        var touchY = touches[0].clientY;
+
+        // 在主界面检测角色选择点击
+        if (_this.state === 'start') {
+          var selected = _this.checkCharacterSelectClick(touchX, touchY);
+          if (selected) {
+            return; // 点击了角色选择区域，不开始游戏
+          }
+        }
       }
       // 开始或重新开始游戏
       if (_this.state === 'start' || _this.state === 'gameover') {
@@ -172,7 +287,20 @@ class Game {
   }
 
   initGame() {
-    this.player = { x: this.W / 2 - 20, y: this.H - 100, w: 40, h: 50, vx: 0, vy: 0, facing: 1 };
+    // 玩家状态: idle(站立), charge(蓄力), jump(起跳), rise(上升), fall(下落), land(落地)
+    this.player = {
+      x: this.W / 2 - 32,
+      y: this.H - 100,
+      w: 64,
+      h: 64,
+      vx: 0,
+      vy: 0,
+      facing: 1,
+      state: 'idle',
+      prevState: 'idle',
+      stateTimer: 0,
+      character: characterConfig.current  // 使用当前选中的角色
+    };
     this.platforms = [];
     this.particles = [];
     this.floatingTexts = [];
@@ -225,6 +353,51 @@ class Game {
     this.showFloatingText(this.player.x, this.player.y - this.cameraY - 30, "二段跳！");
   }
 
+  // 更新玩家动画状态
+  updatePlayerState() {
+    if (!this.player) return;
+    const player = this.player;
+    const prevState = player.state;
+
+    // 根据速度判断状态
+    if (player.vy < -5) {
+      // 快速上升 - 起跳或上升
+      if (prevState === 'idle' || prevState === 'charge') {
+        player.state = 'jump';
+        player.stateTimer = 5; // 起跳帧持续5帧
+      } else if (player.stateTimer <= 0) {
+        player.state = 'rise';
+      }
+    } else if (player.vy < 0) {
+      // 缓慢上升 - 上升
+      player.state = 'rise';
+    } else if (player.vy > 2) {
+      // 下落
+      player.state = 'fall';
+    } else {
+      // 接近静止 - 站立或落地
+      if (prevState === 'fall') {
+        player.state = 'land';
+        player.stateTimer = 8; // 落地帧持续8帧
+      } else if (player.stateTimer <= 0) {
+        player.state = 'idle';
+      }
+    }
+
+    // 更新状态计时器
+    if (player.stateTimer > 0) {
+      player.stateTimer--;
+    }
+  }
+
+  // 获取当前角色帧图片
+  getPlayerFrame() {
+    if (!this.player) return null;
+    const characterName = this.player.character || characterConfig.current;
+    const state = this.player.state || 'idle';
+    return getCharacterFrame(characterName, state);
+  }
+
   generatePlatforms() {
     const topScreen = this.cameraY - 100;
     while (this.platforms.length === 0 || this.platforms[this.platforms.length - 1].y > topScreen - this.H) {
@@ -261,6 +434,9 @@ class Game {
 
     if (player.x > this.W) player.x = -player.w;
     if (player.x + player.w < 0) player.x = this.W;
+
+    // 更新玩家动画状态
+    this.updatePlayerState();
 
     if (player.vy > 0) {
       for (let p of this.platforms) {
@@ -485,6 +661,32 @@ class Game {
     const px = player.x;
     const f = player.facing;
 
+    // 尝试使用序列帧图片绘制
+    const frame = this.getPlayerFrame();
+    if (frame && frame.width > 0) {
+      // 使用序列帧图片
+      this.ctx.save();
+      this.ctx.translate(px + player.w / 2, py + player.h / 2);
+
+      // 根据朝向翻转
+      if (f < 0) {
+        this.ctx.scale(-1, 1);
+      }
+
+      // 绘制发光效果
+      const glow = this.ctx.createRadialGradient(0, 0, 5, 0, 0, 35);
+      glow.addColorStop(0, 'rgba(255,221,87,0.3)');
+      glow.addColorStop(1, 'rgba(255,221,87,0)');
+      this.ctx.fillStyle = glow;
+      this.ctx.fillRect(-35, -35, 70, 70);
+
+      // 绘制角色图片
+      this.ctx.drawImage(frame, -player.w / 2, -player.h / 2, player.w, player.h);
+      this.ctx.restore();
+      return;
+    }
+
+    // 回退到代码绘制（图片未加载时）
     this.ctx.save();
     this.ctx.translate(px + player.w / 2, py + player.h / 2);
 
@@ -604,9 +806,23 @@ class Game {
   }
 
   drawStartScreen() {
-    this.drawBackground();
-    this.ctx.fillStyle = 'rgba(10,10,46,0.95)';
-    this.ctx.fillRect(0, 0, this.W, this.H);
+    // 绘制主界面背景图
+    if (images.bgMain && images.bgMain.width > 0) {
+      // 计算缩放比例以适配屏幕
+      const scale = Math.max(this.W / images.bgMain.width, this.H / images.bgMain.height);
+      const imgW = images.bgMain.width * scale;
+      const imgH = images.bgMain.height * scale;
+      const imgX = (this.W - imgW) / 2;
+      const imgY = (this.H - imgH) / 2;
+      this.ctx.drawImage(images.bgMain, imgX, imgY, imgW, imgH);
+    } else {
+      // 图片未加载时使用默认背景
+      this.drawBackground();
+      this.ctx.fillStyle = 'rgba(10,10,46,0.95)';
+      this.ctx.fillRect(0, 0, this.W, this.H);
+    }
+
+    // 标题文字
     this.ctx.fillStyle = '#ffdd57';
     this.ctx.font = 'bold 36px sans-serif';
     this.ctx.textAlign = 'center';
@@ -614,18 +830,109 @@ class Game {
     this.ctx.shadowBlur = 20;
     this.ctx.fillText('万秀彬跳跳楼', this.W / 2, this.H / 2 - 120);
     this.ctx.shadowBlur = 0;
+
+    // 副标题
     this.ctx.fillStyle = '#ff6b6b';
     this.ctx.font = '20px sans-serif';
     this.ctx.fillText('💪 健身大佬の极限跳跃 💪', this.W / 2, this.H / 2 - 80);
     this.ctx.fillStyle = '#74b9ff';
     this.ctx.font = '16px sans-serif';
     this.ctx.fillText('看谁跳得高！全程为你疯狂打call！', this.W / 2, this.H / 2 - 50);
+
+    // 开始提示
     this.ctx.fillStyle = '#ffdd57';
     this.ctx.font = '18px sans-serif';
     this.ctx.fillText('点击屏幕开始游戏', this.W / 2, this.H / 2 + 10);
+
+    // 操作提示
     this.ctx.fillStyle = '#aaa';
     this.ctx.font = '14px sans-serif';
     this.ctx.fillText('滑动屏幕左右移动 | 连点两次二段跳', this.W / 2, this.H / 2 + 50);
+
+    // 底部图标按钮区域
+    const iconSize = 50;
+    const iconY = this.H - 100;
+    const spacing = 80;
+    const startX = this.W / 2 - spacing * 1.5;
+
+    // 商店图标
+    if (images.iconShop && images.iconShop.width > 0) {
+      this.ctx.drawImage(images.iconShop, startX, iconY, iconSize, iconSize);
+    } else {
+      this.ctx.fillStyle = '#fd79a8';
+      this.ctx.fillRect(startX, iconY, iconSize, iconSize);
+    }
+    this.ctx.fillStyle = '#fff';
+    this.ctx.font = '12px sans-serif';
+    this.ctx.fillText('商店', startX + iconSize / 2, iconY + iconSize + 18);
+
+    // 角色图标
+    if (images.iconCharacter && images.iconCharacter.width > 0) {
+      this.ctx.drawImage(images.iconCharacter, startX + spacing, iconY, iconSize, iconSize);
+    } else {
+      this.ctx.fillStyle = '#74b9ff';
+      this.ctx.fillRect(startX + spacing, iconY, iconSize, iconSize);
+    }
+    this.ctx.fillStyle = '#fff';
+    this.ctx.fillText('角色', startX + spacing + iconSize / 2, iconY + iconSize + 18);
+
+    // 排行榜图标
+    if (images.iconLeaderboard && images.iconLeaderboard.width > 0) {
+      this.ctx.drawImage(images.iconLeaderboard, startX + spacing * 2, iconY, iconSize, iconSize);
+    } else {
+      this.ctx.fillStyle = '#55efc4';
+      this.ctx.fillRect(startX + spacing * 2, iconY, iconSize, iconSize);
+    }
+    this.ctx.fillStyle = '#fff';
+    this.ctx.fillText('排行', startX + spacing * 2 + iconSize / 2, iconY + iconSize + 18);
+
+    // 角色选择区域
+    this.drawCharacterSelect();
+  }
+
+  // 绘制角色选择区域
+  drawCharacterSelect() {
+    const selectY = this.H / 2 + 80;
+    const selectWidth = 120;
+    const selectHeight = 140;
+    const spacing = 140;
+    const startX = this.W / 2 - spacing - selectWidth / 2;
+
+    this.ctx.fillStyle = '#fff';
+    this.ctx.font = '14px sans-serif';
+    this.ctx.fillText('选择角色', this.W / 2, selectY - 20);
+
+    // 绘制每个角色选项
+    for (let i = 0; i < characterConfig.list.length; i++) {
+      const charName = characterConfig.list[i];
+      const x = startX + i * spacing;
+      const y = selectY;
+      const isSelected = characterConfig.current === charName;
+
+      // 绘制选择框背景
+      if (isSelected) {
+        this.ctx.fillStyle = 'rgba(255, 221, 87, 0.3)';
+        this.ctx.strokeStyle = '#ffdd57';
+        this.ctx.lineWidth = 3;
+      } else {
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        this.ctx.lineWidth = 1;
+      }
+      this.ctx.fillRect(x, y, selectWidth, selectHeight);
+      this.ctx.strokeRect(x, y, selectWidth, selectHeight);
+
+      // 绘制角色预览图
+      const frames = characterConfig.frames[charName];
+      if (frames && frames[0] && frames[0].width > 0) {
+        this.ctx.drawImage(frames[0], x + 28, y + 10, 64, 64);
+      }
+
+      // 绘制角色名称
+      this.ctx.fillStyle = isSelected ? '#ffdd57' : '#fff';
+      this.ctx.font = 'bold 14px sans-serif';
+      this.ctx.fillText(characterConfig.names[charName] || charName, x + selectWidth / 2, y + selectHeight - 20);
+    }
   }
 
   drawGameOverScreen() {
@@ -692,6 +999,31 @@ class Game {
     }
 
     this.ctx.restore();
+  }
+
+  // 检测角色选择点击
+  checkCharacterSelectClick(touchX, touchY) {
+    const selectY = this.H / 2 + 80;
+    const selectWidth = 120;
+    const selectHeight = 140;
+    const spacing = 140;
+    const startX = this.W / 2 - spacing - selectWidth / 2;
+
+    for (let i = 0; i < characterConfig.list.length; i++) {
+      const charName = characterConfig.list[i];
+      const x = startX + i * spacing;
+      const y = selectY;
+
+      // 检测点击是否在角色选择框内
+      if (touchX >= x && touchX <= x + selectWidth &&
+          touchY >= y && touchY <= y + selectHeight) {
+        // 切换角色
+        characterConfig.current = charName;
+        loadCharacter(charName);
+        return true;
+      }
+    }
+    return false;
   }
 
   startGame() {

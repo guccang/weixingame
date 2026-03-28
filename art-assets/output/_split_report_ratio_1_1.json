@@ -1,0 +1,138 @@
+{
+  "spec_name": "ratio_1_1",
+  "spec_format": "v3",
+  "ratio": "1:1",
+  "target_pixel": {
+    "width": 128,
+    "height": 128
+  },
+  "atlas_path": "D:/GitWechatGame/art-assets/atlas/Gemini_Generated_Image_2bpha12bpha12bph.png",
+  "spec_path": "D:/GitWechatGame/art-assets/specs/ratio_1_1.json",
+  "output_dir": "D:\\GitWechatGame\\art-assets\\output",
+  "actual_size": {
+    "width": 2048,
+    "height": 2048
+  },
+  "scale": 2.0,
+  "process": {
+    "rembg_enabled": true,
+    "resize_enabled": true
+  },
+  "compress": {
+    "enabled": false,
+    "quality": "high"
+  },
+  "total_elements": 4,
+  "successful": 4,
+  "failed": 0,
+  "elements": [
+    {
+      "name": "icon_coin",
+      "name_cn": "金币图标",
+      "original_coords": {
+        "x": 0,
+        "y": 0,
+        "width": 512,
+        "height": 512
+      },
+      "scaled_coords": {
+        "x": 0,
+        "y": 0,
+        "width": 1024,
+        "height": 1024
+      },
+      "cropped_size": {
+        "width": 1024,
+        "height": 1024
+      },
+      "final_size": {
+        "width": 128,
+        "height": 128
+      },
+      "output_path": "D:\\GitWechatGame\\art-assets\\output\\icon_coin.png",
+      "rembg_applied": true,
+      "status": "success"
+    },
+    {
+      "name": "icon_character",
+      "name_cn": "角色图标",
+      "original_coords": {
+        "x": 512,
+        "y": 0,
+        "width": 512,
+        "height": 512
+      },
+      "scaled_coords": {
+        "x": 1024,
+        "y": 0,
+        "width": 1024,
+        "height": 1024
+      },
+      "cropped_size": {
+        "width": 1024,
+        "height": 1024
+      },
+      "final_size": {
+        "width": 128,
+        "height": 128
+      },
+      "output_path": "D:\\GitWechatGame\\art-assets\\output\\icon_character.png",
+      "rembg_applied": true,
+      "status": "success"
+    },
+    {
+      "name": "icon_leaderboard",
+      "name_cn": "排行榜图标",
+      "original_coords": {
+        "x": 0,
+        "y": 512,
+        "width": 512,
+        "height": 512
+      },
+      "scaled_coords": {
+        "x": 0,
+        "y": 1024,
+        "width": 1024,
+        "height": 1024
+      },
+      "cropped_size": {
+        "width": 1024,
+        "height": 1024
+      },
+      "final_size": {
+        "width": 128,
+        "height": 128
+      },
+      "output_path": "D:\\GitWechatGame\\art-assets\\output\\icon_leaderboard.png",
+      "rembg_applied": true,
+      "status": "success"
+    },
+    {
+      "name": "icon_shop",
+      "name_cn": "商店图标",
+      "original_coords": {
+        "x": 512,
+        "y": 512,
+        "width": 512,
+        "height": 512
+      },
+      "scaled_coords": {
+        "x": 1024,
+        "y": 1024,
+        "width": 1024,
+        "height": 1024
+      },
+      "cropped_size": {
+        "width": 1024,
+        "height": 1024
+      },
+      "final_size": {
+        "width": 128,
+        "height": 128
+      },
+      "output_path": "D:\\GitWechatGame\\art-assets\\output\\icon_shop.png",
+      "rembg_applied": true,
+      "status": "success"
+    }
+  ]
+}

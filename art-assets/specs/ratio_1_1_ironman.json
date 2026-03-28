@@ -1,0 +1,35 @@
+{
+  "spec_name": "ratio_1_1_ironman",
+  "ratio": "1:1",
+  "description": "悟空角色跳跃序列帧，6帧动画，无Y轴位移",
+  "target_pixel": {
+    "width": 128,
+    "height": 128
+  },
+  "element_size": {
+    "width": 512,
+    "height": 512
+  },
+  "canvas": {
+    "width": 1024,
+    "height": 1536
+  },
+  "grid": {
+    "cols": 2,
+    "rows": 3
+  },
+  "animation": {
+    "type": "sequence",
+    "frame_count": 6,
+    "loop": true,
+    "note": "所有帧角色Y轴位置一致，无高度变化，仅姿态变化"
+  },
+  "elements": [
+    {"name": "ironman_01_idle", "name_cn": "悟空_站立", "grid_pos": {"col": 0, "row": 0}},
+    {"name": "ironman_02_charge", "name_cn": "悟空_蓄力", "grid_pos": {"col": 1, "row": 0}},
+    {"name": "ironman_03_jump", "name_cn": "悟空_起跳", "grid_pos": {"col": 0, "row": 1}},
+    {"name": "ironman_04_rise", "name_cn": "悟空_上升", "grid_pos": {"col": 1, "row": 1}},
+    {"name": "ironman_05_fall", "name_cn": "悟空_下落", "grid_pos": {"col": 0, "row": 2}},
+    {"name": "ironman_06_land", "name_cn": "悟空_落地", "grid_pos": {"col": 1, "row": 2}}
+  ]
+}
