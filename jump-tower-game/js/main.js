@@ -170,9 +170,28 @@ class Game {
     this.platforms = [];
     this.player = null;
     this.showCharacterPanel = false; // 是否显示角色选择面板
+    this.wxUserInfo = null; // 微信用户信息
+    this.hasWxLogin = false; // 是否已获取微信登录
 
     this.initInput();
     this.initStars();
+    this.initWxLogin(); // 微信登录获取用户信息
+  }
+
+  // 初始化微信登录
+  initWxLogin() {
+    var _this = this;
+    var wxlogin = require('./runtime/wxlogin');
+    wxlogin.wxLogin(function(success, userInfo) {
+      if (success && userInfo) {
+        _this.wxUserInfo = userInfo;
+        _this.hasWxLogin = true;
+        if (userInfo.nickName) {
+          _this.playerName = userInfo.nickName;
+          _this.generatePraises();
+        }
+      }
+    });
   }
 
   initInput() {
