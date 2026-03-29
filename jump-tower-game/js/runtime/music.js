@@ -3,30 +3,37 @@ let instance;
 /**
  * 统一的音效管理器
  */
-export default class Music {
-  bgmAudio = wx.createInnerAudioContext();
-  shootAudio = wx.createInnerAudioContext();
-  boomAudio = wx.createInnerAudioContext();
-
+class Music {
   constructor() {
     if (instance) return instance;
 
     instance = this;
 
-    this.bgmAudio.loop = true; // 背景音乐循环播放
-    this.bgmAudio.autoplay = true; // 背景音乐自动播放
+    this.bgmAudio = wx.createInnerAudioContext();
+    this.jumpAudio = wx.createInnerAudioContext();
+
+    this.bgmAudio.loop = true;
+    this.bgmAudio.autoplay = false;
     this.bgmAudio.src = 'audio/bgm.mp3';
-    this.shootAudio.src = 'audio/bullet.mp3';
-    this.boomAudio.src = 'audio/boom.mp3';
+    this.jumpAudio.src = 'audio/jump.ogg';
   }
 
-  playShoot() {
-    this.shootAudio.currentTime = 0;
-    this.shootAudio.play();
+  playBGM() {
+    try {
+      this.bgmAudio.play();
+    } catch (e) {
+      console.log('BGM play failed:', e);
+    }
   }
 
-  playExplosion() {
-    this.boomAudio.currentTime = 0;
-    this.boomAudio.play();
+  playJump() {
+    try {
+      this.jumpAudio.currentTime = 0;
+      this.jumpAudio.play();
+    } catch (e) {
+      console.log('Jump sound play failed:', e);
+    }
   }
 }
+
+module.exports = Music;

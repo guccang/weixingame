@@ -26,73 +26,25 @@ const images = {
 };
 
 // ==================== 角色序列帧配置 ====================
-// 状态到帧索引的映射
-const STATE_TO_FRAME_INDEX = {
-  'idle': 0,   // 站立
-  'charge': 1, // 蓄力
-  'jump': 2,   // 起跳
-  'rise': 3,   // 上升
-  'fall': 4,   // 下落
-  'land': 5    // 落地
-};
+const { characterConfig, loadCharacter, getCharacterFrame, switchCharacter, STATE_TO_FRAME_INDEX } = require('./character/character');
 
-// 角色配置
-const characterConfig = {
-  // 当前选中的角色
-  current: 'coach',
-  // 角色列表
-  list: ['coach', 'ironman'],
-  // 角色中文名称
-  names: {
-    'coach': '健身教练',
-    'ironman': '钢铁侠'
-  },
-  // 序列帧总数
-  frameCount: 6,
-  // 已加载的角色资源
-  frames: {},
-  // 加载状态
-  loadedCharacters: {}
-};
+// 职业配置
+const { jobConfig, jobPraiseMap } = require('./runtime/jobconfig');
 
-// 加载指定角色的序列帧
-function loadCharacter(characterName) {
-  if (characterConfig.frames[characterName]) {
-    return; // 已加载
-  }
+// 弹幕系统
+const Barrage = require('./barrage/barrage');
 
-  characterConfig.frames[characterName] = [];
-  let loadCount = 0;
+// 主界面UI
+const MainUI = require('./ui/mainUI');
 
-  for (let i = 0; i < characterConfig.frameCount; i++) {
-    const img = wx.createImage();
-    img.onload = function() {
-      loadCount++;
-      if (loadCount >= characterConfig.frameCount) {
-        characterConfig.loadedCharacters[characterName] = true;
-      }
-    };
-    img.src = `images/characters/${characterName}/jump_${i}.png`;
-    characterConfig.frames[characterName].push(img);
-  }
-}
+// 控制系统
+const Controls = require('./controls/controls');
 
-// 获取角色当前状态对应的帧图片
-function getCharacterFrame(characterName, state) {
-  if (!characterConfig.loadedCharacters[characterName]) {
-    return null;
-  }
-  const frameIndex = STATE_TO_FRAME_INDEX[state];
-  return characterConfig.frames[characterName][frameIndex] || null;
-}
+// 游戏常量
+const GAME_CONST = require('./game/constants');
 
-// 切换角色
-function switchCharacter(characterName) {
-  if (characterConfig.list.includes(characterName)) {
-    characterConfig.current = characterName;
-    loadCharacter(characterName);
-  }
-}
+// 音效管理
+const Audio = require('./audio/audio');
 
 function loadImage(name, src) {
   const img = wx.createImage();
@@ -113,33 +65,6 @@ loadImage('iconCoin', 'images/icon_coin.png');
 loadImage('iconLeaderboard', 'images/icon_leaderboard.png');
 loadImage('iconShop', 'images/icon_shop.png');
 
-// 预加载所有角色
-loadCharacter('coach');
-loadCharacter('ironman');
-
-// ==================== 游戏常量 ====================
-const GRAVITY = 0.45;
-const PLAYER_SPEED = 6;
-const JUMP_FORCE = -15;
-const BOOST_JUMP_FORCE = -22;
-const DOUBLE_JUMP_FORCE = -18;
-
-// ==================== 夸奖系统 ====================
-const praiseTemplates = [
-  "{n}太强了！", "{n}yyds！", "{n}无敌！", "{n}！{n}！{n}！",
-  "这弹跳力逆天了！", "全场最佳！MVP！", "无敌是多么寂寞！",
-  "跳得比楼还高！", "{n}一跳破纪录！", "这就是自律的力量！",
-  "{n}的力量永不疲惫！", "{n}是真的猛！", "这爆发力！绝绝子！",
-  "力量与美的结合！", "{n}天下第一！",
-];
-
-const jobPraiseMap = {
-  '健身': ["肌肉爆炸！！！", "{j}牛逼牛逼牛逼！", "这腿部力量绝了！", "蛋白粉都不够吃！", "卧推300斤！", "硬拉王者！！！", "体脂率3%！", "肌肉猛男！", "深蹲暴击！", "腹肌八块！"],
-  '编程': ["代码之神降临！", "bug都被你跳没了！", "写代码比跳楼还快！", "满屏都是AC！", "算法天才！", "GitHub全绿！"],
-  '游戏': ["王者荣耀上王者！", "吃鸡局局第一！", "操作如神！", "这走位太秀了！", "反应速度逆天！", "MVP拿到手软！"],
-  '学习': ["学霸本霸！", "考试全满分！", "智商爆表！", "清北随便选！", "教授都被你问懵了！", "学神降临！"],
-};
-
 // ==================== 游戏类 ====================
 class Game {
   constructor() {
@@ -148,7 +73,15 @@ class Game {
     this.ctx = ctx;
     this.state = 'start';
     this.playerName = '秀彬';
-    this.playerJob = '健身';
+    this.playerJob = jobConfig.current; // 从职业配置获取
+
+    // 物理常量
+    this.GRAVITY = 0.45;
+    this.PLAYER_SPEED = 6;
+    this.JUMP_FORCE = -15;
+    this.BOOST_JUMP_FORCE = -22;
+    this.DOUBLE_JUMP_FORCE = -18;
+
     this.score = 0;
     this.maxHeight = 0;
     this.combo = 0;
@@ -156,24 +89,21 @@ class Game {
     this.lastPraiseTime = 0;
     this.lastMilestone = 0;
     this.shakeTimer = 0;
-    this.touchStartX = null;
-    this.canDoubleJump = false;
-    this.hasDoubleJumped = false;
-    this.tapCount = 0;
-    this.lastTapTime = 0;
-    this.keys = {};
     this.praises = [];
     this.milestones = [];
-    this.floatingTexts = [];
+    this.barrage = new Barrage(); // 弹幕系统
     this.particles = [];
     this.bgStars = [];
     this.platforms = [];
     this.player = null;
     this.showCharacterPanel = false; // 是否显示角色选择面板
+    this.showJobPanel = false; // 是否显示职业选择面板
     this.wxUserInfo = null; // 微信用户信息
     this.hasWxLogin = false; // 是否已获取微信登录
 
-    this.initInput();
+    this.controls = new Controls(this); // 控制系统
+    this.mainUI = new MainUI(this); // 主界面UI
+    this.audio = new Audio(); // 音效管理
     this.initStars();
     this.initWxLogin(); // 微信登录获取用户信息
   }
@@ -194,137 +124,6 @@ class Game {
     });
   }
 
-  initInput() {
-    var _this = this;
-
-    // 触摸开始 - 使用微信小游戏 API
-    wx.onTouchStart(function(e) {
-      var touches = e.touches;
-      if (touches && touches.length > 0) {
-        _this.touchStartX = touches[0].clientX;
-        var touchX = touches[0].clientX;
-        var touchY = touches[0].clientY;
-
-        // 在主界面检测按钮和角色选择点击
-        if (_this.state === 'start') {
-          // 如果角色面板显示中，优先处理角色选择
-          if (_this.showCharacterPanel) {
-            var selected = _this.checkCharacterSelectClick(touchX, touchY);
-            if (selected) {
-              _this.showCharacterPanel = false; // 选择角色后关闭面板
-              return; // 点击了角色选择区域
-            }
-            // 检测是否点击了关闭角色面板（点击其他区域）
-            if (_this.bottomBtnArea) {
-              var charBtn = _this.bottomBtnArea.character;
-              // 如果点击的是角色按钮本身，不关闭面板
-              if (touchX >= charBtn.x && touchX <= charBtn.x + charBtn.w &&
-                  touchY >= charBtn.y && touchY <= charBtn.y + charBtn.h) {
-                return; // 点击角色按钮，切换面板
-              }
-            }
-            // 点击其他区域，关闭角色面板
-            _this.showCharacterPanel = false;
-            return;
-          }
-
-          // 检测是否点击了底部图标按钮
-          if (_this.bottomBtnArea) {
-            var btn = _this.bottomBtnArea;
-            // 点击了角色按钮
-            if (touchX >= btn.character.x && touchX <= btn.character.x + btn.character.w &&
-                touchY >= btn.character.y && touchY <= btn.character.y + btn.character.h) {
-              _this.showCharacterPanel = true;
-              return;
-            }
-            // 点击了商店按钮（暂未实现）
-            if (touchX >= btn.shop.x && touchX <= btn.shop.x + btn.shop.w &&
-                touchY >= btn.shop.y && touchY <= btn.shop.y + btn.shop.h) {
-              return; // 商店暂未开放
-            }
-            // 点击了排行榜按钮（暂未实现）
-            if (touchX >= btn.leaderboard.x && touchX <= btn.leaderboard.x + btn.leaderboard.w &&
-                touchY >= btn.leaderboard.y && touchY <= btn.leaderboard.y + btn.leaderboard.h) {
-              return; // 排行榜暂未开放
-            }
-          }
-
-          // 检测是否点击了开始按钮
-          if (_this.startBtnArea) {
-            var sBtn = _this.startBtnArea;
-            if (touchX >= sBtn.x && touchX <= sBtn.x + sBtn.w &&
-                touchY >= sBtn.y && touchY <= sBtn.y + sBtn.h) {
-              _this.startGame();
-              return;
-            }
-          }
-          return; // 点击了其他区域不处理
-        }
-
-        // 游戏结束时检测按钮点击
-        if (_this.state === 'gameover' && _this.gameOverBtnArea) {
-          var btn = _this.gameOverBtnArea;
-          // 检查是否点击了重新开始按钮
-          if (touchX >= btn.restartX && touchX <= btn.restartX + btn.restartW &&
-              touchY >= btn.restartY && touchY <= btn.restartY + btn.restartH) {
-            _this.startGame();
-            return;
-          }
-          // 检查是否点击了返回主页按钮
-          if (touchX >= btn.homeX && touchX <= btn.homeX + btn.homeW &&
-              touchY >= btn.homeY && touchY <= btn.homeY + btn.homeH) {
-            _this.goToHome();
-            return;
-          }
-          return; // 点击了其他区域不处理
-        }
-      }
-      // 开始或重新开始游戏
-      if (_this.state === 'start' || _this.state === 'gameover') {
-        _this.startGame();
-      } else if (_this.state === 'playing' && _this.canDoubleJump && !_this.hasDoubleJumped) {
-        var now = Date.now();
-        if (now - _this.lastTapTime < 300) {
-          _this.tapCount++;
-          if (_this.tapCount >= 2) {
-            _this.doDoubleJump();
-            _this.tapCount = 0;
-          }
-        } else {
-          _this.tapCount = 1;
-        }
-        _this.lastTapTime = now;
-      }
-    });
-
-    // 触摸移动 - 使用微信小游戏 API
-    wx.onTouchMove(function(e) {
-      var touches = e.touches;
-      if (touches && touches.length > 0 && _this.touchStartX !== null) {
-        var currentX = touches[0].clientX;
-        var deltaX = currentX - _this.touchStartX;
-
-        if (deltaX < -30) {
-          _this.keys['ArrowLeft'] = true;
-          _this.keys['ArrowRight'] = false;
-        } else if (deltaX > 30) {
-          _this.keys['ArrowLeft'] = false;
-          _this.keys['ArrowRight'] = true;
-        } else {
-          _this.keys['ArrowLeft'] = false;
-          _this.keys['ArrowRight'] = false;
-        }
-      }
-    });
-
-    // 触摸结束 - 使用微信小游戏 API
-    wx.onTouchEnd(function(e) {
-      _this.keys['ArrowLeft'] = false;
-      _this.keys['ArrowRight'] = false;
-      _this.touchStartX = null;
-    });
-  }
-
   initStars() {
     this.bgStars = [];
     for (let i = 0; i < 150; i++) {
@@ -340,7 +139,7 @@ class Game {
   generatePraises() {
     const n = this.playerName;
     const j = this.playerJob;
-    this.praises = praiseTemplates.map(t => t.replace(/\{n\}/g, n).replace(/\{j\}/g, j));
+    this.praises = GAME_CONST.praiseTemplates.map(t => t.replace(/\{n\}/g, n).replace(/\{j\}/g, j));
 
     let jobPraises = null;
     for (const [key, val] of Object.entries(jobPraiseMap)) {
@@ -389,7 +188,7 @@ class Game {
     };
     this.platforms = [];
     this.particles = [];
-    this.floatingTexts = [];
+    this.barrage.clear(); // 清空弹幕
     this.score = 0;
     this.maxHeight = 0;
     this.cameraY = this.H - 100 - this.H * 0.4;
@@ -397,8 +196,7 @@ class Game {
     this.lastMilestone = 0;
     this.combo = 0;
     this.shakeTimer = 0;
-    this.canDoubleJump = false;
-    this.hasDoubleJumped = false;
+    this.controls.reset(); // 重置控制系统状态
 
     const ground = this.createPlatform(this.W / 2 - 100, this.H - 40, 'ground');
     ground.w = 200;
@@ -414,10 +212,6 @@ class Game {
     }
   }
 
-  showFloatingText(x, y, text, color) {
-    this.floatingTexts.push({ x, y, text, color: color || '#ffdd57', life: 1, scale: 1, vy: -2 });
-  }
-
   spawnParticles(x, y, color, count) {
     for (let i = 0; i < count; i++) {
       this.particles.push({
@@ -429,14 +223,6 @@ class Game {
         r: Math.random() * 4 + 2
       });
     }
-  }
-
-  doDoubleJump() {
-    if (!this.player || !this.canDoubleJump || this.hasDoubleJumped) return;
-    this.hasDoubleJumped = true;
-    this.player.vy = DOUBLE_JUMP_FORCE;
-    this.spawnParticles(this.player.x + this.player.w / 2, this.player.y + this.player.h, '#fd79a8', 12);
-    this.showFloatingText(this.player.x, this.player.y - this.cameraY - 30, "二段跳！");
   }
 
   // 更新玩家动画状态
@@ -504,17 +290,17 @@ class Game {
     if (this.state !== 'playing' || !this.player) return;
     const player = this.player;
 
-    if (this.keys['ArrowLeft'] || this.keys['a']) {
-      player.vx = -PLAYER_SPEED;
+    if (this.controls.keys['ArrowLeft'] || this.controls.keys['a']) {
+      player.vx = -this.PLAYER_SPEED;
       player.facing = -1;
-    } else if (this.keys['ArrowRight'] || this.keys['d']) {
-      player.vx = PLAYER_SPEED;
+    } else if (this.controls.keys['ArrowRight'] || this.controls.keys['d']) {
+      player.vx = this.PLAYER_SPEED;
       player.facing = 1;
     } else {
       player.vx *= 0.85;
     }
 
-    player.vy += GRAVITY;
+    player.vy += this.GRAVITY;
     player.x += player.vx;
     player.y += player.vy;
 
@@ -541,30 +327,31 @@ class Game {
 
           if (!p.dead) {
             player.y = p.y - player.h;
-            let jumpForce = JUMP_FORCE;
+            let jumpForce = this.JUMP_FORCE;
 
             if (p.type === 'boost') {
-              jumpForce = BOOST_JUMP_FORCE;
+              jumpForce = this.BOOST_JUMP_FORCE;
               this.spawnParticles(player.x + player.w / 2, player.y + player.h, '#ffdd57', 20);
               this.shakeTimer = 10;
-              this.showFloatingText(player.x, player.y - this.cameraY - 40, "火箭弹射！" + this.playerName + "起飞！！！", '#ffdd57');
+              this.barrage.show(player.x, player.y - this.cameraY - 40, "火箭弹射！" + this.playerName + "起飞！！！", '#ffdd57');
             }
 
             player.vy = jumpForce;
             this.combo++;
-            this.canDoubleJump = true;
-            this.hasDoubleJumped = false;
+            this.controls.canDoubleJump = true;
+            this.controls.hasDoubleJumped = false;
             this.spawnParticles(player.x + player.w / 2, player.y + player.h, '#74b9ff', 8);
+            this.audio.playJump();
 
             const now = Date.now();
             if (now - this.lastPraiseTime > 800) {
               this.lastPraiseTime = now;
               if (this.combo > 5) {
-                this.showFloatingText(player.x, player.y - this.cameraY - 30, this.combo + "连跳！" + this.playerName + "太强了！", '#ff6b6b');
+                this.barrage.show(player.x, player.y - this.cameraY - 30, this.combo + "连跳！" + this.playerName + "太强了！", '#ff6b6b');
               } else {
                 const praise = this.praises[Math.floor(Math.random() * this.praises.length)];
                 const colors = ['#ffdd57', '#ff6b6b', '#74b9ff', '#55efc4', '#fd79a8', '#ffeaa7'];
-                this.showFloatingText(player.x, player.y - this.cameraY - 30, praise, colors[Math.floor(Math.random() * colors.length)]);
+                this.barrage.show(player.x, player.y - this.cameraY - 30, praise, colors[Math.floor(Math.random() * colors.length)]);
               }
             }
           }
@@ -589,7 +376,7 @@ class Game {
       for (let m of this.milestones) {
         if (this.score >= m.h && this.lastMilestone < m.h) {
           this.lastMilestone = m.h;
-          this.showFloatingText(this.W / 2 - 100, this.H / 2 - this.cameraY, m.msg, '#ff6b6b');
+          this.barrage.show(this.W / 2 - 100, this.H / 2 - this.cameraY, m.msg, '#ff6b6b');
           this.shakeTimer = 15;
           this.spawnParticles(this.W / 2, this.H / 2, '#ff6b6b', 30);
         }
@@ -611,11 +398,7 @@ class Game {
       return p.life > 0;
     });
 
-    this.floatingTexts = this.floatingTexts.filter(t => {
-      t.y += t.vy;
-      t.life -= 0.012;
-      return t.life > 0;
-    });
+    this.barrage.update();
 
     if (this.shakeTimer > 0) this.shakeTimer--;
   }
@@ -861,20 +644,6 @@ class Game {
     this.ctx.globalAlpha = 1;
   }
 
-  drawFloatingTexts() {
-    for (let t of this.floatingTexts) {
-      this.ctx.globalAlpha = t.life;
-      this.ctx.fillStyle = t.color;
-      this.ctx.font = 'bold 22px sans-serif';
-      this.ctx.textAlign = 'left';
-      this.ctx.shadowColor = '#ff6600';
-      this.ctx.shadowBlur = 10;
-      this.ctx.fillText(t.text, Math.max(10, Math.min(this.W - 200, t.x)), t.y);
-      this.ctx.shadowBlur = 0;
-    }
-    this.ctx.globalAlpha = 1;
-  }
-
   drawUI() {
     if (this.state !== 'playing') return;
     this.ctx.fillStyle = '#ffdd57';
@@ -916,7 +685,7 @@ class Game {
       this.ctx.textAlign = 'center';
       this.ctx.shadowColor = '#ffaa00';
       this.ctx.shadowBlur = 20;
-      this.ctx.fillText('万秀彬跳跳楼', this.W / 2, this.H / 2 - 120);
+      this.ctx.fillText('万秀彬跳跳', this.W / 2, this.H / 2 - 120);
       this.ctx.shadowBlur = 0;
 
       // 副标题
@@ -965,7 +734,8 @@ class Game {
     this.bottomBtnArea = {
       shop: { x: startX, y: iconY, w: iconSize, h: iconSize },
       character: { x: startX + spacing, y: iconY, w: iconSize, h: iconSize },
-      leaderboard: { x: startX + spacing * 2, y: iconY, w: iconSize, h: iconSize }
+      job: { x: startX + spacing * 2, y: iconY, w: iconSize, h: iconSize },
+      leaderboard: { x: startX + spacing * 3, y: iconY, w: iconSize, h: iconSize }
     };
 
     // 商店图标
@@ -993,27 +763,39 @@ class Game {
     this.ctx.fillStyle = '#fff';
     this.ctx.fillText('角色', startX + spacing + iconSize / 2, iconY + iconSize + 18);
 
+    // 职业图标（高亮显示当前选中）
+    if (this.showJobPanel) {
+      this.ctx.fillStyle = 'rgba(255, 107, 107, 0.5)';
+      this.ctx.fillRect(startX + spacing * 2 - 5, iconY - 5, iconSize + 10, iconSize + 10);
+    }
+    this.ctx.fillStyle = jobConfig.colors[this.playerJob] || '#ff6b6b';
+    this.ctx.fillRect(startX + spacing * 2, iconY, iconSize, iconSize);
+    this.ctx.fillStyle = '#fff';
+    this.ctx.font = '12px sans-serif';
+    this.ctx.fillText('职业', startX + spacing * 2 + iconSize / 2, iconY + iconSize + 18);
+
     // 排行榜图标
     if (images.iconLeaderboard && images.iconLeaderboard.width > 0) {
-      this.ctx.drawImage(images.iconLeaderboard, startX + spacing * 2, iconY, iconSize, iconSize);
+      this.ctx.drawImage(images.iconLeaderboard, startX + spacing * 3, iconY, iconSize, iconSize);
     } else {
       this.ctx.fillStyle = '#55efc4';
-      this.ctx.fillRect(startX + spacing * 2, iconY, iconSize, iconSize);
+      this.ctx.fillRect(startX + spacing * 3, iconY, iconSize, iconSize);
     }
     this.ctx.fillStyle = '#fff';
-    this.ctx.fillText('排行', startX + spacing * 2 + iconSize / 2, iconY + iconSize + 18);
+    this.ctx.font = '12px sans-serif';
+    this.ctx.fillText('排行', startX + spacing * 3 + iconSize / 2, iconY + iconSize + 18);
 
-    // 根据状态显示当前角色或角色选择面板
+    // 根据状态显示面板
     if (this.showCharacterPanel) {
-      // 显示角色选择面板
       this.drawCharacterSelect();
+    } else if (this.showJobPanel) {
+      this.drawJobSelect();
     } else {
-      // 显示当前选中角色
       this.drawCurrentCharacter();
     }
   }
 
-  // 绘制当前选中的角色
+  // 绘制当前选中的角色和职业
   drawCurrentCharacter() {
     const charName = characterConfig.current;
     const charDisplayName = characterConfig.names[charName] || charName;
@@ -1022,8 +804,14 @@ class Game {
     // 角色显示区域
     const charBoxWidth = 120;
     const charBoxHeight = 140;
-    const charBoxX = this.W / 2 - charBoxWidth / 2;
+    const charBoxX = this.W / 2 - charBoxWidth - 10;
     const charBoxY = this.H / 2 + 100;
+
+    // 职业显示区域
+    const jobBoxWidth = 120;
+    const jobBoxHeight = 140;
+    const jobBoxX = this.W / 2 + 10;
+    const jobBoxY = this.H / 2 + 100;
 
     // 绘制角色框背景
     this.ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
@@ -1041,12 +829,26 @@ class Game {
     // 绘制角色名称
     this.ctx.fillStyle = '#ffdd57';
     this.ctx.font = '16px sans-serif';
-    this.ctx.fillText(charDisplayName, this.W / 2, charBoxY + 100);
+    this.ctx.fillText(charDisplayName, charBoxX + charBoxWidth / 2, charBoxY + 100);
 
-    // 提示点击角色按钮
-    this.ctx.fillStyle = '#aaa';
-    this.ctx.font = '12px sans-serif';
-    this.ctx.fillText('点击下方角色按钮切换', this.W / 2, charBoxY + 125);
+    // 绘制职业框背景
+    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+    this.ctx.strokeStyle = 'rgba(255, 107, 107, 0.5)';
+    this.ctx.lineWidth = 2;
+    this.roundRect(jobBoxX, jobBoxY, jobBoxWidth, jobBoxHeight, 10);
+    this.ctx.fill();
+    this.ctx.stroke();
+
+    // 绘制职业图标
+    this.ctx.fillStyle = jobConfig.colors[this.playerJob] || '#ff6b6b';
+    this.ctx.beginPath();
+    this.ctx.arc(jobBoxX + jobBoxWidth / 2, jobBoxY + 40, 25, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    // 绘制职业名称
+    this.ctx.fillStyle = '#ffdd57';
+    this.ctx.font = '16px sans-serif';
+    this.ctx.fillText(this.playerJob, jobBoxX + jobBoxWidth / 2, jobBoxY + 100);
   }
 
   // 绘制角色选择区域
@@ -1091,6 +893,52 @@ class Game {
       this.ctx.fillStyle = isSelected ? '#ffdd57' : '#fff';
       this.ctx.font = 'bold 14px sans-serif';
       this.ctx.fillText(characterConfig.names[charName] || charName, x + selectWidth / 2, y + selectHeight - 20);
+    }
+  }
+
+  // 绘制职业选择面板
+  drawJobSelect() {
+    const selectY = this.H / 2 + 80;
+    const selectWidth = 100;
+    const selectHeight = 80;
+    const spacing = 120;
+    const startX = this.W / 2 - (jobConfig.list.length * spacing) / 2;
+
+    this.ctx.fillStyle = '#fff';
+    this.ctx.font = '14px sans-serif';
+    this.ctx.fillText('选择职业', this.W / 2, selectY - 20);
+
+    // 绘制每个职业选项
+    for (let i = 0; i < jobConfig.list.length; i++) {
+      const jobName = jobConfig.list[i];
+      const x = startX + i * spacing;
+      const y = selectY;
+      const isSelected = jobConfig.current === jobName;
+
+      // 绘制选择框背景
+      if (isSelected) {
+        this.ctx.fillStyle = 'rgba(255, 107, 107, 0.3)';
+        this.ctx.strokeStyle = '#ff6b6b';
+        this.ctx.lineWidth = 3;
+      } else {
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        this.ctx.lineWidth = 1;
+      }
+      this.roundRect(x, y, selectWidth, selectHeight, 10);
+      this.ctx.fill();
+      this.ctx.stroke();
+
+      // 绘制职业图标
+      this.ctx.fillStyle = jobConfig.colors[jobName] || '#ff6b6b';
+      this.ctx.beginPath();
+      this.ctx.arc(x + selectWidth / 2, y + 25, 18, 0, Math.PI * 2);
+      this.ctx.fill();
+
+      // 绘制职业名称
+      this.ctx.fillStyle = isSelected ? '#ffdd57' : '#fff';
+      this.ctx.font = 'bold 14px sans-serif';
+      this.ctx.fillText(jobName, x + selectWidth / 2, y + selectHeight - 15);
     }
   }
 
@@ -1177,7 +1025,7 @@ class Game {
       this.drawPlatforms();
       this.drawPlayer();
       this.drawParticles();
-      this.drawFloatingTexts();
+      this.barrage.draw(this.ctx, this.W);
       this.drawUI();
     } else if (this.state === 'gameover') {
       this.drawGameOverScreen();
@@ -1205,6 +1053,34 @@ class Game {
         // 切换角色
         characterConfig.current = charName;
         loadCharacter(charName);
+        this.audio.playClick();
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // 检测职业选择点击
+  checkJobSelectClick(touchX, touchY) {
+    const selectY = this.H / 2 + 80;
+    const selectWidth = 100;
+    const selectHeight = 80;
+    const spacing = 120;
+    const startX = this.W / 2 - (jobConfig.list.length * spacing) / 2;
+
+    for (let i = 0; i < jobConfig.list.length; i++) {
+      const jobName = jobConfig.list[i];
+      const x = startX + i * spacing;
+      const y = selectY;
+
+      // 检测点击是否在职业选择框内
+      if (touchX >= x && touchX <= x + selectWidth &&
+          touchY >= y && touchY <= y + selectHeight) {
+        // 切换职业
+        jobConfig.current = jobName;
+        this.playerJob = jobName;
+        this.generatePraises(); // 刷新夸夸词
+        this.audio.playClick();
         return true;
       }
     }
@@ -1215,12 +1091,13 @@ class Game {
     this.generatePraises();
     this.initGame();
     this.state = 'playing';
+    this.audio.playBGM();
     const _this = this;
     setTimeout(function() {
-      _this.showFloatingText(_this.W / 2 - 80, _this.H / 2, _this.playerName + "出发！冲冲冲！💪");
+      _this.barrage.show(_this.W / 2 - 80, _this.H / 2, _this.playerName + "出发！冲冲冲！💪");
     }, 500);
     setTimeout(function() {
-      _this.showFloatingText(_this.W / 2 - 60, _this.H / 2 - 60, _this.playerJob + "牛逼！！！");
+      _this.barrage.show(_this.W / 2 - 60, _this.H / 2 - 60, _this.playerJob + "牛逼！！！");
     }, 1200);
   }
 
@@ -1233,6 +1110,8 @@ class Game {
     this.state = 'start';
     this.combo = 0;
     this.showCharacterPanel = false;
+    this.showJobPanel = false;
+    this.audio.stopBGM();
   }
 
   loop() {

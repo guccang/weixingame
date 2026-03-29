@@ -1,6 +1,21 @@
 // 微信登录模块
 let loginCallback = null;
 
+// 绘制圆角矩形（兼容微信小游戏）
+function drawRoundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
 // 微信登录获取用户信息
 function wxLogin(callback) {
   loginCallback = callback;
@@ -67,8 +82,7 @@ function showAuthButton() {
   ctx.fillStyle = '#00d084';
   ctx.shadowColor = '#00d084';
   ctx.shadowBlur = 10;
-  ctx.beginPath();
-  ctx.roundRect(btnX, btnY, btnWidth, btnHeight, 10);
+  drawRoundRect(ctx, btnX, btnY, btnWidth, btnHeight, 10);
   ctx.fill();
   ctx.shadowBlur = 0;
 
