@@ -3,6 +3,7 @@
  */
 
 const { drawBackground } = require('./background');
+const { GAME_MODES } = require('../game/constants');
 
 /**
  * 绘制游戏结束界面
@@ -11,6 +12,7 @@ const { drawBackground } = require('./background');
  */
 function drawGameOverScreen(ctx, game) {
   const { W, H, score, playerName, playerJob } = game;
+  const gameMode = game.gameMode;
 
   drawBackground(ctx, W, H, game.cameraY, game.score, game.bgStars);
   ctx.fillStyle = 'rgba(10,10,46,0.95)';
@@ -20,10 +22,31 @@ function drawGameOverScreen(ctx, game) {
   ctx.textAlign = 'center';
   ctx.shadowColor = '#ffaa00';
   ctx.shadowBlur = 20;
-  ctx.fillText('挑战结束！', W / 2, H / 2 - 100);
+
+  let title = '挑战结束！';
+  let scoreText = '🏆 最终高度: ' + score + 'm';
+
+  // 竞速模式显示时间信息
+  if (gameMode.gameMode === GAME_MODES.TIME_ATTACK) {
+    title = '时间到！';
+    const elapsed = game.finalElapsedTime || 0;
+    const mins = Math.floor(elapsed / 60000);
+    const secs = Math.floor((elapsed % 60000) / 1000);
+    scoreText = '🏆 高度: ' + score + 'm | 用时: ' + mins + '分' + secs + '秒';
+  }
+
+  // 闯关模式显示目标信息
+  if (gameMode.gameMode === GAME_MODES.CHALLENGE && gameMode.selectedLandmark) {
+    const target = gameMode.selectedLandmark.targetHeight;
+    const achieved = score >= target;
+    title = achieved ? '🎉 挑战成功！' : '挑战失败';
+    scoreText = '🏆 ' + gameMode.selectedLandmark.name + ': ' + score + 'm / ' + target + 'm';
+  }
+
+  ctx.fillText(title, W / 2, H / 2 - 100);
   ctx.shadowBlur = 0;
   ctx.font = 'bold 28px sans-serif';
-  ctx.fillText('🏆 最终高度: ' + score + 'm', W / 2, H / 2 - 50);
+  ctx.fillText(scoreText, W / 2, H / 2 - 50);
 
   let finalMsg = "";
   if (score < 50) {
@@ -35,7 +58,7 @@ function drawGameOverScreen(ctx, game) {
   } else if (score < 1000) {
     finalMsg = "太强了！！！" + playerName + "已经是跳跃王者！！🏆\n" + playerJob + "牛逼牛逼牛逼！！！";
   } else if (score < 2000) {
-    finalMsg = "逆天了！！！" + playerName + "の传说！！！\n" + playerJob + "界的神话！无人能敌！💪💪💪";
+    finalMsg = "逆天了！！！" + playerName + "的传说！！！\n" + playerJob + "界的神话！无人能敌！💪💪💪";
   } else {
     finalMsg = "不可思议！！！" + playerName + "突破了人类极限！！！\n你就是宇宙最强" + playerJob + "之王！！！🏆💪";
   }

@@ -38,7 +38,7 @@ function render(game, images, characterConfig, jobConfig) {
     drawPlayer(ctx, game.player, game.cameraY, characterConfig);
     drawParticles(ctx, game.particles, game.cameraY);
     game.barrage.draw(ctx, W);
-    drawUI(ctx, W, H, game.score, game.combo, game.state);
+    drawUI(ctx, W, H, game.score, game.combo, game.state, game.gameMode);
   } else if (game.state === 'gameover') {
     drawGameOverScreen(ctx, game);
   }

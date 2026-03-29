@@ -43,6 +43,9 @@ const { platform: platformPhysics, particle: particlePhysics } = physics;
 // 玩家系统
 const player = require('./player/player');
 
+// 游戏模式系统
+const { GameMode } = require('./game/index');
+
 // 绘制系统
 const drawer = require('./drawer/drawer');
 
@@ -89,6 +92,7 @@ class Game {
     this.mainUI = new MainUI(this); // 主界面UI
     this.audio = new Audio(); // 音效管理
     this.levelGenerator = new LevelGenerator(); // 关卡生成器
+    this.gameMode = new GameMode(); // 游戏模式管理
     this.initStars();
     this.initWxLogin(); // 微信登录获取用户信息
   }
@@ -138,6 +142,9 @@ class Game {
     this.shakeTimer = 0;
     this.controls.reset(); // 重置控制系统状态
 
+    // 初始化游戏模式特定状态
+    this.gameMode.initForGame(this);
+
     // 使用关卡生成器初始化
     this.platforms = this.levelGenerator.initLevel(this.W, this.H, characterConfig);
   }
@@ -164,6 +171,11 @@ class Game {
 
   update() {
     if (this.state !== 'playing' || !this.player) return;
+
+    // 竞速模式计时器
+    if (this.gameMode.update(this, 16.67)) {
+      return; // 游戏结束
+    }
 
     player.updateHorizontalMovement(this.player, this.controls);
     player.applyGravity(this.player);
@@ -224,33 +236,6 @@ class Game {
     return false;
   }
 
-  // 检测职业选择点击
-  checkJobSelectClick(touchX, touchY) {
-    const selectY = this.H / 2 + 80;
-    const selectWidth = 100;
-    const selectHeight = 80;
-    const spacing = 120;
-    const startX = this.W / 2 - (jobConfig.list.length * spacing) / 2;
-
-    for (let i = 0; i < jobConfig.list.length; i++) {
-      const jobName = jobConfig.list[i];
-      const x = startX + i * spacing;
-      const y = selectY;
-
-      // 检测点击是否在职业选择框内
-      if (touchX >= x && touchX <= x + selectWidth &&
-          touchY >= y && touchY <= y + selectHeight) {
-        // 切换职业
-        jobConfig.current = jobName;
-        this.playerJob = jobName;
-        this.generatePraises(); // 刷新夸夸词
-        this.audio.playClick();
-        return true;
-      }
-    }
-    return false;
-  }
-
   startGame() {
     this.generatePraises();
     this.initGame();
@@ -268,6 +253,7 @@ class Game {
   gameOver() {
     this.state = 'gameover';
     this.combo = 0;
+    this.gameMode.onGameOver(this);
   }
 
   goToHome() {
@@ -275,6 +261,7 @@ class Game {
     this.combo = 0;
     this.showCharacterPanel = false;
     this.showJobPanel = false;
+    this.gameMode.reset();
     this.audio.stopBGM();
   }
 

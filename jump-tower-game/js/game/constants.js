@@ -1,6 +1,23 @@
 // 游戏常量配置
 
+const GAME_MODES = {
+  ENDLESS: 'endless',
+  CHALLENGE: 'challenge',
+  TIME_ATTACK: 'timeAttack'
+};
+
+const TIME_ATTACK_OPTIONS = [
+  { label: '1分钟', value: 60000 },
+  { label: '5分钟', value: 300000 },
+  { label: '10分钟', value: 600000 },
+  { label: '15分钟', value: 900000 },
+  { label: '30分钟', value: 1800000 }
+];
+
 module.exports = {
+  GAME_MODES,
+  TIME_ATTACK_OPTIONS,
+
   // 物理常量
   GRAVITY: 0.45,
   PLAYER_SPEED: 6,
@@ -25,10 +42,10 @@ module.exports = {
     { h: 50, msg: "{n}热身完毕，真正的挑战开始！" },
     { h: 100, msg: "100米！{n}的{j}力量堪比火箭！" },
     { h: 200, msg: "200米！{n}已经超越了地球引力！" },
-    { h: 500, msg: "500米！{j}大佬の极限还远远没到！" },
+    { h: 500, msg: "500米！{j}大佬的极限还远远没到！" },
     { h: 1000, msg: "1000米！！！{n}已经是{j}之神了！！！" },
     { h: 2000, msg: "2000米！！宇宙级{j}王者！无人能敌！" },
-    { h: 5000, msg: "5000米！！！{n} = {j}の神 + 跳跃の神！！！" },
+    { h: 5000, msg: "5000米！！！{n} = {j}之神 + 跳跃之神！！！" },
   ],
 
   // 5000米后的循环里程碑

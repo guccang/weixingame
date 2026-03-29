@@ -6,6 +6,7 @@ const { roundRect } = require('./helper');
 const { drawBackground } = require('./background');
 const { drawCharacterSelect } = require('./characterSelect');
 const { drawJobSelect } = require('./jobSelect');
+const { drawModeSelect, drawTimeSelect, drawLandmarkSelect } = require('./modeSelect');
 
 /**
  * 绘制开始界面
@@ -33,20 +34,21 @@ function drawStartScreen(ctx, game, images, characterConfig, jobConfig) {
   }
 
   // 如果角色面板显示中，隐藏主页面UI
-  if (!game.showCharacterPanel) {
+  // 只有当没有显示任何面板时，才绘制开始按钮和标题
+  if (!game.showCharacterPanel && !game.showJobPanel && !game.gameMode.showModeSelect && !game.gameMode.showTimeSelect && !game.gameMode.showLandmarkSelect) {
     // 标题文字
     ctx.fillStyle = '#ffdd57';
     ctx.font = 'bold 36px sans-serif';
     ctx.textAlign = 'center';
     ctx.shadowColor = '#ffaa00';
     ctx.shadowBlur = 20;
-    ctx.fillText('万秀彬跳跳', W / 2, H / 2 - 120);
+    ctx.fillText('秀彬跳跳', W / 2, H / 2 - 120);
     ctx.shadowBlur = 0;
 
     // 副标题
     ctx.fillStyle = '#ff6b6b';
     ctx.font = '20px sans-serif';
-    ctx.fillText('💪 健身大佬の极限跳跃 💪', W / 2, H / 2 - 80);
+    ctx.fillText('💪 健身大佬的极限跳跃 💪', W / 2, H / 2 - 80);
     ctx.fillStyle = '#74b9ff';
     ctx.font = '16px sans-serif';
     ctx.fillText('看谁跳得高！全程为你疯狂打call！', W / 2, H / 2 - 50);
@@ -55,7 +57,7 @@ function drawStartScreen(ctx, game, images, characterConfig, jobConfig) {
     const btnWidth = 140;
     const btnHeight = 50;
     const btnX = W / 2 - btnWidth / 2;
-    const btnY = H / 2 + 260;
+    const btnY = H / 2 + 200;
 
     ctx.fillStyle = '#00d084';
     ctx.shadowColor = '#00d084';
@@ -74,73 +76,64 @@ function drawStartScreen(ctx, game, images, characterConfig, jobConfig) {
       w: btnWidth,
       h: btnHeight
     };
+  } else {
+    // 有面板显示时，清空开始按钮区域
+    game.startBtnArea = null;
   }
 
   // 底部图标按钮区域
   const iconSize = 50;
   const iconY = H - 100;
-  const spacing = 80;
-  const startX = W / 2 - spacing * 1.5;
+  const icons = [
+    { key: 'shop', color: '#fd79a8', text: '商店', img: images.iconShop },
+    { key: 'character', color: '#74b9ff', text: '角色', img: images.iconCharacter },
+    { key: 'mode', color: '#ffdd57', text: '玩法', img: null, highlight: game.gameMode.showModeSelect },
+    { key: 'job', color: jobConfig.colors[game.playerJob] || '#ff6b6b', text: '职业', img: null, highlight: game.showJobPanel },
+    { key: 'leaderboard', color: '#55efc4', text: '排行', img: images.iconLeaderboard }
+  ];
+  const btnCount = icons.length;
+  const totalBtnWidth = btnCount * iconSize;
+  const totalGap = W - totalBtnWidth;
+  const gap = totalGap / (btnCount + 1);
 
-  game.bottomBtnArea = {
-    shop: { x: startX, y: iconY, w: iconSize, h: iconSize },
-    character: { x: startX + spacing, y: iconY, w: iconSize, h: iconSize },
-    job: { x: startX + spacing * 2, y: iconY, w: iconSize, h: iconSize },
-    leaderboard: { x: startX + spacing * 3, y: iconY, w: iconSize, h: iconSize }
-  };
+  game.bottomBtnArea = {};
+  icons.forEach((icon, i) => {
+    const x = gap + i * (iconSize + gap);
+    game.bottomBtnArea[icon.key] = { x, y: iconY, w: iconSize, h: iconSize };
 
-  // 商店图标
-  if (images.iconShop && images.iconShop.width > 0) {
-    ctx.drawImage(images.iconShop, startX, iconY, iconSize, iconSize);
-  } else {
-    ctx.fillStyle = '#fd79a8';
-    ctx.fillRect(startX, iconY, iconSize, iconSize);
-  }
-  ctx.fillStyle = '#fff';
-  ctx.font = '12px sans-serif';
-  ctx.fillText('商店', startX + iconSize / 2, iconY + iconSize + 18);
+    // 高亮背景
+    if (icon.highlight) {
+      ctx.fillStyle = 'rgba(255, 221, 87, 0.5)';
+      ctx.fillRect(x - 5, iconY - 5, iconSize + 10, iconSize + 10);
+    }
 
-  // 角色图标
-  if (game.showCharacterPanel) {
-    ctx.fillStyle = 'rgba(116, 185, 255, 0.5)';
-    ctx.fillRect(startX + spacing - 5, iconY - 5, iconSize + 10, iconSize + 10);
-  }
-  if (images.iconCharacter && images.iconCharacter.width > 0) {
-    ctx.drawImage(images.iconCharacter, startX + spacing, iconY, iconSize, iconSize);
-  } else {
-    ctx.fillStyle = '#74b9ff';
-    ctx.fillRect(startX + spacing, iconY, iconSize, iconSize);
-  }
-  ctx.fillStyle = '#fff';
-  ctx.fillText('角色', startX + spacing + iconSize / 2, iconY + iconSize + 18);
+    // 图标
+    if (icon.img && icon.img.width > 0) {
+      ctx.drawImage(icon.img, x, iconY, iconSize, iconSize);
+    } else {
+      ctx.fillStyle = icon.color;
+      ctx.fillRect(x, iconY, iconSize, iconSize);
+    }
 
-  // 职业图标
-  if (game.showJobPanel) {
-    ctx.fillStyle = 'rgba(255, 107, 107, 0.5)';
-    ctx.fillRect(startX + spacing * 2 - 5, iconY - 5, iconSize + 10, iconSize + 10);
-  }
-  ctx.fillStyle = jobConfig.colors[game.playerJob] || '#ff6b6b';
-  ctx.fillRect(startX + spacing * 2, iconY, iconSize, iconSize);
-  ctx.fillStyle = '#fff';
-  ctx.font = '12px sans-serif';
-  ctx.fillText('职业', startX + spacing * 2 + iconSize / 2, iconY + iconSize + 18);
-
-  // 排行榜图标
-  if (images.iconLeaderboard && images.iconLeaderboard.width > 0) {
-    ctx.drawImage(images.iconLeaderboard, startX + spacing * 3, iconY, iconSize, iconSize);
-  } else {
-    ctx.fillStyle = '#55efc4';
-    ctx.fillRect(startX + spacing * 3, iconY, iconSize, iconSize);
-  }
-  ctx.fillStyle = '#fff';
-  ctx.font = '12px sans-serif';
-  ctx.fillText('排行', startX + spacing * 3 + iconSize / 2, iconY + iconSize + 18);
+    // 文字
+    ctx.fillStyle = '#fff';
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(icon.text, x + iconSize / 2, iconY + iconSize + 18);
+  });
+  ctx.textAlign = 'left';
 
   // 根据状态显示面板
   if (game.showCharacterPanel) {
     drawCharacterSelect(ctx, game, characterConfig);
   } else if (game.showJobPanel) {
     drawJobSelect(ctx, game, jobConfig);
+  } else if (game.gameMode.showModeSelect) {
+    drawModeSelect(ctx, game, W, H);
+  } else if (game.gameMode.showTimeSelect) {
+    drawTimeSelect(ctx, game, W, H);
+  } else if (game.gameMode.showLandmarkSelect) {
+    drawLandmarkSelect(ctx, game, W, H);
   } else {
     drawCurrentCharacter(ctx, game, characterConfig, jobConfig);
   }
@@ -159,13 +152,13 @@ function drawCurrentCharacter(ctx, game, characterConfig, jobConfig) {
   const charBoxWidth = 120;
   const charBoxHeight = 140;
   const charBoxX = W / 2 - charBoxWidth - 10;
-  const charBoxY = H / 2 + 100;
+  const charBoxY = H / 2;
 
   // 职业显示区域
   const jobBoxWidth = 120;
   const jobBoxHeight = 140;
   const jobBoxX = W / 2 + 10;
-  const jobBoxY = H / 2 + 100;
+  const jobBoxY = H / 2;
 
   // 绘制角色框背景
   ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
@@ -183,6 +176,7 @@ function drawCurrentCharacter(ctx, game, characterConfig, jobConfig) {
   // 绘制角色名称
   ctx.fillStyle = '#ffdd57';
   ctx.font = '16px sans-serif';
+  ctx.textAlign = 'center';
   ctx.fillText(charDisplayName, charBoxX + charBoxWidth / 2, charBoxY + 100);
 
   // 绘制职业框背景
@@ -203,6 +197,7 @@ function drawCurrentCharacter(ctx, game, characterConfig, jobConfig) {
   ctx.fillStyle = '#ffdd57';
   ctx.font = '16px sans-serif';
   ctx.fillText(playerJob, jobBoxX + jobBoxWidth / 2, jobBoxY + 100);
+  ctx.textAlign = 'left';
 }
 
 module.exports = {

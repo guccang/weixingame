@@ -42,8 +42,7 @@ class Controls {
       }
       // 开始或重新开始游戏
       if (_this.game.state === 'start' || _this.game.state === 'gameover') {
-        _this.game.audio.playClick();
-        _this.game.startGame();
+        // 不在这里自动开始游戏，由mainUI处理开始按钮点击
       } else if (_this.game.state === 'playing' && _this.canDoubleJump && !_this.hasDoubleJumped) {
         var now = Date.now();
         if (now - _this.lastTapTime < 300) {
