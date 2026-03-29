@@ -46,6 +46,10 @@ const GAME_CONST = require('./game/constants');
 // 音效管理
 const Audio = require('./audio/audio');
 
+// 物理系统
+const physics = require('./physics/physics');
+const { platform: platformPhysics, player: playerPhysics, particle: particlePhysics } = physics;
+
 function loadImage(name, src) {
   const img = wx.createImage();
   img.onload = function() {
@@ -76,12 +80,12 @@ class Game {
     this.playerJob = jobConfig.current; // 从职业配置获取
 
     // 物理常量
-    this.GRAVITY = 0.45;
-    this.PLAYER_SPEED = 6;
-    this.JUMP_FORCE = -15;
-    this.BOOST_JUMP_FORCE = -22;
-    this.DOUBLE_JUMP_FORCE = -18;
-    this.SLIDE_FALL_FORCE = 20;
+    this.GRAVITY = physics.constants.GRAVITY;
+    this.PLAYER_SPEED = physics.constants.PLAYER_SPEED;
+    this.JUMP_FORCE = physics.constants.JUMP_FORCE;
+    this.BOOST_JUMP_FORCE = physics.constants.BOOST_JUMP_FORCE;
+    this.DOUBLE_JUMP_FORCE = physics.constants.DOUBLE_JUMP_FORCE;
+    this.SLIDE_FALL_FORCE = physics.constants.SLIDE_FALL_FORCE;
 
     this.score = 0;
     this.maxHeight = 0;
@@ -169,7 +173,7 @@ class Game {
   }
 
   createPlatform(x, y, type) {
-    return { x, y, w: 85, h: 14, type: type || 'normal', bounced: false, crumbling: false, dead: false };
+    return platformPhysics.createPlatform(x, y, type);
   }
 
   initGame() {
@@ -214,53 +218,13 @@ class Game {
   }
 
   spawnParticles(x, y, color, count) {
-    for (let i = 0; i < count; i++) {
-      this.particles.push({
-        x, y,
-        vx: (Math.random() - 0.5) * 8,
-        vy: (Math.random() - 0.5) * 8 - 3,
-        life: 1,
-        color,
-        r: Math.random() * 4 + 2
-      });
-    }
+    const newParticles = particlePhysics.spawnParticles(x, y, color, count);
+    this.particles.push(...newParticles);
   }
 
   // 更新玩家动画状态
   updatePlayerState() {
-    if (!this.player) return;
-    const player = this.player;
-    const prevState = player.state;
-
-    // 根据速度判断状态
-    if (player.vy < -5) {
-      // 快速上升 - 起跳或上升
-      if (prevState === 'idle' || prevState === 'charge') {
-        player.state = 'jump';
-        player.stateTimer = 5; // 起跳帧持续5帧
-      } else if (player.stateTimer <= 0) {
-        player.state = 'rise';
-      }
-    } else if (player.vy < 0) {
-      // 缓慢上升 - 上升
-      player.state = 'rise';
-    } else if (player.vy > 2) {
-      // 下落
-      player.state = 'fall';
-    } else {
-      // 接近静止 - 站立或落地
-      if (prevState === 'fall') {
-        player.state = 'land';
-        player.stateTimer = 8; // 落地帧持续8帧
-      } else if (player.stateTimer <= 0) {
-        player.state = 'idle';
-      }
-    }
-
-    // 更新状态计时器
-    if (player.stateTimer > 0) {
-      player.stateTimer--;
-    }
+    playerPhysics.updatePlayerState(this.player);
   }
 
   // 获取当前角色帧图片
@@ -291,19 +255,9 @@ class Game {
     if (this.state !== 'playing' || !this.player) return;
     const player = this.player;
 
-    if (this.controls.keys['ArrowLeft'] || this.controls.keys['a']) {
-      player.vx = -this.PLAYER_SPEED;
-      player.facing = -1;
-    } else if (this.controls.keys['ArrowRight'] || this.controls.keys['d']) {
-      player.vx = this.PLAYER_SPEED;
-      player.facing = 1;
-    } else {
-      player.vx *= 0.85;
-    }
-
-    player.vy += this.GRAVITY;
-    player.x += player.vx;
-    player.y += player.vy;
+    playerPhysics.updateHorizontalMovement(player, this.controls);
+    playerPhysics.applyGravity(player);
+    playerPhysics.updatePosition(player, this.W);
 
     if (player.x > this.W) player.x = -player.w;
     if (player.x + player.w < 0) player.x = this.W;
@@ -311,14 +265,9 @@ class Game {
     // 更新玩家动画状态
     this.updatePlayerState();
 
-    if (player.vy > 0) {
+    if (playerPhysics.isFalling(player)) {
       for (let p of this.platforms) {
-        let px = p.x;
-        if (p.type === 'moving') {
-          px = p.x + Math.sin(Date.now() * 0.003 + p.y) * 60;
-        }
-        if (player.x + player.w > px && player.x < px + p.w &&
-          player.y + player.h >= p.y && player.y + player.h <= p.y + p.h + player.vy + 5) {
+        if (platformPhysics.checkCollision(player, p, Date.now())) {
 
           if (p.type === 'crumble' && !p.crumbling) {
             p.crumbling = true;
@@ -328,10 +277,9 @@ class Game {
 
           if (!p.dead) {
             player.y = p.y - player.h;
-            let jumpForce = this.JUMP_FORCE;
+            let jumpForce = platformPhysics.handlePlatformJump(player, p, physics.constants);
 
             if (p.type === 'boost') {
-              jumpForce = this.BOOST_JUMP_FORCE;
               this.spawnParticles(player.x + player.w / 2, player.y + player.h, '#ffdd57', 20);
               this.shakeTimer = 10;
               this.barrage.show(player.x, player.y - this.cameraY - 40, "火箭弹射！" + this.playerName + "起飞！！！", '#ffdd57');
@@ -391,13 +339,7 @@ class Game {
       return;
     }
 
-    this.particles = this.particles.filter(p => {
-      p.x += p.vx;
-      p.y += p.vy;
-      p.vy += 0.15;
-      p.life -= 0.025;
-      return p.life > 0;
-    });
+    this.particles = particlePhysics.updateParticles(this.particles);
 
     this.barrage.update();
 
@@ -464,10 +406,7 @@ class Game {
 
   drawPlatforms() {
     for (let p of this.platforms) {
-      let px = p.x;
-      if (p.type === 'moving') {
-        px = p.x + Math.sin(Date.now() * 0.003 + p.y) * 60;
-      }
+      const px = platformPhysics.getMovingPlatformX(p, Date.now());
       const sy = p.y - this.cameraY;
       if (sy < -20 || sy > this.H + 20) continue;
 

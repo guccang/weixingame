@@ -1,0 +1,15 @@
+/**
+ * 物理常量配置
+ */
+
+module.exports = {
+  GRAVITY: 0.45,
+  PLAYER_SPEED: 6,
+  JUMP_FORCE: -15,
+  BOOST_JUMP_FORCE: -22,
+  DOUBLE_JUMP_FORCE: -18,
+  SLIDE_FALL_FORCE: 20,
+  PARTICLE_GRAVITY: 0.15,
+  MAX_FALL_SPEED: 20,
+  FRICTION: 0.85
+};
