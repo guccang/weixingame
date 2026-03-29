@@ -15,6 +15,14 @@ export default class GameInfo extends Emitter {
       endY: SCREEN_HEIGHT / 2 - 100 + 255,
     };
 
+    // 返回主页按钮区域
+    this.homeBtnArea = {
+      startX: SCREEN_WIDTH / 2 - 40,
+      startY: SCREEN_HEIGHT / 2 - 100 + 255,
+      endX: SCREEN_WIDTH / 2 + 50,
+      endY: SCREEN_HEIGHT / 2 - 100 + 310,
+    };
+
     // 绑定触摸事件
     wx.onTouchStart(this.touchEventHandler.bind(this))
   }
@@ -42,6 +50,7 @@ export default class GameInfo extends Emitter {
     this.drawGameOverImage(ctx);
     this.drawGameOverText(ctx, score);
     this.drawRestartButton(ctx);
+    this.drawHomeButton(ctx);
   }
 
   drawGameOverImage(ctx) {
@@ -91,12 +100,31 @@ export default class GameInfo extends Emitter {
     );
   }
 
+  drawHomeButton(ctx) {
+    ctx.drawImage(
+      atlas,
+      120,
+      6,
+      39,
+      24,
+      SCREEN_WIDTH / 2 - 60,
+      SCREEN_HEIGHT / 2 - 100 + 255,
+      120,
+      40
+    );
+    ctx.fillText(
+      '返回主页',
+      SCREEN_WIDTH / 2 - 40,
+      SCREEN_HEIGHT / 2 - 100 + 280
+    );
+  }
+
   touchEventHandler(event) {
     const { clientX, clientY } = event.touches[0]; // 获取触摸点的坐标
 
     // 当前只有游戏结束时展示了UI，所以只处理游戏结束时的状态
     if (GameGlobal.databus.isGameOver) {
-      // 检查触摸是否在按钮区域内
+      // 检查触摸是否在重新开始按钮区域内
       if (
         clientX >= this.btnArea.startX &&
         clientX <= this.btnArea.endX &&
@@ -105,6 +133,16 @@ export default class GameInfo extends Emitter {
       ) {
         // 调用重启游戏的回调函数
         this.emit('restart');
+      }
+      // 检查触摸是否在返回主页按钮区域内
+      if (
+        clientX >= this.homeBtnArea.startX &&
+        clientX <= this.homeBtnArea.endX &&
+        clientY >= this.homeBtnArea.startY &&
+        clientY <= this.homeBtnArea.endY
+      ) {
+        // 调用返回主页的回调函数
+        this.emit('home');
       }
     }
   }

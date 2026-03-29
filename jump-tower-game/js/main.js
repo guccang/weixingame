@@ -169,6 +169,7 @@ class Game {
     this.bgStars = [];
     this.platforms = [];
     this.player = null;
+    this.showCharacterPanel = false; // 是否显示角色选择面板
 
     this.initInput();
     this.initStars();
@@ -185,12 +186,77 @@ class Game {
         var touchX = touches[0].clientX;
         var touchY = touches[0].clientY;
 
-        // 在主界面检测角色选择点击
+        // 在主界面检测按钮和角色选择点击
         if (_this.state === 'start') {
-          var selected = _this.checkCharacterSelectClick(touchX, touchY);
-          if (selected) {
-            return; // 点击了角色选择区域，不开始游戏
+          // 如果角色面板显示中，优先处理角色选择
+          if (_this.showCharacterPanel) {
+            var selected = _this.checkCharacterSelectClick(touchX, touchY);
+            if (selected) {
+              return; // 点击了角色选择区域
+            }
+            // 检测是否点击了关闭角色面板（点击其他区域）
+            if (_this.bottomBtnArea) {
+              var charBtn = _this.bottomBtnArea.character;
+              // 如果点击的是角色按钮本身，不关闭面板
+              if (touchX >= charBtn.x && touchX <= charBtn.x + charBtn.w &&
+                  touchY >= charBtn.y && touchY <= charBtn.y + charBtn.h) {
+                return; // 点击角色按钮，切换面板
+              }
+            }
+            // 点击其他区域，关闭角色面板
+            _this.showCharacterPanel = false;
+            return;
           }
+
+          // 检测是否点击了底部图标按钮
+          if (_this.bottomBtnArea) {
+            var btn = _this.bottomBtnArea;
+            // 点击了角色按钮
+            if (touchX >= btn.character.x && touchX <= btn.character.x + btn.character.w &&
+                touchY >= btn.character.y && touchY <= btn.character.y + btn.character.h) {
+              _this.showCharacterPanel = true;
+              return;
+            }
+            // 点击了商店按钮（暂未实现）
+            if (touchX >= btn.shop.x && touchX <= btn.shop.x + btn.shop.w &&
+                touchY >= btn.shop.y && touchY <= btn.shop.y + btn.shop.h) {
+              return; // 商店暂未开放
+            }
+            // 点击了排行榜按钮（暂未实现）
+            if (touchX >= btn.leaderboard.x && touchX <= btn.leaderboard.x + btn.leaderboard.w &&
+                touchY >= btn.leaderboard.y && touchY <= btn.leaderboard.y + btn.leaderboard.h) {
+              return; // 排行榜暂未开放
+            }
+          }
+
+          // 检测是否点击了开始按钮
+          if (_this.startBtnArea) {
+            var sBtn = _this.startBtnArea;
+            if (touchX >= sBtn.x && touchX <= sBtn.x + sBtn.w &&
+                touchY >= sBtn.y && touchY <= sBtn.y + sBtn.h) {
+              _this.startGame();
+              return;
+            }
+          }
+          return; // 点击了其他区域不处理
+        }
+
+        // 游戏结束时检测按钮点击
+        if (_this.state === 'gameover' && _this.gameOverBtnArea) {
+          var btn = _this.gameOverBtnArea;
+          // 检查是否点击了重新开始按钮
+          if (touchX >= btn.restartX && touchX <= btn.restartX + btn.restartW &&
+              touchY >= btn.restartY && touchY <= btn.restartY + btn.restartH) {
+            _this.startGame();
+            return;
+          }
+          // 检查是否点击了返回主页按钮
+          if (touchX >= btn.homeX && touchX <= btn.homeX + btn.homeW &&
+              touchY >= btn.homeY && touchY <= btn.homeY + btn.homeH) {
+            _this.goToHome();
+            return;
+          }
+          return; // 点击了其他区域不处理
         }
       }
       // 开始或重新开始游戏
@@ -839,21 +905,50 @@ class Game {
     this.ctx.font = '16px sans-serif';
     this.ctx.fillText('看谁跳得高！全程为你疯狂打call！', this.W / 2, this.H / 2 - 50);
 
-    // 开始提示
-    this.ctx.fillStyle = '#ffdd57';
-    this.ctx.font = '18px sans-serif';
-    this.ctx.fillText('点击屏幕开始游戏', this.W / 2, this.H / 2 + 10);
+    // 开始按钮
+    const btnWidth = 140;
+    const btnHeight = 50;
+    const btnX = this.W / 2 - btnWidth / 2;
+    const btnY = this.H / 2 + 30;
+
+    // 绘制按钮背景
+    this.ctx.fillStyle = '#00d084';
+    this.ctx.shadowColor = '#00d084';
+    this.ctx.shadowBlur = 15;
+    this.roundRect(btnX, btnY, btnWidth, btnHeight, 25);
+    this.ctx.fill();
+    this.ctx.shadowBlur = 0;
+
+    // 绘制按钮文字
+    this.ctx.fillStyle = '#ffffff';
+    this.ctx.font = 'bold 20px sans-serif';
+    this.ctx.fillText('开始游戏', this.W / 2, btnY + 32);
+
+    // 保存开始按钮区域供触摸检测
+    this.startBtnArea = {
+      x: btnX,
+      y: btnY,
+      w: btnWidth,
+      h: btnHeight
+    };
 
     // 操作提示
     this.ctx.fillStyle = '#aaa';
     this.ctx.font = '14px sans-serif';
-    this.ctx.fillText('滑动屏幕左右移动 | 连点两次二段跳', this.W / 2, this.H / 2 + 50);
+    this.ctx.fillText('滑动屏幕左右移动 | 连点两次二段跳', this.W / 2, this.H / 2 + 100);
 
     // 底部图标按钮区域
     const iconSize = 50;
     const iconY = this.H - 100;
     const spacing = 80;
     const startX = this.W / 2 - spacing * 1.5;
+
+    // 保存底部按钮区域供触摸检测
+    this.bottomBtnArea = {
+      shop: { x: startX, y: iconY, w: iconSize, h: iconSize },
+      character: { x: startX + spacing, y: iconY, w: iconSize, h: iconSize },
+      leaderboard: { x: startX + spacing * 2, y: iconY, w: iconSize, h: iconSize }
+    };
 
     // 商店图标
     if (images.iconShop && images.iconShop.width > 0) {
@@ -866,7 +961,11 @@ class Game {
     this.ctx.font = '12px sans-serif';
     this.ctx.fillText('商店', startX + iconSize / 2, iconY + iconSize + 18);
 
-    // 角色图标
+    // 角色图标（高亮显示当前选中）
+    if (this.showCharacterPanel) {
+      this.ctx.fillStyle = 'rgba(116, 185, 255, 0.5)';
+      this.ctx.fillRect(startX + spacing - 5, iconY - 5, iconSize + 10, iconSize + 10);
+    }
     if (images.iconCharacter && images.iconCharacter.width > 0) {
       this.ctx.drawImage(images.iconCharacter, startX + spacing, iconY, iconSize, iconSize);
     } else {
@@ -886,8 +985,50 @@ class Game {
     this.ctx.fillStyle = '#fff';
     this.ctx.fillText('排行', startX + spacing * 2 + iconSize / 2, iconY + iconSize + 18);
 
-    // 角色选择区域
-    this.drawCharacterSelect();
+    // 根据状态显示当前角色或角色选择面板
+    if (this.showCharacterPanel) {
+      // 显示角色选择面板
+      this.drawCharacterSelect();
+    } else {
+      // 显示当前选中角色
+      this.drawCurrentCharacter();
+    }
+  }
+
+  // 绘制当前选中的角色
+  drawCurrentCharacter() {
+    const charName = characterConfig.current;
+    const charDisplayName = characterConfig.names[charName] || charName;
+    const frames = characterConfig.frames[charName];
+
+    // 角色显示区域
+    const charBoxWidth = 120;
+    const charBoxHeight = 140;
+    const charBoxX = this.W / 2 - charBoxWidth / 2;
+    const charBoxY = this.H / 2 + 100;
+
+    // 绘制角色框背景
+    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+    this.ctx.strokeStyle = 'rgba(255, 221, 87, 0.5)';
+    this.ctx.lineWidth = 2;
+    this.roundRect(charBoxX, charBoxY, charBoxWidth, charBoxHeight, 10);
+    this.ctx.fill();
+    this.ctx.stroke();
+
+    // 绘制角色图片
+    if (frames && frames[0] && frames[0].width > 0) {
+      this.ctx.drawImage(frames[0], charBoxX + 28, charBoxY + 15, 64, 64);
+    }
+
+    // 绘制角色名称
+    this.ctx.fillStyle = '#ffdd57';
+    this.ctx.font = '16px sans-serif';
+    this.ctx.fillText(charDisplayName, this.W / 2, charBoxY + 100);
+
+    // 提示点击角色按钮
+    this.ctx.fillStyle = '#aaa';
+    this.ctx.font = '12px sans-serif';
+    this.ctx.fillText('点击下方角色按钮切换', this.W / 2, charBoxY + 125);
   }
 
   // 绘制角色选择区域
@@ -972,7 +1113,33 @@ class Game {
     }
     this.ctx.fillStyle = '#ffdd57';
     this.ctx.font = '18px sans-serif';
-    this.ctx.fillText('点击屏幕再来一次！', this.W / 2, this.H / 2 + 150);
+    this.ctx.fillText('点击下方按钮选择操作', this.W / 2, this.H / 2 + 130);
+
+    // 绘制重新开始按钮
+    this.ctx.fillStyle = '#00d084';
+    this.ctx.fillRect(this.W / 2 - 80, this.H / 2 + 155, 70, 35);
+    this.ctx.fillStyle = '#ffffff';
+    this.ctx.font = '16px sans-serif';
+    this.ctx.fillText('重新开始', this.W / 2 - 45, this.H / 2 + 178);
+
+    // 绘制返回主页按钮
+    this.ctx.fillStyle = '#74b9ff';
+    this.ctx.fillRect(this.W / 2 + 10, this.H / 2 + 155, 70, 35);
+    this.ctx.fillStyle = '#ffffff';
+    this.ctx.font = '16px sans-serif';
+    this.ctx.fillText('返回主页', this.W / 2 + 45, this.H / 2 + 178);
+
+    // 保存按钮区域供触摸检测使用
+    this.gameOverBtnArea = {
+      restartX: this.W / 2 - 80,
+      restartY: this.H / 2 + 155,
+      restartW: 70,
+      restartH: 35,
+      homeX: this.W / 2 + 10,
+      homeY: this.H / 2 + 155,
+      homeW: 70,
+      homeH: 35
+    };
   }
 
   render() {
@@ -1042,6 +1209,12 @@ class Game {
   gameOver() {
     this.state = 'gameover';
     this.combo = 0;
+  }
+
+  goToHome() {
+    this.state = 'start';
+    this.combo = 0;
+    this.showCharacterPanel = false;
   }
 
   loop() {
