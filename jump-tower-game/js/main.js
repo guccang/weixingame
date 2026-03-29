@@ -4,7 +4,7 @@
  */
 
 // 引入render.js初始化canvas
-require('./drawer/render');
+require('./render');
 
 // 使用全局canvas
 const canvas = GameGlobal.canvas;
@@ -38,7 +38,10 @@ const Audio = require('./audio/audio');
 
 // 物理系统
 const physics = require('./physics/physics');
-const { platform: platformPhysics, player: playerPhysics, particle: particlePhysics } = physics;
+const { platform: platformPhysics, particle: particlePhysics } = physics;
+
+// 玩家系统
+const player = require('./player/player');
 
 // 绘制系统
 const drawer = require('./drawer/drawer');
@@ -123,20 +126,7 @@ class Game {
   }
 
   initGame() {
-    // 玩家状态: idle(站立), charge(蓄力), jump(起跳), rise(上升), fall(下落), land(落地)
-    this.player = {
-      x: this.W / 2 - 32,
-      y: this.H - 100,
-      w: 64,
-      h: 64,
-      vx: 0,
-      vy: 0,
-      facing: 1,
-      state: 'idle',
-      prevState: 'idle',
-      stateTimer: 0,
-      character: characterConfig.current  // 使用当前选中的角色
-    };
+    this.player = player.createPlayer(this.W, this.H);
     this.particles = [];
     this.barrage.clear(); // 清空弹幕
     this.score = 0;
@@ -159,15 +149,12 @@ class Game {
 
   // 更新玩家动画状态
   updatePlayerState() {
-    playerPhysics.updatePlayerState(this.player);
+    player.updatePlayerState(this.player);
   }
 
   // 获取当前角色帧图片
   getPlayerFrame() {
-    if (!this.player) return null;
-    const characterName = this.player.character || characterConfig.current;
-    const state = this.player.state || 'idle';
-    return getCharacterFrame(characterName, state);
+    return player.getPlayerFrame(this.player);
   }
 
   generatePlatforms() {
@@ -177,88 +164,26 @@ class Game {
 
   update() {
     if (this.state !== 'playing' || !this.player) return;
-    const player = this.player;
 
-    playerPhysics.updateHorizontalMovement(player, this.controls);
-    playerPhysics.applyGravity(player);
-    playerPhysics.updatePosition(player, this.W);
+    player.updateHorizontalMovement(this.player, this.controls);
+    player.applyGravity(this.player);
+    player.updatePosition(this.player, this.W);
 
-    if (player.x > this.W) player.x = -player.w;
-    if (player.x + player.w < 0) player.x = this.W;
+    if (this.player.x > this.W) this.player.x = -this.player.w;
+    if (this.player.x + this.player.w < 0) this.player.x = this.W;
 
     // 更新玩家动画状态
     this.updatePlayerState();
 
-    if (playerPhysics.isFalling(player)) {
-      for (let p of this.platforms) {
-        if (platformPhysics.checkCollision(player, p, Date.now())) {
+    player.handlePlatformCollisions(this.player, this.platforms, this, Date.now());
 
-          if (p.type === 'crumble' && !p.crumbling) {
-            p.crumbling = true;
-            const _this = this;
-            setTimeout(function() { p.dead = true; }, 300);
-          }
+    player.updateCamera(this.player, this);
 
-          if (!p.dead) {
-            player.y = p.y - player.h;
-            let jumpForce = platformPhysics.handlePlatformJump(player, p, physics.constants);
-
-            if (p.type === 'boost') {
-              this.spawnParticles(player.x + player.w / 2, player.y + player.h, '#ffdd57', 20);
-              this.shakeTimer = 10;
-              this.barrage.show(player.x, player.y - this.cameraY - 40, "火箭弹射！" + this.playerName + "起飞！！！", '#ffdd57');
-            }
-
-            player.vy = jumpForce;
-            this.combo++;
-            this.controls.canDoubleJump = true;
-            this.controls.hasDoubleJumped = false;
-            this.spawnParticles(player.x + player.w / 2, player.y + player.h, '#74b9ff', 8);
-            this.audio.playJump();
-
-            const now = Date.now();
-            if (now - this.lastPraiseTime > 800) {
-              this.lastPraiseTime = now;
-              if (this.combo > 5) {
-                this.barrage.show(player.x, player.y - this.cameraY - 30, this.combo + "连跳！" + this.playerName + "太强了！", '#ff6b6b');
-              } else {
-                const praise = this.praiseSystem.getRandomPraise();
-                const colors = ['#ffdd57', '#ff6b6b', '#74b9ff', '#55efc4', '#fd79a8', '#ffeaa7'];
-                this.barrage.show(player.x, player.y - this.cameraY - 30, praise, colors[Math.floor(Math.random() * colors.length)]);
-              }
-            }
-          }
-        }
-      }
-    }
-
-    const targetCam = player.y - this.H * 0.4;
-    if (targetCam < this.cameraY) {
-      this.cameraY += (targetCam - this.cameraY) * 0.25;
-    }
-    const playerScreenY = player.y - this.cameraY;
-    if (playerScreenY < 50) {
-      this.cameraY = player.y - 50;
-    }
-
-    const currentHeight = Math.floor((-player.y + this.H - 100) / 10);
-    if (currentHeight > this.maxHeight) {
-      this.maxHeight = currentHeight;
-      this.score = this.maxHeight;
-
-      const milestone = this.praiseSystem.checkMilestone(this.score, this.lastMilestone);
-      if (milestone) {
-        this.lastMilestone = milestone.h;
-        this.barrage.show(this.W / 2 - 100, this.H / 2 - this.cameraY, milestone.msg, '#ff6b6b');
-        this.shakeTimer = 15;
-        this.spawnParticles(this.W / 2, this.H / 2, '#ff6b6b', 30);
-      }
-    }
+    player.updateScore(this.player, this);
 
     this.generatePlatforms();
 
-    if (player.y > this.cameraY + this.H + 100) {
-      this.gameOver();
+    if (player.checkGameOver(this.player, this)) {
       return;
     }
 
