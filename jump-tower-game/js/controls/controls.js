@@ -4,6 +4,7 @@ class Controls {
   constructor(game) {
     this.game = game;
     this.touchStartX = null;
+    this.touchStartY = null;
     this.keys = {};
     this.canDoubleJump = false;
     this.hasDoubleJumped = false;
@@ -21,6 +22,7 @@ class Controls {
       var touches = e.touches;
       if (touches && touches.length > 0) {
         _this.touchStartX = touches[0].clientX;
+        _this.touchStartY = touches[0].clientY;
         var touchX = touches[0].clientX;
         var touchY = touches[0].clientY;
 
@@ -62,7 +64,16 @@ class Controls {
       var touches = e.touches;
       if (touches && touches.length > 0 && _this.touchStartX !== null) {
         var currentX = touches[0].clientX;
+        var currentY = touches[0].clientY;
         var deltaX = currentX - _this.touchStartX;
+        var deltaY = currentY - _this.touchStartY;
+
+        // 滑动下落
+        if (_this.game.state === 'playing' && deltaY > 30 && !_this.keys['ArrowLeft'] && !_this.keys['ArrowRight']) {
+          if (_this.game.player) {
+            _this.game.player.vy = _this.game.SLIDE_FALL_FORCE;
+          }
+        }
 
         if (deltaX < -30) {
           _this.keys['ArrowLeft'] = true;
@@ -82,6 +93,7 @@ class Controls {
       _this.keys['ArrowLeft'] = false;
       _this.keys['ArrowRight'] = false;
       _this.touchStartX = null;
+      _this.touchStartY = null;
     });
   }
 

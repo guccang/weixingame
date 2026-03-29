@@ -81,6 +81,7 @@ class Game {
     this.JUMP_FORCE = -15;
     this.BOOST_JUMP_FORCE = -22;
     this.DOUBLE_JUMP_FORCE = -18;
+    this.SLIDE_FALL_FORCE = 20;
 
     this.score = 0;
     this.maxHeight = 0;

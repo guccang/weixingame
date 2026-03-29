@@ -49,4 +49,7 @@ module.exports = {
   // 相机相关
   CAMERA_SMOOTHING: 0.25,
   PLAYER_SAFE_ZONE: 50,
+
+  // 下滑快速下落力度
+  SLIDE_FALL_FORCE: 20,
 };
