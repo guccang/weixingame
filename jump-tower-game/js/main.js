@@ -192,6 +192,7 @@ class Game {
           if (_this.showCharacterPanel) {
             var selected = _this.checkCharacterSelectClick(touchX, touchY);
             if (selected) {
+              _this.showCharacterPanel = false; // 选择角色后关闭面板
               return; // 点击了角色选择区域
             }
             // 检测是否点击了关闭角色面板（点击其他区域）
@@ -888,54 +889,52 @@ class Game {
       this.ctx.fillRect(0, 0, this.W, this.H);
     }
 
-    // 标题文字
-    this.ctx.fillStyle = '#ffdd57';
-    this.ctx.font = 'bold 36px sans-serif';
-    this.ctx.textAlign = 'center';
-    this.ctx.shadowColor = '#ffaa00';
-    this.ctx.shadowBlur = 20;
-    this.ctx.fillText('万秀彬跳跳楼', this.W / 2, this.H / 2 - 120);
-    this.ctx.shadowBlur = 0;
+    // 如果角色面板显示中，隐藏主页面UI
+    if (!this.showCharacterPanel) {
+      // 标题文字
+      this.ctx.fillStyle = '#ffdd57';
+      this.ctx.font = 'bold 36px sans-serif';
+      this.ctx.textAlign = 'center';
+      this.ctx.shadowColor = '#ffaa00';
+      this.ctx.shadowBlur = 20;
+      this.ctx.fillText('万秀彬跳跳楼', this.W / 2, this.H / 2 - 120);
+      this.ctx.shadowBlur = 0;
 
-    // 副标题
-    this.ctx.fillStyle = '#ff6b6b';
-    this.ctx.font = '20px sans-serif';
-    this.ctx.fillText('💪 健身大佬の极限跳跃 💪', this.W / 2, this.H / 2 - 80);
-    this.ctx.fillStyle = '#74b9ff';
-    this.ctx.font = '16px sans-serif';
-    this.ctx.fillText('看谁跳得高！全程为你疯狂打call！', this.W / 2, this.H / 2 - 50);
+      // 副标题
+      this.ctx.fillStyle = '#ff6b6b';
+      this.ctx.font = '20px sans-serif';
+      this.ctx.fillText('💪 健身大佬の极限跳跃 💪', this.W / 2, this.H / 2 - 80);
+      this.ctx.fillStyle = '#74b9ff';
+      this.ctx.font = '16px sans-serif';
+      this.ctx.fillText('看谁跳得高！全程为你疯狂打call！', this.W / 2, this.H / 2 - 50);
 
-    // 开始按钮
-    const btnWidth = 140;
-    const btnHeight = 50;
-    const btnX = this.W / 2 - btnWidth / 2;
-    const btnY = this.H / 2 + 30;
+      // 开始按钮（位于角色区域下方）
+      const btnWidth = 140;
+      const btnHeight = 50;
+      const btnX = this.W / 2 - btnWidth / 2;
+      const btnY = this.H / 2 + 260;
 
-    // 绘制按钮背景
-    this.ctx.fillStyle = '#00d084';
-    this.ctx.shadowColor = '#00d084';
-    this.ctx.shadowBlur = 15;
-    this.roundRect(btnX, btnY, btnWidth, btnHeight, 25);
-    this.ctx.fill();
-    this.ctx.shadowBlur = 0;
+      // 绘制按钮背景
+      this.ctx.fillStyle = '#00d084';
+      this.ctx.shadowColor = '#00d084';
+      this.ctx.shadowBlur = 15;
+      this.roundRect(btnX, btnY, btnWidth, btnHeight, 25);
+      this.ctx.fill();
+      this.ctx.shadowBlur = 0;
 
-    // 绘制按钮文字
-    this.ctx.fillStyle = '#ffffff';
-    this.ctx.font = 'bold 20px sans-serif';
-    this.ctx.fillText('开始游戏', this.W / 2, btnY + 32);
+      // 绘制按钮文字
+      this.ctx.fillStyle = '#ffffff';
+      this.ctx.font = 'bold 20px sans-serif';
+      this.ctx.fillText('开始游戏', this.W / 2, btnY + 32);
 
-    // 保存开始按钮区域供触摸检测
-    this.startBtnArea = {
-      x: btnX,
-      y: btnY,
-      w: btnWidth,
-      h: btnHeight
-    };
-
-    // 操作提示
-    this.ctx.fillStyle = '#aaa';
-    this.ctx.font = '14px sans-serif';
-    this.ctx.fillText('滑动屏幕左右移动 | 连点两次二段跳', this.W / 2, this.H / 2 + 100);
+      // 保存开始按钮区域供触摸检测
+      this.startBtnArea = {
+        x: btnX,
+        y: btnY,
+        w: btnWidth,
+        h: btnHeight
+      };
+    }
 
     // 底部图标按钮区域
     const iconSize = 50;
