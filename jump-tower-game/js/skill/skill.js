@@ -79,6 +79,12 @@ class ActiveSkill {
       try {
         const audio = wx.createInnerAudioContext();
         audio.src = this.config.sound;
+        audio.onEnded(function() {
+          audio.destroy();
+        });
+        audio.onError(function() {
+          audio.destroy();
+        });
         audio.play();
       } catch (e) {
         console.log('Skill sound play failed:', e);

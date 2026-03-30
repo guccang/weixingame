@@ -6,50 +6,105 @@ const { roundRect } = require('./helper');
 
 /**
  * 绘制职业选择面板
- * @param {CanvasRenderingContext2D} ctx - canvas上下文
- * @param {Object} game - 游戏实例
- * @param {Object} jobConfig - 职业配置
  */
 function drawJobSelect(ctx, game, jobConfig) {
   const { W, H } = game;
-  const selectY = H / 2 + 80;
+  const list = jobConfig.list;
+  const listCount = list.length;
+  const time = Date.now();
+
+  // 呼吸效果
+  const breathe = Math.sin(time * 0.003) * 0.5 + 0.5;
+
+  // 布局参数
+  const cols = 2;
   const selectWidth = 100;
-  const selectHeight = 80;
-  const spacing = 120;
-  const startX = W / 2 - (jobConfig.list.length * spacing) / 2;
+  const selectHeight = 90;
+  const spacingX = 30;
+  const spacingY = 20;
+  const totalWidth = cols * selectWidth + (cols - 1) * spacingX;
+  const startX = (W - totalWidth) / 2;
+  const selectY = H * 0.25;
 
+  // 绘制标题 "职业列表"
   ctx.fillStyle = '#fff';
-  ctx.font = '14px sans-serif';
-  ctx.fillText('选择职业', W / 2, selectY - 20);
+  ctx.font = 'bold 20px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('职业列表', W / 2, selectY - 40);
 
-  for (let i = 0; i < jobConfig.list.length; i++) {
-    const jobName = jobConfig.list[i];
-    const x = startX + i * spacing;
-    const y = selectY;
-    const isSelected = jobConfig.current === jobName;
+  // 绘制职业卡片
+  for (let i = 0; i < listCount; i++) {
+    const jobName = list[i];
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const x = startX + col * (selectWidth + spacingX);
+    const y = selectY + row * (selectHeight + spacingY);
+    const isSelected = game.playerJob === jobName;
+    const jobColor = jobConfig.colors[jobName] || '#ff6b6b';
 
+    // 卡片背景（统一深色）
+    ctx.fillStyle = 'rgba(30, 30, 60, 0.9)';
+    roundRect(ctx, x, y, selectWidth, selectHeight, 8);
+
+    // 选中状态：只加边缘发光 + 呼吸效果
     if (isSelected) {
-      ctx.fillStyle = 'rgba(255, 107, 107, 0.3)';
-      ctx.strokeStyle = '#ff6b6b';
+      ctx.save();
+      ctx.shadowColor = jobColor;
+      ctx.shadowBlur = 10 + breathe * 15;
+      ctx.strokeStyle = jobColor;
       ctx.lineWidth = 3;
+      roundRect(ctx, x, y, selectWidth, selectHeight, 8);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.restore();
     } else {
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
       ctx.lineWidth = 1;
+      roundRect(ctx, x, y, selectWidth, selectHeight, 8);
+      ctx.stroke();
     }
-    roundRect(ctx, x, y, selectWidth, selectHeight, 10);
-    ctx.fill();
-    ctx.stroke();
 
-    ctx.fillStyle = jobConfig.colors[jobName] || '#ff6b6b';
+    // 职业图标圆圈
+    ctx.fillStyle = jobColor;
     ctx.beginPath();
-    ctx.arc(x + selectWidth / 2, y + 25, 18, 0, Math.PI * 2);
+    ctx.arc(x + selectWidth / 2, y + 30, 20, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = isSelected ? '#ffdd57' : '#fff';
+    // 职业名字（居中）
+    ctx.fillStyle = isSelected ? jobColor : '#fff';
     ctx.font = 'bold 14px sans-serif';
+    ctx.textAlign = 'center';
     ctx.fillText(jobName, x + selectWidth / 2, y + selectHeight - 15);
   }
+
+  // 绘制关闭按钮 (X) - 在底部导航上方
+  const closeBtnSize = 40;
+  const closeBtnX = W / 2 - closeBtnSize / 2;
+  const closeBtnY = H - 160; // 底部导航在 H - 100，关闭按钮在其上方
+
+  // 保存关闭按钮区域
+  game.closeJobPanel = { x: closeBtnX, y: closeBtnY, w: closeBtnSize, h: closeBtnSize };
+
+  // 绘制圆形背景
+  ctx.fillStyle = 'rgba(255, 107, 107, 0.8)';
+  ctx.beginPath();
+  ctx.arc(closeBtnX + closeBtnSize / 2, closeBtnY + closeBtnSize / 2, closeBtnSize / 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 绘制 X
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+  const padding = 12;
+  ctx.beginPath();
+  ctx.moveTo(closeBtnX + padding, closeBtnY + padding);
+  ctx.lineTo(closeBtnX + closeBtnSize - padding, closeBtnY + closeBtnSize - padding);
+  ctx.moveTo(closeBtnX + closeBtnSize - padding, closeBtnY + padding);
+  ctx.lineTo(closeBtnX + padding, closeBtnY + closeBtnSize - padding);
+  ctx.stroke();
+  ctx.lineCap = 'butt';
+
+  ctx.textAlign = 'left';
 }
 
 module.exports = {

@@ -99,7 +99,7 @@ function handlePlatformCollisions(player, platforms, game, now) {
     if (platformPhysics.checkCollision(player, p, now, false)) {
       if (p.type === 'crumble' && !p.crumbling) {
         p.crumbling = true;
-        setTimeout(function() { p.dead = true; }, 300);
+        p.crumbleTimer = setTimeout(function(platform) { platform.dead = true; }, 300, p);
       }
 
       if (!p.dead) {

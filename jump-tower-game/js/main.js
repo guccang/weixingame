@@ -108,6 +108,7 @@ class Game {
     this.levelGenerator = new LevelGenerator(); // 关卡生成器
     this.gameMode = new GameMode(); // 游戏模式管理
     this.skillSystem = new SkillSystem(this); // 技能系统
+    this.animationId = null; // 动画帧ID，用于取消动画循环
     this.initStars();
     this.initWxLogin(); // 微信登录获取用户信息
   }
@@ -237,21 +238,22 @@ class Game {
 
   // 检测角色选择点击
   checkCharacterSelectClick(touchX, touchY) {
-    const selectY = this.H / 2 + 80;
+    const list = characterConfig.list;
+    const listCount = list.length;
     const selectWidth = 120;
     const selectHeight = 140;
-    const spacing = 140;
-    const startX = this.W / 2 - spacing - selectWidth / 2;
+    const spacing = 20;
+    const totalWidth = listCount * selectWidth + (listCount - 1) * spacing;
+    const startX = (this.W - totalWidth) / 2;
+    const selectY = this.H * 0.35;
 
-    for (let i = 0; i < characterConfig.list.length; i++) {
-      const charName = characterConfig.list[i];
-      const x = startX + i * spacing;
+    for (let i = 0; i < listCount; i++) {
+      const charName = list[i];
+      const x = startX + i * (selectWidth + spacing);
       const y = selectY;
 
-      // 检测点击是否在角色选择框内
       if (touchX >= x && touchX <= x + selectWidth &&
           touchY >= y && touchY <= y + selectHeight) {
-        // 切换角色
         characterConfig.current = charName;
         loadCharacter(charName);
         this.audio.playClick();
@@ -362,10 +364,19 @@ class Game {
     this.update();
     this.render();
     const _this = this;
-    requestAnimationFrame(function() { _this.loop(); });
+    this.animationId = requestAnimationFrame(function() { _this.loop(); });
+  }
+
+  stopLoop() {
+    if (this.animationId) {
+      cancelAnimationFrame(this.animationId);
+      this.animationId = null;
+    }
   }
 
   start() {
+    // 防止重复启动动画循环
+    if (this.animationId) return;
     this.loop();
   }
 }
