@@ -14,10 +14,6 @@ class Audio {
     this.bgmAudio.volume = 1.0;
     this.bgmAudio.src = 'audio/background_music.mp3';
 
-    // 跳跃音效
-    this.jumpAudio = wx.createInnerAudioContext();
-    this.jumpAudio.src = 'audio/jump.mp3';
-
     // 点击音效
     this.clickAudio = wx.createInnerAudioContext();
     this.clickAudio.src = 'audio/click.mp3';
@@ -44,16 +40,6 @@ class Audio {
       this.bgmPlaying = false;
     } catch (e) {
       console.log('BGM stop failed:', e);
-    }
-  }
-
-  // 播放跳跃音效
-  playJump() {
-    try {
-      this.jumpAudio.currentTime = 0;
-      this.jumpAudio.play();
-    } catch (e) {
-      console.log('Jump sound play failed:', e);
     }
   }
 

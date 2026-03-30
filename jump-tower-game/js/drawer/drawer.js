@@ -35,10 +35,10 @@ function render(game, images, characterConfig, jobConfig) {
   } else if (game.state === 'playing') {
     drawBackground(ctx, W, H, game.cameraY, game.score, game.bgStars);
     drawPlatforms(ctx, game.platforms, game.cameraY);
-    drawPlayer(ctx, game.player, game.cameraY, characterConfig);
+    drawPlayer(ctx, game.player, game.cameraY, characterConfig, game.skillSystem);
     drawParticles(ctx, game.particles, game.cameraY);
     game.barrage.draw(ctx, W);
-    drawUI(ctx, W, H, game.score, game.combo, game.state, game.gameMode);
+    drawUI(ctx, W, H, game.score, game.combo, game.state, game.gameMode, game.chargeCount, game.chargeFull, game.chargeDashing);
   } else if (game.state === 'gameover') {
     drawGameOverScreen(ctx, game);
   }

@@ -2,7 +2,7 @@
  * 玩家绘制模块
  */
 
-const { getCharacterFrame } = require('../character/character');
+const { characterConfig, STATE_TO_FRAME_INDEX } = require('../character/character');
 
 /**
  * 绘制玩家
@@ -10,8 +10,9 @@ const { getCharacterFrame } = require('../character/character');
  * @param {Object} player - 玩家对象
  * @param {number} cameraY - 相机Y偏移
  * @param {Object} characterConfig - 角色配置
+ * @param {Object} skillSystem - 技能系统（可选）
  */
-function drawPlayer(ctx, player, cameraY, characterConfig) {
+function drawPlayer(ctx, player, cameraY, characterConfig, skillSystem) {
   if (!player) return;
   const py = player.y - cameraY;
   const px = player.x;
@@ -19,8 +20,19 @@ function drawPlayer(ctx, player, cameraY, characterConfig) {
 
   // 尝试使用序列帧图片绘制
   const characterName = player.character || characterConfig.current;
-  const state = player.state || 'idle';
-  const frame = getCharacterFrame(characterName, state);
+
+  // 优先使用技能系统的帧索引，否则使用状态映射
+  let frameIndex;
+  if (skillSystem) {
+    frameIndex = skillSystem.getCurrentFrameIndex();
+  } else {
+    const state = player.state || 'idle';
+    frameIndex = STATE_TO_FRAME_INDEX[state] || 0;
+  }
+
+  const frame = characterConfig.frames[characterName]
+    ? characterConfig.frames[characterName][frameIndex]
+    : null;
 
   if (frame && frame.width > 0) {
     // 使用序列帧图片

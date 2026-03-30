@@ -5,6 +5,8 @@ class Controls {
     this.game = game;
     this.touchStartX = null;
     this.touchStartY = null;
+    this.lastDeltaX = 0;
+    this.lastDeltaY = 0;
     this.keys = {};
     this.canDoubleJump = false;
     this.hasDoubleJumped = false;
@@ -26,6 +28,9 @@ class Controls {
         _this.touchStartY = touches[0].clientY;
         var touchX = touches[0].clientX;
         var touchY = touches[0].clientY;
+
+        // 蓄力冲刺期间只记录触摸位置，不处理其他逻辑
+        if (_this.game.chargeDashing) return;
 
         // 在主界面检测按钮和角色选择点击
         if (_this.game.state === 'start') {
@@ -68,21 +73,27 @@ class Controls {
         var deltaX = currentX - _this.touchStartX;
         var deltaY = currentY - _this.touchStartY;
 
-        // 滑动下落
-        if (_this.game.state === 'playing' && deltaY > 30 && !_this.keys['ArrowLeft'] && !_this.keys['ArrowRight'] && !_this.isSlidingDown) {
+        // 保存滑动距离
+        _this.lastDeltaX = deltaX;
+        _this.lastDeltaY = deltaY;
+
+        // 滑动下落（非冲刺期间）
+        if (!_this.game.chargeDashing && _this.game.state === 'playing' && deltaY > 30 && !_this.keys['ArrowLeft'] && !_this.keys['ArrowRight'] && !_this.isSlidingDown) {
           if (_this.game.player) {
-            _this.game.player.vy = _this.game.SLIDE_FALL_FORCE;
+            // 使用技能系统触发下滑
+            _this.game.skillSystem.onGesture(0, deltaY);
             _this.isSlidingDown = true;
           }
         }
 
+        // 左右移动（冲刺期间也允许）
         if (deltaX < -30) {
           _this.keys['ArrowLeft'] = true;
           _this.keys['ArrowRight'] = false;
         } else if (deltaX > 30) {
           _this.keys['ArrowLeft'] = false;
           _this.keys['ArrowRight'] = true;
-        } else {
+        } else if (!_this.game.chargeDashing) {
           _this.keys['ArrowLeft'] = false;
           _this.keys['ArrowRight'] = false;
         }
@@ -91,10 +102,19 @@ class Controls {
 
     // 触摸结束
     wx.onTouchEnd(function(e) {
+      // 处理手势结束时的技能触发
+      if (_this.touchStartX !== null && _this.touchStartY !== null && _this.game.state === 'playing') {
+        // 计算最终滑动方向并触发技能
+        if (!_this.isSlidingDown) {
+          _this.game.skillSystem.onGesture(_this.lastDeltaX, _this.lastDeltaY);
+        }
+      }
       _this.keys['ArrowLeft'] = false;
       _this.keys['ArrowRight'] = false;
       _this.touchStartX = null;
       _this.touchStartY = null;
+      _this.lastDeltaX = 0;
+      _this.lastDeltaY = 0;
       _this.isSlidingDown = false;
     });
   }
@@ -102,9 +122,8 @@ class Controls {
   doDoubleJump() {
     if (!this.game.player || !this.canDoubleJump || this.hasDoubleJumped) return;
     this.hasDoubleJumped = true;
-    this.game.player.vy = this.game.DOUBLE_JUMP_FORCE;
-    this.game.spawnParticles(this.game.player.x + this.game.player.w / 2, this.game.player.y + this.game.player.h, '#fd79a8', 12);
-    this.game.barrage.show(this.game.player.x, this.game.player.y - this.game.cameraY - 30, "二段跳！");
+    // 使用技能系统触发二段跳
+    this.game.skillSystem.triggerDoubleJump();
   }
 
   reset() {
@@ -112,6 +131,8 @@ class Controls {
     this.hasDoubleJumped = false;
     this.tapCount = 0;
     this.lastTapTime = 0;
+    this.lastDeltaX = 0;
+    this.lastDeltaY = 0;
   }
 }
 

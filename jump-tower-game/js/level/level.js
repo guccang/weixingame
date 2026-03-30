@@ -69,9 +69,11 @@ class LevelGenerator {
     }
 
     // 清理屏幕下方不可见的平台
-    this.platforms = this.platforms.filter(
-      p => !p.dead && p.y < cameraY + H + 200
-    );
+    const toRemove = this.platforms.filter(p => p.dead || p.y >= cameraY + H + 200);
+    for (const p of toRemove) {
+      const idx = this.platforms.indexOf(p);
+      if (idx !== -1) this.platforms.splice(idx, 1);
+    }
   }
 
   /**

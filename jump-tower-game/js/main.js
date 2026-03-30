@@ -16,7 +16,7 @@ const H = canvas.height;
 const images = require('./resource/images');
 
 // ==================== 角色序列帧配置 ====================
-const { characterConfig, loadCharacter, getCharacterFrame, switchCharacter, STATE_TO_FRAME_INDEX } = require('./character/character');
+const { characterConfig, loadCharacter, switchCharacter } = require('./character/character');
 
 // 职业配置
 const { jobConfig, jobPraiseMap } = require('./runtime/jobconfig');
@@ -52,6 +52,9 @@ const drawer = require('./drawer/drawer');
 // 关卡生成系统
 const LevelGenerator = require('./level/level');
 
+// 技能系统
+const SkillSystem = require('./skill/skill');
+
 // ==================== 游戏类 ====================
 class Game {
   constructor() {
@@ -73,6 +76,10 @@ class Game {
     this.score = 0;
     this.maxHeight = 0;
     this.combo = 0;
+    this.chargeCount = 0;
+    this.chargeFull = false;
+    this.chargeDashing = false;
+    this.chargeDashEndTime = 0;
     this.cameraY = 0;
     this.lastPraiseTime = 0;
     this.lastMilestone = 0;
@@ -93,6 +100,7 @@ class Game {
     this.audio = new Audio(); // 音效管理
     this.levelGenerator = new LevelGenerator(); // 关卡生成器
     this.gameMode = new GameMode(); // 游戏模式管理
+    this.skillSystem = new SkillSystem(this); // 技能系统
     this.initStars();
     this.initWxLogin(); // 微信登录获取用户信息
   }
@@ -140,10 +148,16 @@ class Game {
     this.lastMilestone = 0;
     this.combo = 0;
     this.shakeTimer = 0;
+    this.chargeCount = 0;
+    this.chargeFull = false;
+    this.chargeDashing = false;
     this.controls.reset(); // 重置控制系统状态
 
     // 初始化游戏模式特定状态
     this.gameMode.initForGame(this);
+
+    // 重置技能系统
+    this.skillSystem.reset();
 
     // 使用关卡生成器初始化
     this.platforms = this.levelGenerator.initLevel(this.W, this.H, characterConfig);
@@ -157,11 +171,6 @@ class Game {
   // 更新玩家动画状态
   updatePlayerState() {
     player.updatePlayerState(this.player);
-  }
-
-  // 获取当前角色帧图片
-  getPlayerFrame() {
-    return player.getPlayerFrame(this.player);
   }
 
   generatePlatforms() {
@@ -194,6 +203,14 @@ class Game {
     player.updateScore(this.player, this);
 
     this.generatePlatforms();
+
+    // 更新被撞飞平台的物理
+    for (const p of this.platforms) {
+      platformPhysics.updatePlatform(p);
+    }
+
+    // 更新技能系统
+    this.skillSystem.update(16.67);
 
     if (player.checkGameOver(this.player, this)) {
       return;
@@ -259,9 +276,13 @@ class Game {
   goToHome() {
     this.state = 'start';
     this.combo = 0;
+    this.chargeCount = 0;
+    this.chargeFull = false;
+    this.chargeDashing = false;
     this.showCharacterPanel = false;
     this.showJobPanel = false;
     this.gameMode.reset();
+    this.skillSystem.reset();
     this.audio.stopBGM();
   }
 

@@ -5,7 +5,7 @@
 
 const physics = require('../physics/physics');
 const { player: playerPhysics, platform: platformPhysics, particle: particlePhysics } = physics;
-const { characterConfig, getCharacterFrame } = require('../character/character');
+const { characterConfig } = require('../character/character');
 
 /**
  * 创建玩家对象
@@ -73,18 +73,6 @@ function isFalling(player) {
 }
 
 /**
- * 获取玩家当前帧图片
- * @param {Object} player - 玩家对象
- * @returns {Image|null}
- */
-function getPlayerFrame(player) {
-  if (!player) return null;
-  const characterName = player.character || characterConfig.current;
-  const state = player.state || 'idle';
-  return getCharacterFrame(characterName, state);
-}
-
-/**
  * 处理玩家与平台的碰撞
  * @param {Object} player - 玩家对象
  * @param {Array} platforms - 平台数组
@@ -92,10 +80,23 @@ function getPlayerFrame(player) {
  * @param {number} now - 当前时间戳
  */
 function handlePlatformCollisions(player, platforms, game, now) {
+  // 蓄力冲刺中：直接撞飞碰到的平台
+  if (game.chargeDashing) {
+    for (let p of platforms) {
+      if (!p.dead && platformPhysics.checkCollision(player, p, now, true)) {
+        p.vy = -20;
+        p.vx = (Math.random() - 0.5) * 15;
+        p.va = (Math.random() - 0.5) * 0.5;
+        p.falling = true;
+      }
+    }
+    return; // 冲刺期间不处理普通跳跃
+  }
+
   if (!isFalling(player)) return;
 
   for (let p of platforms) {
-    if (platformPhysics.checkCollision(player, p, now)) {
+    if (platformPhysics.checkCollision(player, p, now, false)) {
       if (p.type === 'crumble' && !p.crumbling) {
         p.crumbling = true;
         setTimeout(function() { p.dead = true; }, 300);
@@ -105,18 +106,13 @@ function handlePlatformCollisions(player, platforms, game, now) {
         player.y = p.y - player.h;
         let jumpForce = platformPhysics.handlePlatformJump(player, p, physics.constants);
 
-        if (p.type === 'boost') {
-          game.spawnParticles(player.x + player.w / 2, player.y + player.h, '#ffdd57', 20);
-          game.shakeTimer = 10;
-          game.barrage.show(player.x, player.y - game.cameraY - 40, "火箭弹射！" + game.playerName + "起飞！！！", '#ffdd57');
-        }
+        // 使用技能系统触发跳跃（包含粒子、音效、特效）
+        game.skillSystem.onJumpLand(p);
 
         player.vy = jumpForce;
         game.combo++;
         game.controls.canDoubleJump = true;
         game.controls.hasDoubleJumped = false;
-        game.spawnParticles(player.x + player.w / 2, player.y + player.h, '#74b9ff', 8);
-        game.audio.playJump();
 
         if (now - game.lastPraiseTime > 800) {
           game.lastPraiseTime = now;
@@ -190,7 +186,6 @@ module.exports = {
   applyGravity,
   updatePosition,
   isFalling,
-  getPlayerFrame,
   handlePlatformCollisions,
   updateCamera,
   updateScore,

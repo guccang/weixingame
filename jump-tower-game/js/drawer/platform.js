@@ -17,6 +17,14 @@ function drawPlatforms(ctx, platforms, cameraY) {
     const sy = p.y - cameraY;
     if (sy < -20 || sy > ctx.canvas.height + 20) continue;
 
+    // 被撞飞的平台应用旋转
+    if (p.falling && p.va) {
+      ctx.save();
+      ctx.translate(px + p.w / 2, sy + p.h / 2);
+      ctx.rotate(p.angle);
+      ctx.translate(-(px + p.w / 2), -(sy + p.h / 2));
+    }
+
     if (p.crumbling) {
       ctx.globalAlpha = 0.5;
     }
@@ -67,6 +75,10 @@ function drawPlatforms(ctx, platforms, cameraY) {
 
     ctx.shadowBlur = 0;
     ctx.globalAlpha = 1;
+
+    if (p.falling && p.va) {
+      ctx.restore();
+    }
   }
 }
 

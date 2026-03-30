@@ -13,8 +13,11 @@ const { GAME_MODES } = require('../game/constants');
  * @param {number} combo - 连跳数
  * @param {string} state - 游戏状态
  * @param {Object} gameMode - 游戏模式对象
+ * @param {number} chargeCount - 蓄力层数
+ * @param {boolean} chargeFull - 蓄力是否已满
+ * @param {boolean} chargeDashing - 蓄力冲刺中
  */
-function drawUI(ctx, W, H, score, combo, state, gameMode) {
+function drawUI(ctx, W, H, score, combo, state, gameMode, chargeCount, chargeFull, chargeDashing) {
   if (state !== 'playing') return;
   ctx.fillStyle = '#ffdd57';
   ctx.font = 'bold 22px sans-serif';
@@ -34,6 +37,50 @@ function drawUI(ctx, W, H, score, combo, state, gameMode) {
   } else {
     ctx.fillText('🏆 高度: ' + score + 'm', 15, 35);
     ctx.fillText('💪 连跳: ' + combo, 15, 65);
+  }
+
+  // 蓄力冲刺中显示
+  if (chargeDashing) {
+    ctx.fillStyle = '#ff00ff';
+    ctx.shadowColor = '#ff00ff';
+    ctx.shadowBlur = 15;
+    ctx.font = 'bold 18px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('⚡ 蓄力冲刺中 ⚡', W - 15, 65);
+    ctx.shadowBlur = 0;
+  }
+
+  // 蓄力条（冲刺中不显示）
+  if (!chargeDashing) {
+    const chargeBarWidth = 120;
+    const chargeBarHeight = 12;
+    const chargeBarX = W - chargeBarWidth - 15;
+    const chargeBarY = 35;
+    const chargeMax = 6;
+
+    // 蓄力条背景
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.fillRect(chargeBarX, chargeBarY, chargeBarWidth, chargeBarHeight);
+
+    // 蓄力条填充
+    if (chargeFull) {
+      ctx.fillStyle = '#ff00ff';
+      ctx.shadowColor = '#ff00ff';
+      ctx.shadowBlur = 15;
+    } else {
+      ctx.fillStyle = '#55efc4';
+      ctx.shadowColor = '#55efc4';
+      ctx.shadowBlur = 8;
+    }
+    const fillWidth = (chargeCount / chargeMax) * chargeBarWidth;
+    ctx.fillRect(chargeBarX, chargeBarY, fillWidth, chargeBarHeight);
+
+    // 蓄力文字
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = chargeFull ? '#ff00ff' : '#ffffff';
+    ctx.font = 'bold 14px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(chargeFull ? '⚡满蓄力！' : '⚡蓄力 ' + chargeCount + '/' + chargeMax, W - 15, chargeBarY + chargeBarHeight + 18);
   }
 
   ctx.shadowBlur = 0;

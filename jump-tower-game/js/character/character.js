@@ -74,6 +74,5 @@ module.exports = {
   STATE_TO_FRAME_INDEX: STATE_TO_FRAME_INDEX,
   characterConfig: characterConfig,
   loadCharacter: loadCharacter,
-  getCharacterFrame: getCharacterFrame,
   switchCharacter: switchCharacter
 };
