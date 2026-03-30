@@ -40,6 +40,9 @@ const Audio = require('./audio/audio');
 const physics = require('./physics/physics');
 const { platform: platformPhysics, particle: particlePhysics } = physics;
 
+// 平台配置（表格驱动）
+const platformConfig = require('./platform/platformConfig');
+
 // 玩家系统
 const player = require('./player/player');
 

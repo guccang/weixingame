@@ -1,9 +1,11 @@
 /**
  * 平台绘制模块
+ * 使用表格配置的平台图片皮肤
  */
 
 const { roundRect } = require('./helper');
 const { platform: platformPhysics } = require('../physics/physics');
+const platformConfig = require('../platform/platformConfig');
 
 /**
  * 绘制平台
@@ -29,48 +31,28 @@ function drawPlatforms(ctx, platforms, cameraY) {
       ctx.globalAlpha = 0.5;
     }
 
-    if (p.type === 'ground') {
-      const g = ctx.createLinearGradient(px, sy, px, sy + p.h);
-      g.addColorStop(0, '#55efc4');
-      g.addColorStop(1, '#00b894');
-      ctx.fillStyle = g;
-      ctx.shadowColor = '#55efc4';
-      ctx.shadowBlur = 10;
-      roundRect(ctx, px, sy, p.w, p.h, 4);
-    } else if (p.type === 'boost') {
-      const g = ctx.createLinearGradient(px, sy, px, sy + p.h);
-      g.addColorStop(0, '#ffdd57');
-      g.addColorStop(1, '#ffa502');
-      ctx.fillStyle = g;
-      ctx.shadowColor = '#ffdd57';
-      ctx.shadowBlur = 15;
-      roundRect(ctx, px, sy, p.w, p.h, 4);
-      ctx.fillStyle = '#fff';
-      ctx.font = 'bold 10px sans-serif';
-      ctx.fillText('↑↑', px + p.w / 2 - 10, sy + 11);
-    } else if (p.type === 'crumble') {
-      ctx.fillStyle = '#b2bec3';
-      ctx.shadowColor = '#636e72';
-      ctx.shadowBlur = 5;
-      for (let i = 0; i < 3; i++) {
-        ctx.fillRect(px + i * 30, sy + (i % 2) * 3, 25, p.h - (i % 2) * 3);
+    // 尝试使用图片绘制
+    const img = platformConfig.getImage(p.skinId);
+    if (img && img.complete && img.width > 0) {
+      // 使用图片绘制
+      ctx.drawImage(img, px, sy, p.w, p.h);
+
+      // boost 类型添加特效
+      if (p.type === 'boost') {
+        ctx.shadowColor = '#ffdd57';
+        ctx.shadowBlur = 15;
+        ctx.fillStyle = 'rgba(255, 221, 87, 0.3)';
+        ctx.fillRect(px, sy, p.w, p.h);
+        ctx.shadowBlur = 0;
+
+        // 添加箭头指示
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 10px sans-serif';
+        ctx.fillText('↑↑', px + p.w / 2 - 10, sy + 11);
       }
-    } else if (p.type === 'moving') {
-      const g = ctx.createLinearGradient(px, sy, px, sy + p.h);
-      g.addColorStop(0, '#a29bfe');
-      g.addColorStop(1, '#6c5ce7');
-      ctx.fillStyle = g;
-      ctx.shadowColor = '#a29bfe';
-      ctx.shadowBlur = 10;
-      roundRect(ctx, px, sy, p.w, p.h, 4);
     } else {
-      const g = ctx.createLinearGradient(px, sy, px, sy + p.h);
-      g.addColorStop(0, '#74b9ff');
-      g.addColorStop(1, '#0984e3');
-      ctx.fillStyle = g;
-      ctx.shadowColor = '#74b9ff';
-      ctx.shadowBlur = 8;
-      roundRect(ctx, px, sy, p.w, p.h, 4);
+      // 回退到颜色绘制
+      drawWithGradient(ctx, p, px, sy);
     }
 
     ctx.shadowBlur = 0;
@@ -79,6 +61,56 @@ function drawPlatforms(ctx, platforms, cameraY) {
     if (p.falling && p.va) {
       ctx.restore();
     }
+  }
+}
+
+/**
+ * 使用颜色渐变绘制平台（回退方案）
+ */
+function drawWithGradient(ctx, p, px, sy) {
+  if (p.type === 'ground') {
+    const g = ctx.createLinearGradient(px, sy, px, sy + p.h);
+    g.addColorStop(0, '#55efc4');
+    g.addColorStop(1, '#00b894');
+    ctx.fillStyle = g;
+    ctx.shadowColor = '#55efc4';
+    ctx.shadowBlur = 10;
+    roundRect(ctx, px, sy, p.w, p.h, 4);
+  } else if (p.type === 'boost') {
+    const g = ctx.createLinearGradient(px, sy, px, sy + p.h);
+    g.addColorStop(0, '#ffdd57');
+    g.addColorStop(1, '#ffa502');
+    ctx.fillStyle = g;
+    ctx.shadowColor = '#ffdd57';
+    ctx.shadowBlur = 15;
+    roundRect(ctx, px, sy, p.w, p.h, 4);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 10px sans-serif';
+    ctx.fillText('↑↑', px + p.w / 2 - 10, sy + 11);
+  } else if (p.type === 'crumble') {
+    ctx.fillStyle = '#b2bec3';
+    ctx.shadowColor = '#636e72';
+    ctx.shadowBlur = 5;
+    for (let i = 0; i < 3; i++) {
+      ctx.fillRect(px + i * 30, sy + (i % 2) * 3, 25, p.h - (i % 2) * 3);
+    }
+  } else if (p.type === 'moving') {
+    const g = ctx.createLinearGradient(px, sy, px, sy + p.h);
+    g.addColorStop(0, '#a29bfe');
+    g.addColorStop(1, '#6c5ce7');
+    ctx.fillStyle = g;
+    ctx.shadowColor = '#a29bfe';
+    ctx.shadowBlur = 10;
+    roundRect(ctx, px, sy, p.w, p.h, 4);
+  } else {
+    // normal 和其他类型
+    const g = ctx.createLinearGradient(px, sy, px, sy + p.h);
+    g.addColorStop(0, '#74b9ff');
+    g.addColorStop(1, '#0984e3');
+    ctx.fillStyle = g;
+    ctx.shadowColor = '#74b9ff';
+    ctx.shadowBlur = 8;
+    roundRect(ctx, px, sy, p.w, p.h, 4);
   }
 }
 

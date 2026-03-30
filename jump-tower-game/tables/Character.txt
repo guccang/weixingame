@@ -1,0 +1,5 @@
+INT	STRING	STRING
+#序号	角色名字	跳跃序列帧文件夹
+#Id	Name	JumpFolder
+1	钢铁侠	ironman
+2	教练	coach

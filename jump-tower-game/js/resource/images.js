@@ -27,15 +27,14 @@ function loadImage(name, src) {
 }
 
 function loadAllImages() {
-  loadImage('bgMain', 'images/bg_main.png');
-  loadImage('bgShop', 'images/bg_shop.png');
-  loadImage('iconCharacter', 'images/icon_character.png');
-  loadImage('iconCoin', 'images/icon_coin.png');
-  loadImage('iconLeaderboard', 'images/icon_leaderboard.png');
-  loadImage('iconShop', 'images/icon_shop.png');
+  loadImage('bgMain', 'images/ui_main/bg_main.png');
+  loadImage('bgShop', 'images/ui_main/bg_shop.png');
+  loadImage('iconCharacter', 'images/ui_main/icon_character.png');
+  loadImage('iconCoin', 'images/ui_main/icon_coin.png');
+  loadImage('iconLeaderboard', 'images/ui_main/icon_leaderboard.png');
+  loadImage('iconShop', 'images/ui_main/icon_shop.png');
 }
 
-// 立即加载所有图片
 loadAllImages();
 
 module.exports = images;

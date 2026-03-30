@@ -1,10 +1,10 @@
-import Emitter from '../libs/tinyemitter';
-import { SCREEN_WIDTH, SCREEN_HEIGHT } from '../render';
+const Emitter = require('../libs/tinyemitter');
+const { SCREEN_WIDTH, SCREEN_HEIGHT } = require('../render');
 
 const atlas = wx.createImage();
 atlas.src = 'images/Common.png';
 
-export default class GameInfo extends Emitter {
+class GameInfo extends Emitter {
   constructor() {
     super();
 
@@ -15,7 +15,6 @@ export default class GameInfo extends Emitter {
       endY: SCREEN_HEIGHT / 2 - 100 + 255,
     };
 
-    // 返回主页按钮区域
     this.homeBtnArea = {
       startX: SCREEN_WIDTH / 2 - 40,
       startY: SCREEN_HEIGHT / 2 - 100 + 255,
@@ -23,8 +22,7 @@ export default class GameInfo extends Emitter {
       endY: SCREEN_HEIGHT / 2 - 100 + 310,
     };
 
-    // 绑定触摸事件
-    wx.onTouchStart(this.touchEventHandler.bind(this))
+    wx.onTouchStart(this.touchEventHandler.bind(this));
   }
 
   setFont(ctx) {
@@ -33,11 +31,9 @@ export default class GameInfo extends Emitter {
   }
 
   render(ctx) {
-    this.renderGameScore(ctx, GameGlobal.databus.score); // 绘制当前分数
-
-    // 游戏结束时停止帧循环并显示游戏结束画面
+    this.renderGameScore(ctx, GameGlobal.databus.score);
     if (GameGlobal.databus.isGameOver) {
-      this.renderGameOver(ctx, GameGlobal.databus.score); // 绘制游戏结束画面
+      this.renderGameOver(ctx, GameGlobal.databus.score);
     }
   }
 
@@ -56,94 +52,52 @@ export default class GameInfo extends Emitter {
   drawGameOverImage(ctx) {
     ctx.drawImage(
       atlas,
-      0,
-      0,
-      119,
-      108,
+      0, 0, 119, 108,
       SCREEN_WIDTH / 2 - 150,
       SCREEN_HEIGHT / 2 - 100,
-      300,
-      300
+      300, 300
     );
   }
 
   drawGameOverText(ctx, score) {
     this.setFont(ctx);
-    ctx.fillText(
-      '游戏结束',
-      SCREEN_WIDTH / 2 - 40,
-      SCREEN_HEIGHT / 2 - 100 + 50
-    );
-    ctx.fillText(
-      `得分: ${score}`,
-      SCREEN_WIDTH / 2 - 40,
-      SCREEN_HEIGHT / 2 - 100 + 130
-    );
+    ctx.fillText('游戏结束', SCREEN_WIDTH / 2 - 40, SCREEN_HEIGHT / 2 - 100 + 50);
+    ctx.fillText('得分: ' + score, SCREEN_WIDTH / 2 - 40, SCREEN_HEIGHT / 2 - 100 + 130);
   }
 
   drawRestartButton(ctx) {
-    ctx.drawImage(
-      atlas,
-      120,
-      6,
-      39,
-      24,
-      SCREEN_WIDTH / 2 - 60,
-      SCREEN_HEIGHT / 2 - 100 + 180,
-      120,
-      40
-    );
-    ctx.fillText(
-      '重新开始',
-      SCREEN_WIDTH / 2 - 40,
-      SCREEN_HEIGHT / 2 - 100 + 205
-    );
+    ctx.drawImage(atlas, 120, 6, 39, 24, SCREEN_WIDTH / 2 - 60, SCREEN_HEIGHT / 2 - 100 + 180, 120, 40);
+    ctx.fillText('重新开始', SCREEN_WIDTH / 2 - 40, SCREEN_HEIGHT / 2 - 100 + 205);
   }
 
   drawHomeButton(ctx) {
-    ctx.drawImage(
-      atlas,
-      120,
-      6,
-      39,
-      24,
-      SCREEN_WIDTH / 2 - 60,
-      SCREEN_HEIGHT / 2 - 100 + 255,
-      120,
-      40
-    );
-    ctx.fillText(
-      '返回主页',
-      SCREEN_WIDTH / 2 - 40,
-      SCREEN_HEIGHT / 2 - 100 + 280
-    );
+    ctx.drawImage(atlas, 120, 6, 39, 24, SCREEN_WIDTH / 2 - 60, SCREEN_HEIGHT / 2 - 100 + 255, 120, 40);
+    ctx.fillText('返回主页', SCREEN_WIDTH / 2 - 40, SCREEN_HEIGHT / 2 - 100 + 280);
   }
 
   touchEventHandler(event) {
-    const { clientX, clientY } = event.touches[0]; // 获取触摸点的坐标
+    const clientX = event.touches[0].clientX;
+    const clientY = event.touches[0].clientY;
 
-    // 当前只有游戏结束时展示了UI，所以只处理游戏结束时的状态
     if (GameGlobal.databus.isGameOver) {
-      // 检查触摸是否在重新开始按钮区域内
       if (
         clientX >= this.btnArea.startX &&
         clientX <= this.btnArea.endX &&
         clientY >= this.btnArea.startY &&
         clientY <= this.btnArea.endY
       ) {
-        // 调用重启游戏的回调函数
         this.emit('restart');
       }
-      // 检查触摸是否在返回主页按钮区域内
       if (
         clientX >= this.homeBtnArea.startX &&
         clientX <= this.homeBtnArea.endX &&
         clientY >= this.homeBtnArea.startY &&
         clientY <= this.homeBtnArea.endY
       ) {
-        // 调用返回主页的回调函数
         this.emit('home');
       }
     }
   }
 }
+
+module.exports = GameInfo;

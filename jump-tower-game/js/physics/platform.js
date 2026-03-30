@@ -1,29 +1,45 @@
 /**
  * 平台物理系统
+ * 使用表格配置的平台属性
  */
+
+const platformConfig = require('../platform/platformConfig');
 
 /**
  * 创建平台
  * @param {number} x - x坐标
  * @param {number} y - y坐标
  * @param {string} type - 平台类型: normal, boost, moving, crumble, ground
+ * @param {Object} skinConfig - 可选的皮肤配置（从表格获取）
  * @returns {Object} 平台对象
  */
-function createPlatform(x, y, type) {
+function createPlatform(x, y, type, skinConfig) {
+  // 如果没有提供皮肤配置，随机获取一个
+  if (!skinConfig) {
+    skinConfig = platformConfig.getRandomByType(type);
+  }
+
   return {
     x,
     y,
     w: 85,
     h: 14,
     type: type || 'normal',
+    // 皮肤配置（从表格）
+    skinId: skinConfig ? skinConfig.Id : 0,
+    skinName: skinConfig ? skinConfig.Name : '',
+    bounceForce: skinConfig ? skinConfig.BounceForce : 1.0,
+    moveSpeed: skinConfig ? skinConfig.MoveSpeed : 0,
+    moveRange: skinConfig ? skinConfig.MoveRange : 0,
+    // 状态
     bounced: false,
     crumbling: false,
     dead: false,
     vx: 0,
     vy: 0,
     falling: false,
-    angle: 0,  // 旋转角度
-    va: 0      // 角速度
+    angle: 0,
+    va: 0
   };
 }
 
@@ -34,8 +50,11 @@ function createPlatform(x, y, type) {
  * @returns {number} 当前x坐标
  */
 function getMovingPlatformX(platform, time) {
-  if (platform.type === 'moving' && !platform.falling) {
-    return platform.x + Math.sin(time * 0.003 + platform.y) * 60;
+  if (platform.type === 'moving' && !platform.falling && platform.moveRange > 0) {
+    // 使用表格配置的移动速度和范围
+    const speed = platform.moveSpeed || 3.0;
+    const range = platform.moveRange || 60;
+    return platform.x + Math.sin(time * 0.001 * speed + platform.y) * range;
   }
   return platform.x;
 }
@@ -48,21 +67,15 @@ function updatePlatform(platform) {
   if (!platform.falling) return;
   platform.x += platform.vx;
   platform.y += platform.vy;
-  platform.vy += 0.5; // 重力
+  platform.vy += 0.5;
   platform.angle += platform.va;
 }
 
 /**
  * 检测玩家与平台的碰撞
- * @param {Object} player - 玩家对象
- * @param {Object} platform - 平台对象
- * @param {number} time - 当前时间戳
- * @param {boolean} isChargingDash - 是否在蓄力冲刺中
- * @returns {boolean} 是否碰撞
  */
 function checkCollision(player, platform, time, isChargingDash) {
   const px = getMovingPlatformX(platform, time);
-  // 蓄力冲刺时扩大垂直容差，避免快速移动穿透平台
   const vyTolerance = isChargingDash ? Math.abs(player.vy) + 50 : player.vy + 5;
   return (
     player.x + player.w > px &&
@@ -80,17 +93,26 @@ function checkCollision(player, platform, time, isChargingDash) {
  * @returns {number} 跳跃力度
  */
 function handlePlatformJump(player, platform, physics) {
-  let jumpForce = physics.JUMP_FORCE;
+  // 使用表格配置的弹跳力
+  const bounceMultiplier = platform.bounceForce || 1.0;
+  return physics.JUMP_FORCE * bounceMultiplier;
+}
 
-  if (platform.type === 'boost') {
-    jumpForce = physics.BOOST_JUMP_FORCE;
-  }
-
-  return jumpForce;
+/**
+ * 根据类型随机创建平台（带皮肤）
+ * @param {number} x - x坐标
+ * @param {number} y - y坐标
+ * @param {string} type - 平台类型
+ * @returns {Object} 平台对象
+ */
+function createPlatformWithSkin(x, y, type) {
+  const skinConfig = platformConfig.getRandomByType(type);
+  return createPlatform(x, y, type, skinConfig);
 }
 
 module.exports = {
   createPlatform,
+  createPlatformWithSkin,
   getMovingPlatformX,
   checkCollision,
   handlePlatformJump,
