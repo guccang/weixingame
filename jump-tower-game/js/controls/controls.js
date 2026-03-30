@@ -10,6 +10,7 @@ class Controls {
     this.hasDoubleJumped = false;
     this.tapCount = 0;
     this.lastTapTime = 0;
+    this.isSlidingDown = false;
 
     this.initInput();
   }
@@ -68,9 +69,10 @@ class Controls {
         var deltaY = currentY - _this.touchStartY;
 
         // 滑动下落
-        if (_this.game.state === 'playing' && deltaY > 30 && !_this.keys['ArrowLeft'] && !_this.keys['ArrowRight']) {
+        if (_this.game.state === 'playing' && deltaY > 30 && !_this.keys['ArrowLeft'] && !_this.keys['ArrowRight'] && !_this.isSlidingDown) {
           if (_this.game.player) {
             _this.game.player.vy = _this.game.SLIDE_FALL_FORCE;
+            _this.isSlidingDown = true;
           }
         }
 
@@ -93,6 +95,7 @@ class Controls {
       _this.keys['ArrowRight'] = false;
       _this.touchStartX = null;
       _this.touchStartY = null;
+      _this.isSlidingDown = false;
     });
   }
 
