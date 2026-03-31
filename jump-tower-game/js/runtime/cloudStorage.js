@@ -2,7 +2,7 @@
  * 微信云存储模块 - 使用云数据库存储游戏成绩数据
  */
 
-const DB_NAME = 'jumpdatabase'; // 云数据库名称
+const DB_NAME = 'jumpdatabase'; // 云数据库名称（仅用于标识）
 const COLLECTION_NAME = 'game_records'; // 集合名称
 
 let db = null;
@@ -10,9 +10,9 @@ let db = null;
 // 初始化云数据库
 function initCloudDB() {
   if (!db && wx.cloud) {
-    wx.cloud.init({
-      env: 'jumpdatabase' // 指定环境ID
-    });
+    // 环境ID请在微信云开发控制台获取，格式如: cloud1-xxxxx 或自定义环境名
+    // 这里使用空字符串让云开发自动使用默认环境
+    wx.cloud.init({});
     db = wx.cloud.database();
   }
   return db;
