@@ -26,17 +26,20 @@ function drawUI(ctx, W, H, score, combo, state, gameMode, chargeCount, chargeFul
   ctx.shadowBlur = 10;
 
   // 竞速模式显示倒计时
+  // 注意：顶部留出安全区域，避开刘海屏和微信右上角按钮
+  const safeTop = 60; // 顶部安全距离
+
   if (gameMode.gameMode === GAME_MODES.TIME_ATTACK) {
     const timeRemaining = gameMode.timeRemaining;
     const seconds = Math.ceil(timeRemaining / 1000);
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    ctx.fillText('⏱️ ' + mins + ':' + secs.toString().padStart(2, '0'), 15, 35);
-    ctx.fillText('🏆 ' + score + 'm', 15, 65);
-    ctx.fillText('💪 ' + combo, 15, 95);
+    ctx.fillText('⏱️ ' + mins + ':' + secs.toString().padStart(2, '0'), 15, safeTop);
+    ctx.fillText('🏆 ' + score + 'm', 15, safeTop + 30);
+    ctx.fillText('💪 ' + combo, 15, safeTop + 60);
   } else {
-    ctx.fillText('🏆 高度: ' + score + 'm', 15, 35);
-    ctx.fillText('💪 连跳: ' + combo, 15, 65);
+    ctx.fillText('🏆 高度: ' + score + 'm', 15, safeTop);
+    ctx.fillText('💪 连跳: ' + combo, 15, safeTop + 30);
   }
 
   // 蓄力冲刺中显示
@@ -46,16 +49,17 @@ function drawUI(ctx, W, H, score, combo, state, gameMode, chargeCount, chargeFul
     ctx.shadowBlur = 15;
     ctx.font = 'bold 18px sans-serif';
     ctx.textAlign = 'right';
-    ctx.fillText('⚡ 蓄力冲刺中 ⚡', W - 15, 65);
+    ctx.fillText('⚡ 蓄力冲刺中 ⚡', W - 15, safeTop + 30);
     ctx.shadowBlur = 0;
   }
 
-  // 蓄力条（冲刺中不显示）
+  // 蓄力条（冲刺中不显示，与连跳文字底端对齐）
   if (!chargeDashing) {
     const chargeBarWidth = 120;
     const chargeBarHeight = 12;
     const chargeBarX = W - chargeBarWidth - 15;
-    const chargeBarY = 35;
+    // 蓄力条与连跳文字底端对齐（连跳在safeTop+30，字体约22px，底部约safeTop+30+7=safeTop+37）
+    const chargeBarY = safeTop + 30 + 7 - chargeBarHeight;
     const chargeMax = 6;
 
     // 蓄力条背景

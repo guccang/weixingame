@@ -22,8 +22,8 @@ function createPlatform(x, y, type, skinConfig) {
   return {
     x,
     y,
-    w: 85,
-    h: 14,
+    w: 100,
+    h: 25,
     type: type || 'normal',
     // 皮肤配置（从表格）
     skinId: skinConfig ? skinConfig.Id : 0,

@@ -27,7 +27,10 @@
       "Bash(cp \"D:/GitWechatGame/art-assets/output/coach_\"*.png \"D:/GitWechatGame/jump-tower-game/images/characters/coach/\")",
       "Bash(python \"D:/GitWechatGame/.claude/skills/art-prompt-workflow/scripts/split_atlas.py\" \"D:/GitWechatGame/art-assets/atlas/Gemini_Generated_Image_5m76tg5m76tg5m76.png\" \"D:/GitWechatGame/art-assets/specs/ratio_1_1_coach.json\" \"D:/GitWechatGame/art-assets/output/\" --no-rembg)",
       "Bash(python tools/table_converter.py)",
-      "Bash(node --check js/main.js)"
+      "Bash(node --check js/main.js)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)",
+      "Bash(git add:*)"
     ]
   }
 }

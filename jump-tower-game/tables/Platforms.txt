@@ -1,11 +1,8 @@
 INT	STRING	STRING	STRING	FLOAT	FLOAT	FLOAT
 #序号	平台名称	资源路径	类型	弹跳力	移动速度	移动范围
 #Id	Name	ResPath	Type	BounceForce	MoveSpeed	MoveRange
-1	糖果平台	images/platforms/candy_platform.png	normal	1.0	0	0
-2	云朵平台	images/platforms/cloud_platform.png	boost	1.5	0	0
-3	草地平台	images/platforms/grass_platform.png	normal	1.0	0	0
-4	冰面平台	images/platforms/ice_platform.png	slippery	1.0	0	0
-5	金属平台	images/platforms/metal_platform.png	normal	1.0	0	0
-6	岩石平台	images/platforms/rock_platform.png	crumble	0.8	0	0
-7	沙地平台	images/platforms/sand_platform.png	normal	0.9	0	0
-8	木质平台	images/platforms/wood_platform.png	moving	1.0	3.0	100
+1	普通台子	images/platforms/platform_normal.png	normal	1.0	0	0
+2	冰块台子	images/platforms/platform_ice.png	normal	1.0	0	0
+3	岩石台子	images/platforms/platform_rock.png	crumble	0.8	0	0
+4	移动台子	images/platforms/platform_moving.png	moving	1.0	3.0	100
+5	弹跳台子	images/platforms/platform_moving.png	boost	1.5	0	0

@@ -37,18 +37,25 @@ function drawPlatforms(ctx, platforms, cameraY) {
       // 使用图片绘制
       ctx.drawImage(img, px, sy, p.w, p.h);
 
-      // boost 类型添加特效
+      // boost 类型添加中心方块发光特效（呼吸感）
       if (p.type === 'boost') {
-        ctx.shadowColor = '#ffdd57';
-        ctx.shadowBlur = 15;
-        ctx.fillStyle = 'rgba(255, 221, 87, 0.3)';
-        ctx.fillRect(px, sy, p.w, p.h);
-        ctx.shadowBlur = 0;
+        const time = Date.now() * 0.005;
+        const breathe = 0.5 + 0.5 * Math.sin(time); // 0~1 呼吸效果
+        const glowIntensity = 15 + breathe * 20; // 15~35
+        const alpha = 0.15 + breathe * 0.15; // 0.15~0.3
 
-        // 添加箭头指示
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 10px sans-serif';
-        ctx.fillText('↑↑', px + p.w / 2 - 10, sy + 11);
+        // 中心发光方块（比原图小一些，位置中央偏上）
+        const margin = p.w * 0.15; // 缩小15%
+        const innerX = px + margin;
+        const innerY = sy + p.h * 0.1; // 靠上位置
+        const innerW = p.w - margin * 2;
+        const innerH = p.h * 0.5;
+
+        ctx.shadowColor = '#ffdd57';
+        ctx.shadowBlur = glowIntensity;
+        ctx.fillStyle = `rgba(255, 221, 87, ${alpha})`;
+        ctx.fillRect(innerX, innerY, innerW, innerH);
+        ctx.shadowBlur = 0;
       }
     } else {
       // 回退到颜色绘制

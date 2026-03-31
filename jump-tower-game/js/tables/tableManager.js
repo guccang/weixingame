@@ -58,7 +58,7 @@ class TableManager {
   _checkAndCopyData() {
     const fs = wx.getFileSystemManager();
     const versionFile = this.tableDir + "/.version";
-    const currentVersion = "20260331021807";
+    const currentVersion = "20260331134537";
 
     let needCopy = false;
     try {

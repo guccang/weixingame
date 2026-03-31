@@ -22,12 +22,17 @@ class LevelGenerator {
     platforms.push(ground);
 
     // 初始平台 (12个)
+    // normal类型：普通台子和冰块台子随机出现（表格配置）
+    // crumble类型：岩石台子，踩中消失
+    // moving类型：移动的台子
+    // boost类型：弹跳台子（暂时用moving资源）
     for (let i = 0; i < 12; i++) {
       let px = Math.random() * (W - 100) + 10;
       let py = H - 100 - i * 70;
       let type = 'normal';
-      if (i > 4 && Math.random() < 0.2) type = 'boost';
+      if (i > 4 && Math.random() < 0.15) type = 'boost';
       if (i > 6 && Math.random() < 0.15) type = 'moving';
+      if (i > 8 && Math.random() < 0.1) type = 'crumble';
       platforms.push(platformPhysics.createPlatformWithSkin(px, py, type));
     }
 
@@ -50,8 +55,13 @@ class LevelGenerator {
       let type = 'normal';
       const h = -ny;
 
-      if (h > 300 && Math.random() < 0.25) type = 'boost';
-      if (h > 200 && Math.random() < 0.2) type = 'moving';
+      // 平台类型生成概率
+      // normal：普通台子和冰块台子随机出现（表格配置）
+      // boost：弹跳台子（暂时用moving资源）
+      // moving：移动的台子
+      // crumble：岩石台子，踩中消失
+      if (h > 300 && Math.random() < 0.15) type = 'boost';
+      if (h > 200 && Math.random() < 0.15) type = 'moving';
       if (h > 800 && Math.random() < 0.1) type = 'crumble';
 
       this.platforms.push(platformPhysics.createPlatformWithSkin(nx, ny, type));
