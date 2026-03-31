@@ -10,9 +10,9 @@ let db = null;
 // 初始化云数据库
 function initCloudDB() {
   if (!db && wx.cloud) {
-    // 环境ID请在微信云开发控制台获取，格式如: cloud1-xxxxx 或自定义环境名
-    // 这里使用空字符串让云开发自动使用默认环境
-    wx.cloud.init({});
+    wx.cloud.init({
+      env: 'cloud1-9gazfwmccd451101'
+    });
     db = wx.cloud.database();
   }
   return db;

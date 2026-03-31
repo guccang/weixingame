@@ -4,7 +4,9 @@ let loginCallback = null;
 // 初始化云开发
 function initCloud() {
   if (wx.cloud) {
-    wx.cloud.init({});
+    wx.cloud.init({
+      env: 'cloud1-9gazfwmccd451101'
+    });
     console.log('云开发初始化成功');
   }
 }
