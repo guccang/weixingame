@@ -19,11 +19,19 @@ function createPlatform(x, y, type, skinConfig) {
     skinConfig = platformConfig.getRandomByType(type);
   }
 
+  // 基础尺寸
+  const baseW = 100;
+  const baseH = 25;
+
+  // 获取缩放系数
+  const scale = skinConfig ? (skinConfig.Scale || 1.0) : 1.0;
+
   return {
     x,
     y,
-    w: 100,
-    h: 25,
+    w: baseW * scale,
+    h: baseH * scale,
+    scale,
     type: type || 'normal',
     // 皮肤配置（从表格）
     skinId: skinConfig ? skinConfig.Id : 0,

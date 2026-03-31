@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-表格转换工具 - 生成表格数据结构和初始数据
+表格转换工具 - 生成表格数据结构和配置
 生成的文件：
   1. tableConfig.js - 表格元数据配置
   2. tableStruct.js - 数据结构类定义
-  3. tableData.js - 初始数据（用于首次启动复制到用户目录）
-  4. tableManager.js - 表格管理器（自动复制+加载）
+  3. tableManager.js - 表格管理器（直接从.txt文件读取数据）
+
+注意：不再生成 tableData.js，数据直接从 tables/*.txt 文件读取
 """
 
 import os
@@ -211,52 +212,16 @@ def generate_table_struct(tables_info):
     return '\n'.join(lines)
 
 
-def generate_table_data(tables_info):
-    """生成初始数据文件"""
-    lines = [
-        '/**',
-        ' * 表格初始数据 - 自动生成',
-        ' * 首次启动时会复制到用户目录',
-        f' * 生成时间: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}',
-        ' */',
-        '',
-    ]
-
-    for table_name, info in tables_info.items():
-        fields = info['fields']
-        types = info['types']
-        rows = info['rows']
-
-        lines.append(f'const {table_name}Data = [')
-        for row in rows:
-            row_parts = []
-            for i, field in enumerate(fields):
-                field_type = types[i] if i < len(types) else 'STRING'
-                value = row.get(field, '')
-                js_value = get_js_value(value, field_type)
-                row_parts.append(f'{field}: {js_value}')
-            lines.append('  {' + ', '.join(row_parts) + '},')
-        lines.append('];')
-        lines.append('')
-
-    lines.append('module.exports = {')
-    for table_name in tables_info.keys():
-        lines.append(f'  {table_name}Data,')
-    lines.append('};')
-
-    return '\n'.join(lines)
-
-
 def generate_table_manager(tables_info):
-    """生成表格管理器"""
+    """生成表格管理器 - 直接从 .txt 文件读取数据"""
     lines = [
         '/**',
         ' * 表格数据管理器',
-        ' * 首次启动时将数据复制到用户目录，之后从用户目录加载',
+        ' * 直接从 tables/*.txt 文件读取数据',
+        f' * 生成时间: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}',
         ' */',
         '',
         "const { TableConfigs } = require('./tableConfig');",
-        "const initialData = require('./tableData');",
         '',
     ]
 
@@ -271,25 +236,17 @@ def generate_table_manager(tables_info):
         '    this.tables = {};',
         '    this.maps = {};',
         '    this.initialized = false;',
-        '    this.userDataPath = wx.env.USER_DATA_PATH;',
-        '    this.tableDir = this.userDataPath + "/game_tables";',
         '  }',
         '',
         '  /**',
-        '   * 初始化：确保用户目录有数据，然后加载',
+        '   * 初始化：直接从 .txt 文件加载所有表格',
         '   */',
         '  init() {',
         '    if (this.initialized) return;',
         '',
-        '    // 确保表格目录存在',
-        '    this._ensureTableDir();',
-        '',
-        '    // 检查并复制初始数据',
-        '    this._checkAndCopyData();',
-        '',
         '    // 加载所有表格',
         '    for (const tableName in TableConfigs) {',
-        '      this._loadTable(tableName);',
+        '      this._loadTableFromTxt(tableName);',
         '    }',
         '',
         '    this.initialized = true;',
@@ -297,67 +254,47 @@ def generate_table_manager(tables_info):
         '  }',
         '',
         '  /**',
-        '   * 确保表格目录存在',
+        '   * 从 .txt 文件加载表格',
         '   */',
-        '  _ensureTableDir() {',
-        '    const fs = wx.getFileSystemManager();',
-        '    try {',
-        '      fs.accessSync(this.tableDir);',
-        '    } catch (e) {',
-        '      fs.mkdirSync(this.tableDir, true);',
-        '      console.log("[TableManager] 创建表格目录:", this.tableDir);',
-        '    }',
-        '  }',
-        '',
-        '  /**',
-        '   * 检查并复制初始数据到用户目录',
-        '   */',
-        '  _checkAndCopyData() {',
-        '    const fs = wx.getFileSystemManager();',
-        '    const versionFile = this.tableDir + "/.version";',
-        '    const currentVersion = "' + datetime.now().strftime("%Y%m%d%H%M%S") + '";',
-        '',
-        '    let needCopy = false;',
-        '    try {',
-        '      const savedVersion = fs.readFileSync(versionFile, "utf-8");',
-        '      if (savedVersion !== currentVersion) {',
-        '        needCopy = true;',
-        '      }',
-        '    } catch (e) {',
-        '      needCopy = true;',
-        '    }',
-        '',
-        '    if (needCopy) {',
-        '      console.log("[TableManager] 复制初始数据到用户目录...");',
-        '      for (const tableName in TableConfigs) {',
-        '        const config = TableConfigs[tableName];',
-        '        const filePath = this.tableDir + "/" + config.file;',
-        '        const data = initialData[tableName + "Data"];',
-        '        fs.writeFileSync(filePath, JSON.stringify(data), "utf-8");',
-        '        console.log("[TableManager] 写入:", filePath);',
-        '      }',
-        '      fs.writeFileSync(versionFile, currentVersion, "utf-8");',
-        '      console.log("[TableManager] 数据复制完成");',
-        '    }',
-        '  }',
-        '',
-        '  /**',
-        '   * 从用户目录加载表格',
-        '   */',
-        '  _loadTable(tableName) {',
+        '  _loadTableFromTxt(tableName) {',
         '    const config = TableConfigs[tableName];',
-        '    const filePath = this.tableDir + "/" + config.file;',
+        '    const txtPath = "tables/" + config.file;',
         '    const RowClass = this._getRowClass(tableName);',
         '',
         '    try {',
         '      const fs = wx.getFileSystemManager();',
-        '      const content = fs.readFileSync(filePath, "utf-8");',
-        '      const dataArray = JSON.parse(content);',
+        '      const content = fs.readFileSync(txtPath, "utf-8");',
         '',
-        '      const fields = config.fields.map(f => f.name);',
-        '      const types = config.fields.map(f => f.type);',
+        '      // 解析 Tab 分隔的文本',
+        '      const lines = content.split("\\n").filter(line => line.trim());',
         '',
-        '      const rows = dataArray.map(obj => RowClass.create(obj, fields, types));',
+        '      if (lines.length < 4) {',
+        '        console.warn(`[TableManager] 表格 ${tableName} 数据为空`);',
+        '        this.tables[tableName] = [];',
+        '        this.maps[tableName] = {};',
+        '        return;',
+        '      }',
+        '',
+        '      // 第1行：类型定义',
+        '      const types = lines[0].split("\\t").map(t => t.trim());',
+        '      // 第2行：中文列名（跳过）',
+        '      // 第3行：英文列名',
+        '      const fields = lines[2].split("\\t").map(f => f.replace(/^#/, "").trim());',
+        '',
+        '      // 解析数据行（从第4行开始）',
+        '      const rows = [];',
+        '      for (let i = 3; i < lines.length; i++) {',
+        '        const values = lines[i].split("\\t");',
+        '        const obj = {};',
+        '',
+        '        for (let j = 0; j < fields.length; j++) {',
+        '          obj[fields[j]] = values[j] || "";',
+        '        }',
+        '',
+        '        const row = RowClass.create(obj, fields, types);',
+        '        rows.push(row);',
+        '      }',
+        '',
         '      this.tables[tableName] = rows;',
         '      this.maps[tableName] = this._buildMap(rows);',
         '',
@@ -384,7 +321,7 @@ def generate_table_manager(tables_info):
         '  _buildMap(rows) {',
         '    const map = {};',
         '    for (const row of rows) {',
-        '      map[row.id] = row;',
+        '      map[row.Id] = row;',
         '    }',
         '    return map;',
         '  }',
@@ -462,13 +399,15 @@ def main():
         f.write(generate_table_struct(tables_info))
     print('生成: tableStruct.js')
 
-    with open(os.path.join(OUTPUT_DIR, 'tableData.js'), 'w', encoding='utf-8') as f:
-        f.write(generate_table_data(tables_info))
-    print('生成: tableData.js')
-
     with open(os.path.join(OUTPUT_DIR, 'tableManager.js'), 'w', encoding='utf-8') as f:
         f.write(generate_table_manager(tables_info))
     print('生成: tableManager.js')
+
+    # 删除旧的 tableData.js（如果存在）
+    table_data_path = os.path.join(OUTPUT_DIR, 'tableData.js')
+    if os.path.exists(table_data_path):
+        os.remove(table_data_path)
+        print('删除: tableData.js（不再需要）')
 
     print(f'\n完成! 共 {len(tables_info)} 个表格')
     print('=' * 50)

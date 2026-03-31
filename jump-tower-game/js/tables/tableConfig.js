@@ -1,6 +1,6 @@
 /**
  * 表格配置 - 自动生成
- * 生成时间: 2026-03-31 13:45:37
+ * 生成时间: 2026-03-31 17:30:13
  */
 
 const FieldType = {
@@ -31,6 +31,7 @@ const PlatformsConfig = {
     { name: 'BounceForce', type: 'FLOAT', comment: '弹跳力' },
     { name: 'MoveSpeed', type: 'FLOAT', comment: '移动速度' },
     { name: 'MoveRange', type: 'FLOAT', comment: '移动范围' },
+    { name: 'Scale', type: 'FLOAT', comment: '缩放系数' },
   ],
 };
 

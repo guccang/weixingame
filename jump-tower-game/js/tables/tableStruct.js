@@ -1,6 +1,6 @@
 /**
  * 表格数据结构定义 - 自动生成
- * 生成时间: 2026-03-31 13:45:37
+ * 生成时间: 2026-03-31 17:30:13
  */
 
 const { FieldType } = require('./tableConfig');
@@ -63,6 +63,7 @@ class CharacterRow extends BaseTableRow {
  * @property {number} BounceForce - 弹跳力
  * @property {number} MoveSpeed - 移动速度
  * @property {number} MoveRange - 移动范围
+ * @property {number} Scale - 缩放系数
  */
 class PlatformsRow extends BaseTableRow {
   constructor() {
@@ -74,6 +75,7 @@ class PlatformsRow extends BaseTableRow {
     this.BounceForce = 0;
     this.MoveSpeed = 0;
     this.MoveRange = 0;
+    this.Scale = 0;
   }
 
   static create(obj, fields, types) {

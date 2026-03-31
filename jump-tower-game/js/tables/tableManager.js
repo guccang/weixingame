@@ -1,10 +1,10 @@
 /**
  * 表格数据管理器
- * 首次启动时将数据复制到用户目录，之后从用户目录加载
+ * 直接从 tables/*.txt 文件读取数据
+ * 生成时间: 2026-03-31 17:30:13
  */
 
 const { TableConfigs } = require('./tableConfig');
-const initialData = require('./tableData');
 
 const { CharacterRow } = require('./tableStruct');
 const { PlatformsRow } = require('./tableStruct');
@@ -14,25 +14,17 @@ class TableManager {
     this.tables = {};
     this.maps = {};
     this.initialized = false;
-    this.userDataPath = wx.env.USER_DATA_PATH;
-    this.tableDir = this.userDataPath + "/game_tables";
   }
 
   /**
-   * 初始化：确保用户目录有数据，然后加载
+   * 初始化：直接从 .txt 文件加载所有表格
    */
   init() {
     if (this.initialized) return;
 
-    // 确保表格目录存在
-    this._ensureTableDir();
-
-    // 检查并复制初始数据
-    this._checkAndCopyData();
-
     // 加载所有表格
     for (const tableName in TableConfigs) {
-      this._loadTable(tableName);
+      this._loadTableFromTxt(tableName);
     }
 
     this.initialized = true;
@@ -40,67 +32,47 @@ class TableManager {
   }
 
   /**
-   * 确保表格目录存在
+   * 从 .txt 文件加载表格
    */
-  _ensureTableDir() {
-    const fs = wx.getFileSystemManager();
-    try {
-      fs.accessSync(this.tableDir);
-    } catch (e) {
-      fs.mkdirSync(this.tableDir, true);
-      console.log("[TableManager] 创建表格目录:", this.tableDir);
-    }
-  }
-
-  /**
-   * 检查并复制初始数据到用户目录
-   */
-  _checkAndCopyData() {
-    const fs = wx.getFileSystemManager();
-    const versionFile = this.tableDir + "/.version";
-    const currentVersion = "20260331134537";
-
-    let needCopy = false;
-    try {
-      const savedVersion = fs.readFileSync(versionFile, "utf-8");
-      if (savedVersion !== currentVersion) {
-        needCopy = true;
-      }
-    } catch (e) {
-      needCopy = true;
-    }
-
-    if (needCopy) {
-      console.log("[TableManager] 复制初始数据到用户目录...");
-      for (const tableName in TableConfigs) {
-        const config = TableConfigs[tableName];
-        const filePath = this.tableDir + "/" + config.file;
-        const data = initialData[tableName + "Data"];
-        fs.writeFileSync(filePath, JSON.stringify(data), "utf-8");
-        console.log("[TableManager] 写入:", filePath);
-      }
-      fs.writeFileSync(versionFile, currentVersion, "utf-8");
-      console.log("[TableManager] 数据复制完成");
-    }
-  }
-
-  /**
-   * 从用户目录加载表格
-   */
-  _loadTable(tableName) {
+  _loadTableFromTxt(tableName) {
     const config = TableConfigs[tableName];
-    const filePath = this.tableDir + "/" + config.file;
+    const txtPath = "tables/" + config.file;
     const RowClass = this._getRowClass(tableName);
 
     try {
       const fs = wx.getFileSystemManager();
-      const content = fs.readFileSync(filePath, "utf-8");
-      const dataArray = JSON.parse(content);
+      const content = fs.readFileSync(txtPath, "utf-8");
 
-      const fields = config.fields.map(f => f.name);
-      const types = config.fields.map(f => f.type);
+      // 解析 Tab 分隔的文本
+      const lines = content.split("\n").filter(line => line.trim());
 
-      const rows = dataArray.map(obj => RowClass.create(obj, fields, types));
+      if (lines.length < 4) {
+        console.warn(`[TableManager] 表格 ${tableName} 数据为空`);
+        this.tables[tableName] = [];
+        this.maps[tableName] = {};
+        return;
+      }
+
+      // 第1行：类型定义
+      const types = lines[0].split("\t").map(t => t.trim());
+      // 第2行：中文列名（跳过）
+      // 第3行：英文列名
+      const fields = lines[2].split("\t").map(f => f.replace(/^#/, "").trim());
+
+      // 解析数据行（从第4行开始）
+      const rows = [];
+      for (let i = 3; i < lines.length; i++) {
+        const values = lines[i].split("\t");
+        const obj = {};
+
+        for (let j = 0; j < fields.length; j++) {
+          obj[fields[j]] = values[j] || "";
+        }
+
+        const row = RowClass.create(obj, fields, types);
+        rows.push(row);
+      }
+
       this.tables[tableName] = rows;
       this.maps[tableName] = this._buildMap(rows);
 
@@ -123,7 +95,7 @@ class TableManager {
   _buildMap(rows) {
     const map = {};
     for (const row of rows) {
-      map[row.id] = row;
+      map[row.Id] = row;
     }
     return map;
   }
