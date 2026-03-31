@@ -2,8 +2,8 @@
  * 微信云存储模块 - 使用云数据库存储游戏成绩数据
  */
 
-const DB_NAME = 'jumpdatabase'; // 云数据库名称（仅用于标识）
-const COLLECTION_NAME = 'game_records'; // 集合名称
+const DB_NAME = 'jumpdatabase'; // 云数据库名称
+const COLLECTION_NAME = 'jumpdatabase'; // 集合名称
 
 let db = null;
 
