@@ -43,40 +43,104 @@ function saveGameRecord(gameData, callback) {
   }
 
   initCloudDB();
-  const gameMode = gameData.gameMode;
-  const score = gameData.score;
-  const time = gameData.time;
-  const combo = gameData.combo;
-  const nickname = gameData.nickname;
-  const avatarUrl = gameData.avatarUrl;
 
-  const collection = db.collection(COLLECTION_NAME);
-  const now = Date.now();
+  // 先获取当前用户的openid
+  wx.cloud.getCurrentUserInfo({
+    success: function(userInfo) {
+      var openid = userInfo.openid;
+      var gameMode = gameData.gameMode;
+      var score = gameData.score || 0;
+      var time = gameData.time || 0;
+      var combo = gameData.combo || 0;
+      var nickname = gameData.nickname || '匿名用户';
+      var avatarUrl = gameData.avatarUrl || '';
+      var now = Date.now();
 
-  // 新增记录（云数据库会自动添加_openid）
-  const newRecord = {
-    gameMode: gameMode,
-    score: score || 0,
-    bestScore: score || 0,
-    bestChallenge: gameMode === 'challenge' ? score : 0,
-    bestTimeAttack: gameMode === 'timeAttack' ? score : 0,
-    totalTime: time || 0,
-    maxCombo: combo || 0,
-    playCount: 1,
-    nickname: nickname || '匿名用户',
-    avatarUrl: avatarUrl || '',
-    createTime: now,
-    updateTime: now
-  };
+      var collection = db.collection(COLLECTION_NAME);
 
-  collection.add({
-    data: newRecord
-  }).then(function(addRes) {
-    console.log('云数据库新增成功', addRes);
-    if (callback) callback(true, newRecord);
-  }).catch(function(err) {
-    console.error('云数据库新增失败', err);
-    if (callback) callback(false, null);
+      // 先查询是否已有该用户的记录
+      collection.where({
+        _openid: openid
+      }).get().then(function(res) {
+        if (res.data && res.data.length > 0) {
+          // 更新现有记录
+          var existing = res.data[0];
+          var updateData = {
+            gameMode: gameMode,
+            score: score,
+            totalTime: (existing.totalTime || 0) + time,
+            maxCombo: Math.max(combo, existing.maxCombo || 0),
+            playCount: (existing.playCount || 0) + 1,
+            updateTime: now,
+            nickname: nickname,
+            avatarUrl: avatarUrl
+          };
+
+          // 更新最佳成绩
+          if (score > (existing.bestScore || 0)) {
+            updateData.bestScore = score;
+          } else {
+            updateData.bestScore = existing.bestScore;
+          }
+
+          if (gameMode === 'challenge' && score > (existing.bestChallenge || 0)) {
+            updateData.bestChallenge = score;
+          } else {
+            updateData.bestChallenge = existing.bestChallenge || 0;
+          }
+
+          if (gameMode === 'timeAttack' && score > (existing.bestTimeAttack || 0)) {
+            updateData.bestTimeAttack = score;
+          } else {
+            updateData.bestTimeAttack = existing.bestTimeAttack || 0;
+          }
+
+          collection.doc(existing._id).update({
+            data: updateData
+          }).then(function(updateRes) {
+            console.log('云数据库更新成功', updateRes);
+            if (callback) callback(true, updateData);
+          }).catch(function(err) {
+            console.error('云数据库更新失败', err);
+            if (callback) callback(false, null);
+          });
+        } else {
+          // 新增记录
+          var newRecord = {
+            _openid: openid,
+            gameMode: gameMode,
+            score: score,
+            bestScore: score,
+            bestChallenge: gameMode === 'challenge' ? score : 0,
+            bestTimeAttack: gameMode === 'timeAttack' ? score : 0,
+            totalTime: time,
+            maxCombo: combo,
+            playCount: 1,
+            nickname: nickname,
+            avatarUrl: avatarUrl,
+            createTime: now,
+            updateTime: now
+          };
+
+          collection.add({
+            data: newRecord
+          }).then(function(addRes) {
+            console.log('云数据库新增成功', addRes);
+            if (callback) callback(true, newRecord);
+          }).catch(function(err) {
+            console.error('云数据库新增失败', err);
+            if (callback) callback(false, null);
+          });
+        }
+      }).catch(function(err) {
+        console.error('云数据库查询失败', err);
+        if (callback) callback(false, null);
+      });
+    },
+    fail: function(err) {
+      console.error('获取用户信息失败', err);
+      if (callback) callback(false, null);
+    }
   });
 }
 

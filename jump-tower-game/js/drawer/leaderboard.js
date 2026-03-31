@@ -71,16 +71,18 @@ function drawLeaderboardPanel(ctx, game, W, H) {
 
       // 头像
       if (item.avatarUrl) {
-        const img = new Image();
+        var img = wx.createImage();
         img.src = item.avatarUrl;
-        if (img.width > 0) {
-          ctx.save();
-          ctx.beginPath();
-          ctx.arc(listX + 75, y + 22, 18, 0, Math.PI * 2);
-          ctx.clip();
-          ctx.drawImage(img, listX + 57, y + 4, 36, 36);
-          ctx.restore();
-        }
+        img.onload = function() {
+          if (img.width > 0) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(listX + 75, y + 22, 18, 0, Math.PI * 2);
+            ctx.clip();
+            ctx.drawImage(img, listX + 57, y + 4, 36, 36);
+            ctx.restore();
+          }
+        };
       } else {
         // 默认头像
         ctx.fillStyle = '#55efc4';
