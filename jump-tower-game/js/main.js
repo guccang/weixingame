@@ -321,21 +321,20 @@ class Game {
     this.rankList = [];
 
     // 使用云数据库获取排行榜
-    cloudStorage.getAllRankList(function(success, list) {
+    cloudStorage.getAllRankList(function(success, rankData) {
       _this.rankLoading = false;
-      if (success && list) {
-        _this.rankList = list.map((item, index) => ({
-          rank: index + 1,
-          nickname: item.nickname || '匿名用户',
-          avatarUrl: item.avatarUrl || '',
-          score: item.bestScore || item.score || 0
-        }));
-      } else {
-        console.log('获取排行榜失败');
-      }
-    });
-  }
-        _this.rankList = list;
+      if (success && rankData) {
+        var formattedList = [];
+        for (var i = 0; i < rankData.length; i++) {
+          var item = rankData[i];
+          formattedList.push({
+            rank: i + 1,
+            nickname: item.nickname || '匿名用户',
+            avatarUrl: item.avatarUrl || '',
+            score: item.bestScore || item.score || 0
+          });
+        }
+        _this.rankList = formattedList;
       } else {
         console.log('获取排行榜失败');
       }
