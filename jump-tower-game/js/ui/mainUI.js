@@ -132,6 +132,23 @@ class MainUI {
       return true;
     }
 
+    // 如果排行榜面板显示中
+    if (this.game.showLeaderboardPanel) {
+      // 检测关闭按钮
+      if (this.game.closeLeaderboardBtn &&
+          touchX >= this.game.closeLeaderboardBtn.x &&
+          touchX <= this.game.closeLeaderboardBtn.x + this.game.closeLeaderboardBtn.w &&
+          touchY >= this.game.closeLeaderboardBtn.y &&
+          touchY <= this.game.closeLeaderboardBtn.y + this.game.closeLeaderboardBtn.h) {
+        this.game.audio.playClick();
+        this.game.showLeaderboardPanel = false;
+        return true;
+      }
+      // 点击其他区域，关闭面板
+      this.game.showLeaderboardPanel = false;
+      return true;
+    }
+
     // 检测是否点击了底部图标按钮
     if (this.game.bottomBtnArea) {
       var btn = this.game.bottomBtnArea;
@@ -161,9 +178,12 @@ class MainUI {
           touchY >= btn.shop.y && touchY <= btn.shop.y + btn.shop.h) {
         return true;
       }
-      // 点击了排行榜按钮（暂未实现）
+      // 点击了排行榜按钮
       if (touchX >= btn.leaderboard.x && touchX <= btn.leaderboard.x + btn.leaderboard.w &&
           touchY >= btn.leaderboard.y && touchY <= btn.leaderboard.y + btn.leaderboard.h) {
+        this.game.audio.playClick();
+        this.game.showLeaderboardPanel = true;
+        this.game.fetchRankList();
         return true;
       }
     }

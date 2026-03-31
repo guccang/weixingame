@@ -76,6 +76,7 @@ class Game {
     this.score = 0;
     this.maxHeight = 0;
     this.combo = 0;
+    this.maxCombo = 0;
     this.chargeCount = 0;
     this.chargeFull = false;
     this.chargeDashing = false;
@@ -92,6 +93,9 @@ class Game {
     this.player = null;
     this.showCharacterPanel = false; // 是否显示角色选择面板
     this.showJobPanel = false; // 是否显示职业选择面板
+    this.showLeaderboardPanel = false; // 是否显示排行榜面板
+    this.rankList = []; // 排行榜数据
+    this.rankLoading = false; // 排行榜加载状态
     this.wxUserInfo = null; // 微信用户信息
     this.hasWxLogin = false; // 是否已获取微信登录
 
@@ -147,6 +151,7 @@ class Game {
     this.lastPraiseTime = 0;
     this.lastMilestone = 0;
     this.combo = 0;
+    this.maxCombo = 0;
     this.shakeTimer = 0;
     this.chargeCount = 0;
     this.chargeFull = false;
@@ -282,6 +287,44 @@ class Game {
       homeH: 35
     };
     this.gameMode.onGameOver(this);
+
+    // 保存游戏数据到微信云存储
+    this.saveToCloudStorage();
+  }
+
+  // 保存游戏数据到微信云存储
+  saveToCloudStorage() {
+    const cloudStorage = require('./runtime/cloudStorage');
+    const gameData = {
+      gameMode: this.gameMode.gameMode,
+      score: this.score,
+      time: this.finalElapsedTime || 0,
+      combo: this.maxCombo
+    };
+    cloudStorage.saveGameRecord(gameData, function(success, data) {
+      if (success) {
+        console.log('游戏数据已保存到云端', data);
+      } else {
+        console.log('游戏数据云端保存失败');
+      }
+    });
+  }
+
+  // 获取好友排行榜数据
+  fetchRankList() {
+    const cloudStorage = require('./runtime/cloudStorage');
+    const _this = this;
+    this.rankLoading = true;
+    this.rankList = [];
+
+    cloudStorage.getFriendRankList(function(success, list) {
+      _this.rankLoading = false;
+      if (success && list) {
+        _this.rankList = list;
+      } else {
+        console.log('获取排行榜失败');
+      }
+    });
   }
 
   goToHome() {
@@ -293,6 +336,7 @@ class Game {
     this.gameOverBtnArea = null;
     this.showCharacterPanel = false;
     this.showJobPanel = false;
+    this.showLeaderboardPanel = false;
     this.gameMode.reset();
     this.skillSystem.reset();
     this.audio.stopBGM();

@@ -111,6 +111,9 @@ function handlePlatformCollisions(player, platforms, game, now) {
 
         player.vy = jumpForce;
         game.combo++;
+        if (game.combo > game.maxCombo) {
+          game.maxCombo = game.combo;
+        }
         game.controls.canDoubleJump = true;
         game.controls.hasDoubleJumped = false;
 

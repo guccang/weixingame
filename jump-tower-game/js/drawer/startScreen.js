@@ -7,6 +7,7 @@ const { drawBackground } = require('./background');
 const { drawCharacterSelect } = require('./characterSelect');
 const { drawJobSelect } = require('./jobSelect');
 const { drawModeSelect, drawTimeSelect, drawLandmarkSelect } = require('./modeSelect');
+const { drawLeaderboardPanel } = require('./leaderboard');
 
 /**
  * 绘制开始界面
@@ -134,6 +135,8 @@ function drawStartScreen(ctx, game, images, characterConfig, jobConfig) {
     drawTimeSelect(ctx, game, W, H);
   } else if (game.gameMode.showLandmarkSelect) {
     drawLandmarkSelect(ctx, game, W, H);
+  } else if (game.showLeaderboardPanel) {
+    drawLeaderboardPanel(ctx, game, W, H);
   } else {
     drawCurrentCharacter(ctx, game, characterConfig, jobConfig);
   }
