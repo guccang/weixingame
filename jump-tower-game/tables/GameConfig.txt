@@ -1,0 +1,17 @@
+INT	STRING	STRING	FLOAT	STRING
+#序号	配置键	配置名	数值	说明
+#Id	Key	Name	Value	Desc
+1	GRAVITY	重力	0.45	下落加速度
+2	PLAYER_SPEED	玩家速度	6	左右移动速度
+3	JUMP_FORCE	跳跃力	-15	普通跳跃力度（负数向上）
+4	BOOST_JUMP_FORCE	弹跳力	-22	弹跳平台力度
+5	DOUBLE_JUMP_FORCE	二段跳力	-18	二段跳力度
+6	CAMERA_SMOOTHING	相机平滑	0.25	相机跟随平滑度
+7	PLAYER_SAFE_ZONE	安全区	50	玩家安全区域
+8	SLIDE_FALL_FORCE	下滑力	20	快速下落力度
+9	STAR_COUNT	星星数量	150	背景星星数
+10	INITIAL_PLATFORM_COUNT	初始平台数	12	开局平台数量
+11	PRAISE_INTERVAL	夸奖间隔	800	夸奖显示间隔(ms)
+12	COMBO_PRAISE_THRESHOLD	连跳阈值	5	连跳夸夸触发阈值
+13	CHARGE_MAX	蓄力最大值	6	蓄力条最大值
+14	UI_SAFE_TOP	顶部安全区	60	避开刘海屏距离

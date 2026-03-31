@@ -1,6 +1,6 @@
 /**
  * 表格数据结构定义 - 自动生成
- * 生成时间: 2026-03-31 17:30:13
+ * 生成时间: 2026-03-31 17:51:04
  */
 
 const { FieldType } = require('./tableConfig');
@@ -34,6 +34,35 @@ class BaseTableRow {
 }
 
 /**
+ * Audio 表数据行
+ * @property {number} Id - 序号
+ * @property {string} Name - 音效名称
+ * @property {string} ResPath - 资源路径
+ * @property {string} Type - 类型
+ * @property {number} Volume - 音量
+ * @property {boolean} Loop - 循环
+ * @property {string} Desc - 说明
+ */
+class AudioRow extends BaseTableRow {
+  constructor() {
+    super();
+    this.Id = 0;
+    this.Name = '';
+    this.ResPath = '';
+    this.Type = '';
+    this.Volume = 0;
+    this.Loop = false;
+    this.Desc = '';
+  }
+
+  static create(obj, fields, types) {
+    const row = new AudioRow();
+    row.initFromObject(obj, fields, types);
+    return row;
+  }
+}
+
+/**
  * Character 表数据行
  * @property {number} Id - 序号
  * @property {string} Name - 角色名字
@@ -49,6 +78,52 @@ class CharacterRow extends BaseTableRow {
 
   static create(obj, fields, types) {
     const row = new CharacterRow();
+    row.initFromObject(obj, fields, types);
+    return row;
+  }
+}
+
+/**
+ * GameConfig 表数据行
+ * @property {number} Id - 序号
+ * @property {string} Key - 配置键
+ * @property {string} Name - 配置名
+ * @property {number} Value - 数值
+ * @property {string} Desc - 说明
+ */
+class GameConfigRow extends BaseTableRow {
+  constructor() {
+    super();
+    this.Id = 0;
+    this.Key = '';
+    this.Name = '';
+    this.Value = 0;
+    this.Desc = '';
+  }
+
+  static create(obj, fields, types) {
+    const row = new GameConfigRow();
+    row.initFromObject(obj, fields, types);
+    return row;
+  }
+}
+
+/**
+ * Milestones 表数据行
+ * @property {number} Id - 序号
+ * @property {number} Height - 高度
+ * @property {string} Message - 消息模板
+ */
+class MilestonesRow extends BaseTableRow {
+  constructor() {
+    super();
+    this.Id = 0;
+    this.Height = 0;
+    this.Message = '';
+  }
+
+  static create(obj, fields, types) {
+    const row = new MilestonesRow();
     row.initFromObject(obj, fields, types);
     return row;
   }
@@ -85,8 +160,59 @@ class PlatformsRow extends BaseTableRow {
   }
 }
 
+/**
+ * Praises 表数据行
+ * @property {number} Id - 序号
+ * @property {string} Template - 模板文本
+ * @property {number} Weight - 权重
+ */
+class PraisesRow extends BaseTableRow {
+  constructor() {
+    super();
+    this.Id = 0;
+    this.Template = '';
+    this.Weight = 0;
+  }
+
+  static create(obj, fields, types) {
+    const row = new PraisesRow();
+    row.initFromObject(obj, fields, types);
+    return row;
+  }
+}
+
+/**
+ * UIText 表数据行
+ * @property {number} Id - 序号
+ * @property {string} Key - 文本键
+ * @property {string} Text - 中文内容
+ * @property {string} Scene - 场景
+ * @property {string} Desc - 说明
+ */
+class UITextRow extends BaseTableRow {
+  constructor() {
+    super();
+    this.Id = 0;
+    this.Key = '';
+    this.Text = '';
+    this.Scene = '';
+    this.Desc = '';
+  }
+
+  static create(obj, fields, types) {
+    const row = new UITextRow();
+    row.initFromObject(obj, fields, types);
+    return row;
+  }
+}
+
 module.exports = {
   BaseTableRow,
+  AudioRow,
   CharacterRow,
+  GameConfigRow,
+  MilestonesRow,
   PlatformsRow,
+  PraisesRow,
+  UITextRow,
 };

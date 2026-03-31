@@ -1,0 +1,13 @@
+INT	STRING	STRING	STRING	STRING
+#序号	文本键	中文内容	场景	说明
+#Id	Key	Text	Scene	Desc
+1	HEIGHT_LABEL	高度: {0}m	game	高度显示
+2	COMBO_LABEL	连跳: {0}	game	连跳显示
+3	TIMER_LABEL	{0}:{1}	game	倒计时显示
+4	CHARGE_LABEL	蓄力 {0}/{1}	game	蓄力显示
+5	CHARGE_FULL	满蓄力！	game	蓄力满
+6	DASH_LABEL	蓄力冲刺中	game	冲刺提示
+7	MOVE_HINT	滑动屏幕左右移动 | 连点两次二段跳	game	操作提示
+8	GAME_OVER	游戏结束	gameOver	游戏结束
+9	RESTART	重新开始	gameOver	重新开始
+10	BACK_HOME	返回首页	gameOver	返回首页

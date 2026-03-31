@@ -1,0 +1,9 @@
+INT	STRING	STRING	STRING	FLOAT	BOOL	STRING
+#序号	音效名称	资源路径	类型	音量	循环	说明
+#Id	Name	ResPath	Type	Volume	Loop	Desc
+1	背景音乐	audio/background_music.mp3	bgm	1.0	true	游戏背景音乐
+2	点击音效	audio/click.mp3	click	1.0	false	按钮点击音效
+3	跳跃音效	audio/jump.mp3	jump	0.8	false	角色跳跃音效
+4	落地音效	audio/land.mp3	land	0.6	false	落地音效
+5	弹跳音效	audio/boost.mp3	boost	0.8	false	弹跳平台音效
+6	蓄力冲刺音效	audio/dash.mp3	dash	0.9	false	蓄力冲刺音效

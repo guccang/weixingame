@@ -1,13 +1,18 @@
 /**
  * 表格数据管理器
  * 直接从 tables/*.txt 文件读取数据
- * 生成时间: 2026-03-31 17:30:13
+ * 生成时间: 2026-03-31 17:51:04
  */
 
 const { TableConfigs } = require('./tableConfig');
 
+const { AudioRow } = require('./tableStruct');
 const { CharacterRow } = require('./tableStruct');
+const { GameConfigRow } = require('./tableStruct');
+const { MilestonesRow } = require('./tableStruct');
 const { PlatformsRow } = require('./tableStruct');
+const { PraisesRow } = require('./tableStruct');
+const { UITextRow } = require('./tableStruct');
 
 class TableManager {
   constructor() {
@@ -86,8 +91,13 @@ class TableManager {
 
   _getRowClass(tableName) {
     const classMap = {
+      Audio: AudioRow,
       Character: CharacterRow,
+      GameConfig: GameConfigRow,
+      Milestones: MilestonesRow,
       Platforms: PlatformsRow,
+      Praises: PraisesRow,
+      UIText: UITextRow,
     };
     return classMap[tableName];
   }
