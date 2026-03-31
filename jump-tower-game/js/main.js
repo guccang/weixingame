@@ -270,6 +270,17 @@ class Game {
   gameOver() {
     this.state = 'gameover';
     this.combo = 0;
+    // 初始化游戏结束按钮区域，确保在渲染前就存在
+    this.gameOverBtnArea = {
+      restartX: this.W / 2 - 80,
+      restartY: this.H / 2 + 155,
+      restartW: 70,
+      restartH: 35,
+      homeX: this.W / 2 + 10,
+      homeY: this.H / 2 + 155,
+      homeW: 70,
+      homeH: 35
+    };
     this.gameMode.onGameOver(this);
   }
 
@@ -279,6 +290,7 @@ class Game {
     this.chargeCount = 0;
     this.chargeFull = false;
     this.chargeDashing = false;
+    this.gameOverBtnArea = null;
     this.showCharacterPanel = false;
     this.showJobPanel = false;
     this.gameMode.reset();

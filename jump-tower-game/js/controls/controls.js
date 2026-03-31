@@ -102,8 +102,8 @@ class Controls {
 
     // 触摸结束
     wx.onTouchEnd(function(e) {
-      // 处理手势结束时的技能触发
-      if (_this.touchStartX !== null && _this.touchStartY !== null && _this.game.state === 'playing') {
+      // 处理手势结束时的技能触发（蓄力冲刺期间不处理滑动）
+      if (_this.touchStartX !== null && _this.touchStartY !== null && _this.game.state === 'playing' && !_this.game.chargeDashing) {
         // 计算最终滑动方向并触发技能
         if (!_this.isSlidingDown) {
           _this.game.skillSystem.onGesture(_this.lastDeltaX, _this.lastDeltaY);
