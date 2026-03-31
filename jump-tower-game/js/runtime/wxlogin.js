@@ -1,6 +1,16 @@
 // 微信登录模块
 let loginCallback = null;
 
+// 初始化云开发
+function initCloud() {
+  if (wx.cloud) {
+    wx.cloud.init({
+      env: 'jumpdatabase' // 指定云数据库环境
+    });
+    console.log('云开发初始化成功');
+  }
+}
+
 // 绘制圆角矩形（兼容微信小游戏）
 function drawRoundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
@@ -19,6 +29,10 @@ function drawRoundRect(ctx, x, y, w, h, r) {
 // 微信登录获取用户信息
 function wxLogin(callback) {
   loginCallback = callback;
+
+  // 先初始化云开发
+  initCloud();
+
   wx.login({
     success: function(res) {
       if (res.code) {
@@ -44,7 +58,28 @@ function getWxUserInfo() {
     lang: 'zh_CN',
     success: function(res) {
       if (loginCallback) {
-        loginCallback(true, res.userInfo);
+        // 获取openId（通过云开发获取）
+        const userInfo = res.userInfo;
+        if (wx.cloud) {
+          wx.cloud.getTempUserData({
+            success: function(cloudRes) {
+              userInfo.openId = cloudRes.openid;
+              userInfo.unionId = cloudRes.unionid || '';
+              loginCallback(true, userInfo);
+            },
+            fail: function() {
+              // 如果云开发获取失败，使用wx.login获取
+              wx.login({
+                success: function(loginRes) {
+                  userInfo.code = loginRes.code;
+                  loginCallback(true, userInfo);
+                }
+              });
+            }
+          });
+        } else {
+          loginCallback(true, userInfo);
+        }
       }
     },
     fail: function() {

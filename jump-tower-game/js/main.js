@@ -292,10 +292,13 @@ class Game {
     this.saveToCloudStorage();
   }
 
-  // 保存游戏数据到微信云存储
+  // 保存游戏数据到云数据库
   saveToCloudStorage() {
     const cloudStorage = require('./runtime/cloudStorage');
     const gameData = {
+      openId: this.wxUserInfo ? this.wxUserInfo.openId : '',
+      nickname: this.wxUserInfo ? this.wxUserInfo.nickName : this.playerName,
+      avatarUrl: this.wxUserInfo ? this.wxUserInfo.avatarUrl : '',
       gameMode: this.gameMode.gameMode,
       score: this.score,
       time: this.finalElapsedTime || 0,
@@ -310,16 +313,28 @@ class Game {
     });
   }
 
-  // 获取好友排行榜数据
+  // 获取排行榜数据
   fetchRankList() {
     const cloudStorage = require('./runtime/cloudStorage');
     const _this = this;
     this.rankLoading = true;
     this.rankList = [];
 
-    cloudStorage.getFriendRankList(function(success, list) {
+    // 使用云数据库获取排行榜
+    cloudStorage.getAllRankList(function(success, list) {
       _this.rankLoading = false;
       if (success && list) {
+        _this.rankList = list.map((item, index) => ({
+          rank: index + 1,
+          nickname: item.nickname || '匿名用户',
+          avatarUrl: item.avatarUrl || '',
+          score: item.bestScore || item.score || 0
+        }));
+      } else {
+        console.log('获取排行榜失败');
+      }
+    });
+  }
         _this.rankList = list;
       } else {
         console.log('获取排行榜失败');
