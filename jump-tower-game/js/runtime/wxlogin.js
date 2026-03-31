@@ -58,28 +58,7 @@ function getWxUserInfo() {
     lang: 'zh_CN',
     success: function(res) {
       if (loginCallback) {
-        // 获取openId（通过云开发获取）
-        const userInfo = res.userInfo;
-        if (wx.cloud) {
-          wx.cloud.getTempUserData({
-            success: function(cloudRes) {
-              userInfo.openId = cloudRes.openid;
-              userInfo.unionId = cloudRes.unionid || '';
-              loginCallback(true, userInfo);
-            },
-            fail: function() {
-              // 如果云开发获取失败，使用wx.login获取
-              wx.login({
-                success: function(loginRes) {
-                  userInfo.code = loginRes.code;
-                  loginCallback(true, userInfo);
-                }
-              });
-            }
-          });
-        } else {
-          loginCallback(true, userInfo);
-        }
+        loginCallback(true, res.userInfo);
       }
     },
     fail: function() {

@@ -296,7 +296,6 @@ class Game {
   saveToCloudStorage() {
     const cloudStorage = require('./runtime/cloudStorage');
     const gameData = {
-      openId: this.wxUserInfo ? this.wxUserInfo.openId : '',
       nickname: this.wxUserInfo ? this.wxUserInfo.nickName : this.playerName,
       avatarUrl: this.wxUserInfo ? this.wxUserInfo.avatarUrl : '',
       gameMode: this.gameMode.gameMode,

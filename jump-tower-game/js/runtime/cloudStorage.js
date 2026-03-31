@@ -26,7 +26,6 @@ function isCloudDBAvailable() {
 /**
  * 保存游戏成绩到云数据库
  * @param {Object} gameData - 游戏数据
- * @param {string} gameData.openId - 用户openId
  * @param {string} gameData.gameMode - 游戏模式
  * @param {number} gameData.score - 本次高度
  * @param {number} gameData.time - 本次用时(毫秒)
@@ -44,82 +43,39 @@ function saveGameRecord(gameData, callback) {
   }
 
   initCloudDB();
-  const { openId, gameMode, score, time, combo, nickname, avatarUrl } = gameData;
-
-  if (!openId) {
-    console.log('缺少openId，无法保存记录');
-    if (callback) callback(false, null);
-    return;
-  }
+  const gameMode = gameData.gameMode;
+  const score = gameData.score;
+  const time = gameData.time;
+  const combo = gameData.combo;
+  const nickname = gameData.nickname;
+  const avatarUrl = gameData.avatarUrl;
 
   const collection = db.collection(COLLECTION_NAME);
+  const now = Date.now();
 
-  // 先查询是否已有该用户的记录
-  collection.where({
-    _openid: openId
-  }).get().then(res => {
-    const now = Date.now();
+  // 新增记录（云数据库会自动添加_openid）
+  const newRecord = {
+    gameMode: gameMode,
+    score: score || 0,
+    bestScore: score || 0,
+    bestChallenge: gameMode === 'challenge' ? score : 0,
+    bestTimeAttack: gameMode === 'timeAttack' ? score : 0,
+    totalTime: time || 0,
+    maxCombo: combo || 0,
+    playCount: 1,
+    nickname: nickname || '匿名用户',
+    avatarUrl: avatarUrl || '',
+    createTime: now,
+    updateTime: now
+  };
 
-    if (res.data && res.data.length > 0) {
-      // 更新现有记录
-      const existingRecord = res.data[0];
-      const updateData = {
-        gameMode: gameMode,
-        score: Math.max(score, existingRecord.score || 0),
-        totalTime: (existingRecord.totalTime || 0) + (time || 0),
-        maxCombo: Math.max(combo || 0, existingRecord.maxCombo || 0),
-        playCount: (existingRecord.playCount || 0) + 1,
-        updateTime: now
-      };
-
-      // 根据模式更新最佳记录
-      if (gameMode === 'endless' || gameMode === 'challenge') {
-        updateData.bestScore = Math.max(score, existingRecord.bestScore || 0);
-        updateData.bestChallenge = Math.max(updateData.bestScore, existingRecord.bestChallenge || 0);
-      } else if (gameMode === 'timeAttack') {
-        updateData.bestScore = Math.max(score, existingRecord.bestScore || 0);
-        updateData.bestTimeAttack = Math.max(updateData.bestScore, existingRecord.bestTimeAttack || 0);
-      }
-
-      collection.doc(existingRecord._id).update({
-        data: updateData
-      }).then(updateRes => {
-        console.log('云数据库更新成功', updateRes);
-        if (callback) callback(true, updateData);
-      }).catch(err => {
-        console.error('云数据库更新失败', err);
-        if (callback) callback(false, null);
-      });
-    } else {
-      // 新增记录
-      const newRecord = {
-        _openid: openId,
-        gameMode: gameMode,
-        score: score || 0,
-        bestScore: score || 0,
-        bestChallenge: gameMode === 'challenge' ? score : 0,
-        bestTimeAttack: gameMode === 'timeAttack' ? score : 0,
-        totalTime: time || 0,
-        maxCombo: combo || 0,
-        playCount: 1,
-        nickname: nickname || '匿名用户',
-        avatarUrl: avatarUrl || '',
-        createTime: now,
-        updateTime: now
-      };
-
-      collection.add({
-        data: newRecord
-      }).then(addRes => {
-        console.log('云数据库新增成功', addRes);
-        if (callback) callback(true, newRecord);
-      }).catch(err => {
-        console.error('云数据库新增失败', err);
-        if (callback) callback(false, null);
-      });
-    }
-  }).catch(err => {
-    console.error('云数据库查询失败', err);
+  collection.add({
+    data: newRecord
+  }).then(function(addRes) {
+    console.log('云数据库新增成功', addRes);
+    if (callback) callback(true, newRecord);
+  }).catch(function(err) {
+    console.error('云数据库新增失败', err);
     if (callback) callback(false, null);
   });
 }
@@ -146,13 +102,13 @@ function getUserRecord(openId, callback) {
   const collection = db.collection(COLLECTION_NAME);
   collection.where({
     _openid: openId
-  }).get().then(res => {
+  }).get().then(function(res) {
     if (res.data && res.data.length > 0) {
       if (callback) callback(true, res.data[0]);
     } else {
       if (callback) callback(false, null);
     }
-  }).catch(err => {
+  }).catch(function(err) {
     console.error('获取用户记录失败', err);
     if (callback) callback(false, null);
   });
@@ -181,7 +137,6 @@ function getFriendRankList(openIdList, callback) {
   const collection = db.collection(COLLECTION_NAME);
 
   // 查询好友列表中的用户记录
-  // 注意：云数据库where使用in查询有限制，这里分批查询
   const list = [];
   let pending = openIdList.length;
   const batchSize = 20; // 每次最多查20个
@@ -194,17 +149,21 @@ function getFriendRankList(openIdList, callback) {
       nickname: true,
       avatarUrl: true,
       bestScore: true
-    }).get().then(res => {
+    }).get().then(function(res) {
       if (res.data) {
-        list.push(...res.data);
+        for (var i = 0; i < res.data.length; i++) {
+          list.push(res.data[i]);
+        }
       }
       pending -= batch.length;
       if (pending <= 0) {
         // 按分数降序排列
-        list.sort((a, b) => (b.bestScore || 0) - (a.bestScore || 0));
+        list.sort(function(a, b) {
+          return (b.bestScore || 0) - (a.bestScore || 0);
+        });
         if (callback) callback(true, list);
       }
-    }).catch(err => {
+    }).catch(function(err) {
       console.error('查询好友排行失败', err);
       pending -= batch.length;
       if (pending <= 0) {
@@ -214,8 +173,8 @@ function getFriendRankList(openIdList, callback) {
   }
 
   // 分批查询
-  for (let i = 0; i < openIdList.length; i += batchSize) {
-    const batch = openIdList.slice(i, i + batchSize);
+  for (var i = 0; i < openIdList.length; i += batchSize) {
+    var batch = openIdList.slice(i, i + batchSize);
     queryBatch(batch);
   }
 }
@@ -235,12 +194,14 @@ function getAllRankList(callback) {
   const collection = db.collection(COLLECTION_NAME);
 
   collection.orderBy('bestScore', 'desc').limit(100).get()
-    .then(res => {
-      const list = res.data || [];
-      list.sort((a, b) => (b.bestScore || 0) - (a.bestScore || 0));
+    .then(function(res) {
+      var list = res.data || [];
+      list.sort(function(a, b) {
+        return (b.bestScore || 0) - (a.bestScore || 0);
+      });
       if (callback) callback(true, list);
     })
-    .catch(err => {
+    .catch(function(err) {
       console.error('获取排行榜失败', err);
       if (callback) callback(false, []);
     });
@@ -260,20 +221,29 @@ function getFriendRankListViaOpenData(callback) {
   wx.getFriendCloudStorage({
     keyList: ['bestScore'],
     success: function(res) {
-      const list = [];
+      var list = [];
       if (res.data) {
-        for (const item of res.data) {
+        for (var i = 0; i < res.data.length; i++) {
+          var item = res.data[i];
+          var scoreItem = null;
           if (item.KVDataList) {
-            const scoreItem = item.KVDataList.find(kv => kv.key === 'bestScore');
-            list.push({
-              nickname: item.nickname,
-              avatarUrl: item.avatarUrl,
-              bestScore: scoreItem ? Number(scoreItem.value) : 0
-            });
+            for (var j = 0; j < item.KVDataList.length; j++) {
+              if (item.KVDataList[j].key === 'bestScore') {
+                scoreItem = item.KVDataList[j];
+                break;
+              }
+            }
           }
+          list.push({
+            nickname: item.nickname,
+            avatarUrl: item.avatarUrl,
+            bestScore: scoreItem ? Number(scoreItem.value) : 0
+          });
         }
       }
-      list.sort((a, b) => b.bestScore - a.bestScore);
+      list.sort(function(a, b) {
+        return b.bestScore - a.bestScore;
+      });
       if (callback) callback(true, list);
     },
     fail: function(res) {
@@ -284,11 +254,11 @@ function getFriendRankListViaOpenData(callback) {
 }
 
 module.exports = {
-  DB_NAME,
-  isCloudDBAvailable,
-  saveGameRecord,
-  getUserRecord,
-  getFriendRankList,
-  getAllRankList,
-  getFriendRankListViaOpenData
+  DB_NAME: DB_NAME,
+  isCloudDBAvailable: isCloudDBAvailable,
+  saveGameRecord: saveGameRecord,
+  getUserRecord: getUserRecord,
+  getFriendRankList: getFriendRankList,
+  getAllRankList: getAllRankList,
+  getFriendRankListViaOpenData: getFriendRankListViaOpenData
 };
