@@ -60,7 +60,7 @@ class Boss {
 
       // 位置和状态
       x: this.game.W / 2,
-      y: this.game.H + 100, // 从屏幕下方开始
+      y: this.game.cameraY + this.game.H + 100, // 从当前视口下方开始
       targetX: 0,
       targetY: 0,
 
@@ -142,7 +142,7 @@ class Boss {
   _updateMonster(monster, player, dt) {
     // 更新目标位置（追踪玩家）
     monster.targetX = player.x;
-    monster.targetY = player.y - this.game.cameraY;
+    monster.targetY = player.y;
 
     // 状态机
     switch (monster.state) {
@@ -152,7 +152,7 @@ class Boss {
         monster.y -= spawnSpeed * (dt / 1000) * 60;
 
         // 到达屏幕内后开始追踪
-        if (monster.y < this.game.H - 50) {
+        if (monster.y < this.game.cameraY + this.game.H - 50) {
           monster.state = 'chasing';
         }
         break;
@@ -189,6 +189,10 @@ class Boss {
         }
         break;
     }
+
+    if (this._shouldDespawn(monster)) {
+      this.remove(monster);
+    }
   }
 
   /**
@@ -214,14 +218,14 @@ class Boss {
       ctx.drawImage(
         img,
         monster.x - size / 2,
-        monster.y - size / 2 + this.game.cameraY,
+        monster.y - size / 2 - this.game.cameraY,
         size,
         size
       );
     } else {
       // 图片未加载时绘制占位符
       ctx.fillStyle = monster.isBoss ? '#ff0066' : '#ff6600';
-      ctx.fillRect(monster.x - 32, monster.y - 32 + this.game.cameraY, 64, 64);
+      ctx.fillRect(monster.x - 32, monster.y - 32 - this.game.cameraY, 64, 64);
     }
   }
 
@@ -258,7 +262,7 @@ class Boss {
       if (monster.state !== 'chasing') continue;
 
       const dx = player.x - monster.x;
-      const dy = (player.y - this.game.cameraY) - monster.y;
+      const dy = player.y - monster.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
 
       // 碰撞半径
@@ -267,6 +271,21 @@ class Boss {
       }
     }
     return null;
+  }
+
+  /**
+   * 检测怪物是否离开活动区域，避免看不见的实例长期残留
+   */
+  _shouldDespawn(monster) {
+    const topBound = this.game.cameraY - 300;
+    const bottomBound = this.game.cameraY + this.game.H + 300;
+    const leftBound = -300;
+    const rightBound = this.game.W + 300;
+
+    return monster.x < leftBound ||
+      monster.x > rightBound ||
+      monster.y < topBound ||
+      monster.y > bottomBound;
   }
 
   /**
