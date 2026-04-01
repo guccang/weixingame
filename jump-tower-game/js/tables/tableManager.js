@@ -1,7 +1,7 @@
 /**
  * 表格数据管理器
  * 直接从 tables/*.txt 文件读取数据
- * 生成时间: 2026-03-31 17:51:04
+ * 生成时间: 2026-04-01 13:38:03
  */
 
 const { TableConfigs } = require('./tableConfig');
@@ -10,6 +10,7 @@ const { AudioRow } = require('./tableStruct');
 const { CharacterRow } = require('./tableStruct');
 const { GameConfigRow } = require('./tableStruct');
 const { MilestonesRow } = require('./tableStruct');
+const { MonstersRow } = require('./tableStruct');
 const { PlatformsRow } = require('./tableStruct');
 const { PraisesRow } = require('./tableStruct');
 const { UITextRow } = require('./tableStruct');
@@ -95,6 +96,7 @@ class TableManager {
       Character: CharacterRow,
       GameConfig: GameConfigRow,
       Milestones: MilestonesRow,
+      Monsters: MonstersRow,
       Platforms: PlatformsRow,
       Praises: PraisesRow,
       UIText: UITextRow,
