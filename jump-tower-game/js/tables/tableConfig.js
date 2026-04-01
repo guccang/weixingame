@@ -1,6 +1,6 @@
 /**
  * 表格配置 - 自动生成
- * 生成时间: 2026-03-31 17:51:04
+ * 生成时间: 2026-04-01 13:38:03
  */
 
 const FieldType = {
@@ -56,6 +56,22 @@ const MilestonesConfig = {
   ],
 };
 
+const MonstersConfig = {
+  name: 'Monsters',
+  file: 'Monsters.txt',
+  fields: [
+    { name: 'Id', type: 'INT', comment: '序号' },
+    { name: 'Name', type: 'STRING', comment: '怪物名称' },
+    { name: 'Hp', type: 'INT', comment: '生命值' },
+    { name: 'Attack', type: 'INT', comment: '攻击力' },
+    { name: 'Speed', type: 'INT', comment: '移动速度' },
+    { name: 'ChasePath', type: 'STRING', comment: '追击动作路径' },
+    { name: 'IsBoss', type: 'BOOL', comment: '是否Boss' },
+    { name: 'SpawnCond', type: 'STRING', comment: '出现条件' },
+    { name: 'DropReward', type: 'STRING', comment: '掉落奖励' },
+  ],
+};
+
 const PlatformsConfig = {
   name: 'Platforms',
   file: 'Platforms.txt',
@@ -98,6 +114,7 @@ const TableConfigs = {
   Character: CharacterConfig,
   GameConfig: GameConfigConfig,
   Milestones: MilestonesConfig,
+  Monsters: MonstersConfig,
   Platforms: PlatformsConfig,
   Praises: PraisesConfig,
   UIText: UITextConfig,

@@ -1,6 +1,6 @@
 /**
  * 表格数据结构定义 - 自动生成
- * 生成时间: 2026-03-31 17:51:04
+ * 生成时间: 2026-04-01 13:38:03
  */
 
 const { FieldType } = require('./tableConfig');
@@ -130,6 +130,39 @@ class MilestonesRow extends BaseTableRow {
 }
 
 /**
+ * Monsters 表数据行
+ * @property {number} Id - 序号
+ * @property {string} Name - 怪物名称
+ * @property {number} Hp - 生命值
+ * @property {number} Attack - 攻击力
+ * @property {number} Speed - 移动速度
+ * @property {string} ChasePath - 追击动作路径
+ * @property {boolean} IsBoss - 是否Boss
+ * @property {string} SpawnCond - 出现条件
+ * @property {string} DropReward - 掉落奖励
+ */
+class MonstersRow extends BaseTableRow {
+  constructor() {
+    super();
+    this.Id = 0;
+    this.Name = '';
+    this.Hp = 0;
+    this.Attack = 0;
+    this.Speed = 0;
+    this.ChasePath = '';
+    this.IsBoss = false;
+    this.SpawnCond = '';
+    this.DropReward = '';
+  }
+
+  static create(obj, fields, types) {
+    const row = new MonstersRow();
+    row.initFromObject(obj, fields, types);
+    return row;
+  }
+}
+
+/**
  * Platforms 表数据行
  * @property {number} Id - 序号
  * @property {string} Name - 平台名称
@@ -212,6 +245,7 @@ module.exports = {
   CharacterRow,
   GameConfigRow,
   MilestonesRow,
+  MonstersRow,
   PlatformsRow,
   PraisesRow,
   UITextRow,
