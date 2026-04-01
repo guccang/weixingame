@@ -274,6 +274,15 @@ class MainUI {
       this.game.startGame();
       return true;
     }
+    // 检查是否点击了分享按钮
+    if (touchX >= btn.shareX && touchX <= btn.shareX + btn.shareW &&
+        touchY >= btn.shareY && touchY <= btn.shareY + btn.shareH) {
+      this.game.audio.playClick();
+      if (this.game.gameOps) {
+        this.game.gameOps.shareToFriend();
+      }
+      return true;
+    }
     // 检查是否点击了返回主页按钮
     if (touchX >= btn.homeX && touchX <= btn.homeX + btn.homeW &&
         touchY >= btn.homeY && touchY <= btn.homeY + btn.homeH) {

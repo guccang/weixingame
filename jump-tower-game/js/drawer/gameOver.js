@@ -80,19 +80,30 @@ function drawGameOverScreen(ctx, game) {
   ctx.font = '16px sans-serif';
   ctx.fillText('重新开始', W / 2 - 45, H / 2 + 178);
 
-  // 绘制返回主页按钮
-  ctx.fillStyle = '#74b9ff';
+  // 绘制分享按钮
+  ctx.fillStyle = '#ff6b6b';
   ctx.fillRect(W / 2 + 10, H / 2 + 155, 70, 35);
   ctx.fillStyle = '#ffffff';
   ctx.font = '16px sans-serif';
-  ctx.fillText('返回主页', W / 2 + 45, H / 2 + 178);
+  ctx.fillText('转发', W / 2 + 45, H / 2 + 178);
+
+  // 绘制返回主页按钮
+  ctx.fillStyle = '#74b9ff';
+  ctx.fillRect(W / 2 + 100, H / 2 + 155, 70, 35);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '16px sans-serif';
+  ctx.fillText('返回主页', W / 2 + 135, H / 2 + 178);
 
   game.gameOverBtnArea = {
     restartX: W / 2 - 80,
     restartY: H / 2 + 155,
     restartW: 70,
     restartH: 35,
-    homeX: W / 2 + 10,
+    shareX: W / 2 + 10,
+    shareY: H / 2 + 155,
+    shareW: 70,
+    shareH: 35,
+    homeX: W / 2 + 100,
     homeY: H / 2 + 155,
     homeW: 70,
     homeH: 35

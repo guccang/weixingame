@@ -58,6 +58,9 @@ const LevelGenerator = require('./level/level');
 // 技能系统
 const SkillSystem = require('./skill/skill');
 
+// 游戏操作模块
+const GameOperations = require('./game/gameOperations');
+
 // Boss/怪物系统
 const BossSystem = require('./monster/boss');
 
@@ -112,6 +115,7 @@ class Game {
     this.levelGenerator = new LevelGenerator(); // 关卡生成器
     this.gameMode = new GameMode(); // 游戏模式管理
     this.skillSystem = new SkillSystem(this); // 技能系统
+    this.gameOps = new GameOperations(this); // 游戏操作（分享等）
     this.bossSystem = new BossSystem(this); // Boss系统
     this.animationId = null; // 动画帧ID，用于取消动画循环
     this.initStars();
