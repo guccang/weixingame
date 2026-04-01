@@ -58,6 +58,9 @@ const LevelGenerator = require('./level/level');
 // 技能系统
 const SkillSystem = require('./skill/skill');
 
+// Boss/怪物系统
+const BossSystem = require('./monster/boss');
+
 // ==================== 游戏类 ====================
 class Game {
   constructor() {
@@ -88,6 +91,7 @@ class Game {
     this.lastPraiseTime = 0;
     this.lastMilestone = 0;
     this.shakeTimer = 0;
+    this.lastBossSpawnScore = 0; // 上次生成Boss的分数阈值
     this.praiseSystem = new PraiseSystem(); // 夸夸词系统
     this.barrage = new Barrage(); // 弹幕系统
     this.particles = [];
@@ -108,6 +112,7 @@ class Game {
     this.levelGenerator = new LevelGenerator(); // 关卡生成器
     this.gameMode = new GameMode(); // 游戏模式管理
     this.skillSystem = new SkillSystem(this); // 技能系统
+    this.bossSystem = new BossSystem(this); // Boss系统
     this.animationId = null; // 动画帧ID，用于取消动画循环
     this.initStars();
     this.initWxLogin(); // 微信登录获取用户信息
@@ -160,6 +165,7 @@ class Game {
     this.chargeCount = 0;
     this.chargeFull = false;
     this.chargeDashing = false;
+    this.lastBossSpawnScore = 0; // 重置Boss生成阈值
     this.controls.reset(); // 重置控制系统状态
 
     // 初始化游戏模式特定状态
@@ -167,6 +173,9 @@ class Game {
 
     // 重置技能系统
     this.skillSystem.reset();
+
+    // 重置Boss系统
+    this.bossSystem.reset();
 
     // 使用关卡生成器初始化
     this.platforms = this.levelGenerator.initLevel(this.W, this.H, characterConfig);
@@ -220,6 +229,16 @@ class Game {
 
     // 更新技能系统
     this.skillSystem.update(16.67);
+
+    // 更新Boss系统
+    this.bossSystem.update(16.67);
+
+    // Boss出现条件检测（每500分出现一次）
+    const scoreThreshold = Math.floor(this.score / 500);
+    if (scoreThreshold > this.lastBossSpawnScore && this.score >= 500) {
+      this.bossSystem.spawn(1); // 生成ID为1的Boss
+      this.lastBossSpawnScore = scoreThreshold;
+    }
 
     if (player.checkGameOver(this.player, this)) {
       return;

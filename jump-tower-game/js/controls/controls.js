@@ -46,6 +46,17 @@ class Controls {
             return;
           }
         }
+
+        // 【临时测试】游戏中点击生成Boss按钮
+        if (_this.game.state === 'playing' && _this.game.testSpawnBossBtnArea) {
+          var spawnBtn = _this.game.testSpawnBossBtnArea;
+          if (touchX >= spawnBtn.x && touchX <= spawnBtn.x + spawnBtn.w &&
+              touchY >= spawnBtn.y && touchY <= spawnBtn.y + spawnBtn.h) {
+            console.log('[测试] 点击生成Boss按钮');
+            _this.game.bossSystem.spawn(1);
+            return;
+          }
+        }
       }
       // 开始或重新开始游戏
       if (_this.game.state === 'start' || _this.game.state === 'gameover') {
