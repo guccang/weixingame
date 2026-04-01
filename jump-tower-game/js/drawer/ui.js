@@ -5,7 +5,6 @@
 
 const { GAME_MODES } = require('../game/constants');
 const tableManager = require('../tables/tableManager');
-const { roundRect } = require('./helper');
 
 /**
  * 获取UI文本
@@ -102,20 +101,6 @@ function drawUI(ctx, W, H, score, combo, state, gameMode, chargeCount, chargeFul
   ctx.textAlign = 'center';
   ctx.fillText(getText('MOVE_HINT'), W / 2, H - 20);
 
-  // 【临时测试】生成Boss按钮
-  if (game.testSpawnBossBtnArea) {
-    var spawnBtn = game.testSpawnBossBtnArea;
-    ctx.fillStyle = '#ff0066';
-    ctx.shadowColor = '#ff0066';
-    ctx.shadowBlur = 8;
-    roundRect(ctx, spawnBtn.x, spawnBtn.y, spawnBtn.w, spawnBtn.h, 6);
-    ctx.fill();
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 12px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('生成Boss', spawnBtn.x + spawnBtn.w / 2, spawnBtn.y + 23);
-  }
 }
 
 module.exports = {

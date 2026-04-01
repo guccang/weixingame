@@ -78,38 +78,6 @@ function drawStartScreen(ctx, game, images, characterConfig, jobConfig) {
       h: btnHeight
     };
 
-    // 【临时测试】Boss测试按钮
-    const testBtnWidth = 80;
-    const testBtnHeight = 35;
-    const testBtnX = W - testBtnWidth - 20;
-    const testBtnY = 20;
-
-    ctx.fillStyle = '#ff0066';
-    ctx.shadowColor = '#ff0066';
-    ctx.shadowBlur = 10;
-    roundRect(ctx, testBtnX, testBtnY, testBtnWidth, testBtnHeight, 8);
-    ctx.fill();
-    ctx.shadowBlur = 0;
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 14px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('测试Boss', testBtnX + testBtnWidth / 2, testBtnY + 23);
-
-    game.testBossBtnArea = {
-      x: testBtnX,
-      y: testBtnY,
-      w: testBtnWidth,
-      h: testBtnHeight
-    };
-
-    // 【临时测试】游戏中生成Boss按钮（在游戏进行中显示）
-    game.testSpawnBossBtnArea = {
-      x: W - 100,
-      y: 80,
-      w: 80,
-      h: 35
-    };
   } else {
     // 有面板显示时，清空开始按钮区域
     game.startBtnArea = null;

@@ -227,6 +227,10 @@ class SkillSystem {
    * @returns {string|null} 触发的技能ID
    */
   onGesture(deltaX, deltaY) {
+    if (this.game.isControlLocked && this.game.isControlLocked()) {
+      return null;
+    }
+
     let direction = null;
 
     if (deltaY < -this.gestureThreshold) {
@@ -340,12 +344,59 @@ class SkillSystem {
   }
 
   /**
+   * 应用Boss受击击飞，不消耗玩家蓄力
+   */
+  applyBossKnockback(sourceX, options = {}) {
+    const config = this.skillConfigs.chargeFull;
+    const player = this.game.player;
+    if (!config || !player) return;
+
+    const playerCenterX = player.x + player.w / 2;
+    const horizontalDir = sourceX !== undefined && playerCenterX >= sourceX ? 1 : -1;
+    const isFinalHit = !!options.isFinalHit;
+
+    this.game.bossKnockbackUntil = Date.now() + 1300;
+    player.vx = isFinalHit ? 0 : horizontalDir * 14;
+    player.vy = isFinalHit ? -24 : -16;
+    player.state = 'rise';
+    this.game.pendingBossLaunch = {
+      triggerAt: Date.now() + 140,
+      vx: isFinalHit ? 0 : horizontalDir * 7,
+      vy: config.physics ? config.physics.force : -50
+    };
+
+    this.game.shakeTimer = config.shake || 20;
+    if (this.game.barrage) {
+      this.game.barrage.show(
+        player.x,
+        player.y - this.game.cameraY - 40,
+        isFinalHit ? 'Boss终结一击！' : 'Boss把你赶跑了！',
+        '#ff0066'
+      );
+    }
+
+    if (config.particle) {
+      const p = config.particle;
+      this.game.spawnParticles(
+        player.x + player.w / 2,
+        player.y + player.h / 2,
+        p.color || '#ff00ff',
+        p.count || 20
+      );
+    }
+  }
+
+  /**
    * 触发技能
    * @param {string} skillId - 技能ID
    * @param {Object} options - 额外选项
    * @returns {ActiveSkill|null}
    */
   triggerSkill(skillId, options = {}) {
+    if (this.game.isControlLocked && this.game.isControlLocked()) {
+      return null;
+    }
+
     const config = this.skillConfigs[skillId];
     if (!config) {
       console.warn('Skill not found:', skillId);
@@ -497,6 +548,10 @@ class SkillSystem {
    * 触发二段跳技能
    */
   triggerDoubleJump() {
+    if (this.game.isControlLocked && this.game.isControlLocked()) {
+      return null;
+    }
+
     const skillId = 'doubleJump';
     const config = this.skillConfigs[skillId];
     if (!config) return null;

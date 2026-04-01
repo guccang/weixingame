@@ -7,23 +7,6 @@ class MainUI {
 
   // 处理主界面触摸点击
   handleTouch(touchX, touchY) {
-    // 【临时测试】检测Boss测试按钮点击
-    if (this.game.testBossBtnArea) {
-      var testBtn = this.game.testBossBtnArea;
-      if (touchX >= testBtn.x && touchX <= testBtn.x + testBtn.w &&
-          touchY >= testBtn.y && touchY <= testBtn.y + testBtn.h) {
-        this.game.audio.playClick();
-        console.log('[测试] 点击测试Boss按钮，开始游戏并生成Boss');
-        this.game.startGame();
-        // 延迟生成Boss
-        setTimeout(function() {
-          console.log('[测试] 生成Boss');
-          this.game.bossSystem.spawn(1);
-        }.bind(this), 1000);
-        return true;
-      }
-    }
-
     // 如果模式选择面板显示中
     if (this.game.gameMode.showModeSelect) {
       // 检查关闭按钮

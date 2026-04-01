@@ -81,7 +81,7 @@ function isFalling(player) {
  */
 function handlePlatformCollisions(player, platforms, game, now) {
   // 蓄力冲刺中：直接撞飞碰到的平台
-  if (game.chargeDashing) {
+  if (game.isImpactDashing && game.isImpactDashing()) {
     for (let p of platforms) {
       if (!p.dead && platformPhysics.checkCollision(player, p, now, true)) {
         p.vy = -20;

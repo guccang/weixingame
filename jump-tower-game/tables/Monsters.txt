@@ -1,4 +1,4 @@
 INT	STRING	INT	INT	INT	STRING	BOOL	STRING	STRING
 #序号	怪物名称	生命值	攻击力	移动速度	追击动作路径	是否Boss	出现条件	掉落奖励
 #Id	Name	Hp	Attack	Speed	ChasePath	IsBoss	SpawnCond	DropReward
-1	追踪机器人	100	10	3	images/monsters/boss2/chase	true	score_500	coin_10
+1	追踪机器人	100	10	3	images/monsters/boss/chase	true	score_500	coin_10

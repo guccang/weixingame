@@ -1,6 +1,6 @@
 /**
  * Boss/怪物系统
- * 从屏幕下方出现，追踪玩家
+ * 单次Boss事件：出现、追近、预警、跳扑、退场
  */
 
 const { getById, find } = require('../tables/tableManager');
@@ -8,40 +8,43 @@ const { getById, find } = require('../tables/tableManager');
 class Boss {
   constructor(game) {
     this.game = game;
-    this.monsters = []; // 活跃的怪物列表
+    this.monsters = [];
     this.tableLoaded = false;
-    this.imageCache = {}; // 图片缓存
+    this.imageCache = {};
+    this.renderSize = 320;
+    this.warningRenderSize = 340;
+    this.warningDuration = 900;
+    this.attackRange = 120;
+    this.contactRadius = 70;
+    this.spawnSpeed = 14;
+    this.chaseSpeed = 18;
+    this.exitSpeed = 12;
   }
 
-  /**
-   * 初始化，加载怪物表格
-   */
   init() {
     if (!this.tableLoaded) {
-      // 表格管理器会自动初始化
       this.tableLoaded = true;
     }
   }
 
-  /**
-   * 获取怪物配置
-   */
   getMonsterConfig(monsterId) {
     return getById('Monsters', monsterId);
   }
 
-  /**
-   * 获取所有Boss配置
-   */
   getAllBossConfigs() {
     return find('Monsters', function(row) {
       return row.IsBoss === true || row.IsBoss === 'true';
     });
   }
 
-  /**
-   * 生成怪物
-   */
+  hasActiveBoss() {
+    return this.monsters.length > 0;
+  }
+
+  getActiveBoss() {
+    return this.monsters.length > 0 ? this.monsters[0] : null;
+  }
+
   spawn(monsterId) {
     const config = this.getMonsterConfig(monsterId);
     if (!config) {
@@ -49,6 +52,12 @@ class Boss {
       return null;
     }
 
+    this.clear();
+
+    const player = this.game.player;
+    const playerCenterX = player ? player.x + player.w / 2 : this.game.W / 2;
+    const spawnOffsetX = playerCenterX < this.game.W / 2 ? 180 : -180;
+    const spawnX = Math.max(140, Math.min(this.game.W - 140, playerCenterX + spawnOffsetX));
     const monster = {
       id: monsterId,
       name: config.Name,
@@ -57,34 +66,45 @@ class Boss {
       speed: config.Speed,
       isBoss: config.IsBoss === true || config.IsBoss === 'true',
       chasePath: config.ChasePath,
-
-      // 位置和状态
-      x: this.game.W / 2,
-      y: this.game.cameraY + this.game.H + 100, // 从当前视口下方开始
+      x: spawnX,
+      y: this.game.cameraY + this.game.H - 80,
       targetX: 0,
       targetY: 0,
-
-      // 动画状态
       animFrame: 0,
       animTimer: 0,
-      state: 'spawning', // spawning, chasing, attacking, dying
-
-      // 序列帧图片
+      state: 'spawning',
+      stateTimer: 0,
+      approachDelay: 600,
+      hitCooldownUntil: 0,
+      attackCount: 0,
+      maxAttackCount: 3 + Math.floor(Math.random() * 3),
+      warningShown: false,
+      attackResolved: false,
+      leapElapsed: 0,
+      leapDuration: 700,
+      leapArcHeight: 220,
+      leapStartX: 0,
+      leapStartY: 0,
+      leapTargetX: 0,
+      leapTargetY: 0,
       frames: [],
       framesLoaded: false
     };
 
-    // 加载序列帧图片
     this._loadFrames(monster);
-
     this.monsters.push(monster);
     console.log('[Boss] 生成怪物:', monster.name);
+    if (this.game.barrage) {
+      this.game.barrage.show(
+        this.game.W / 2 - 70,
+        150,
+        monster.name + '出现了！',
+        '#ff0066'
+      );
+    }
     return monster;
   }
 
-  /**
-   * 加载怪物序列帧图片
-   */
   _loadFrames(monster) {
     const chasePath = monster.chasePath;
     if (!chasePath) {
@@ -92,7 +112,6 @@ class Boss {
       return;
     }
 
-    // 加载 chase_01.png ~ chase_04.png
     const framePaths = [
       `${chasePath}/chase_01.png`,
       `${chasePath}/chase_02.png`,
@@ -103,16 +122,11 @@ class Boss {
     monster.frames = framePaths;
     monster.framesLoaded = true;
 
-    // 预加载所有帧图片
     for (const path of framePaths) {
       this._getImage(path);
     }
-    console.log('[Boss] 预加载序列帧:', chasePath);
   }
 
-  /**
-   * 根据条件生成Boss
-   */
   spawnByCondition(condition) {
     const configs = this.getAllBossConfigs();
     for (const config of configs) {
@@ -123,71 +137,67 @@ class Boss {
     return null;
   }
 
-  /**
-   * 更新所有怪物
-   */
   update(dt) {
     const player = this.game.player;
     if (!player) return;
 
     for (let i = this.monsters.length - 1; i >= 0; i--) {
-      const monster = this.monsters[i];
-      this._updateMonster(monster, player, dt);
+      this._updateMonster(this.monsters[i], player, dt);
     }
   }
 
-  /**
-   * 更新单个怪物
-   */
   _updateMonster(monster, player, dt) {
-    // 更新目标位置（追踪玩家）
     monster.targetX = player.x;
     monster.targetY = player.y;
 
-    // 状态机
     switch (monster.state) {
       case 'spawning':
-        // 从屏幕下方升起
-        const spawnSpeed = monster.speed * 0.5;
-        monster.y -= spawnSpeed * (dt / 1000) * 60;
-
-        // 到达屏幕内后开始追踪
-        if (monster.y < this.game.cameraY + this.game.H - 50) {
-          monster.state = 'chasing';
+        monster.y -= Math.max(monster.speed * 2.5, this.spawnSpeed) * (dt / 1000) * 60;
+        if (monster.y <= this.game.cameraY + this.game.H - 240) {
+          monster.state = 'approaching';
         }
         break;
 
-      case 'chasing':
-        // 追踪玩家
-        const dx = monster.targetX - monster.x;
-        const dy = monster.targetY - monster.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-
-        if (dist > 10) {
-          const moveSpeed = monster.speed * (dt / 1000) * 60;
-          monster.x += (dx / dist) * moveSpeed;
-          monster.y += (dy / dist) * moveSpeed;
-        }
-
-        // 更新动画帧
-        monster.animTimer += dt;
-        if (monster.animTimer > 150) { // 每帧150ms
-          monster.animFrame = (monster.animFrame + 1) % 4;
-          monster.animTimer = 0;
+      case 'approaching':
+        this._moveTowards(monster, player.x, player.y + 120, Math.max(monster.speed * 3.5, this.chaseSpeed), dt);
+        monster.approachDelay -= dt;
+        if (monster.approachDelay <= 0 &&
+            Date.now() >= monster.hitCooldownUntil &&
+            this._distance(monster.x, monster.y, player.x, player.y) <= this.attackRange) {
+          monster.state = 'warning';
+          monster.stateTimer = this.warningDuration;
+          monster.attackResolved = false;
+          monster.warningShown = false;
         }
         break;
 
-      case 'dying':
-        // 死亡动画（可扩展）
-        monster.y += 5; // 下落
-        if (monster.y > this.game.H + 200) {
-          // 移除怪物
-          const idx = this.monsters.indexOf(monster);
-          if (idx > -1) {
-            this.monsters.splice(idx, 1);
+      case 'warning':
+        monster.stateTimer -= dt;
+        if (!monster.warningShown) {
+          monster.warningShown = true;
+          if (this.game.barrage) {
+            this.game.barrage.show(monster.x - 60, monster.y - this.game.cameraY - 150, 'Boss起跳预警！', '#ff9966');
           }
         }
+        if (monster.stateTimer <= 0) {
+          this._startLeap(monster, player);
+        }
         break;
+
+      case 'leaping':
+        this._updateLeap(monster, player, dt);
+        break;
+
+      case 'exit':
+        monster.y += Math.max(monster.speed * 2.5, this.exitSpeed) * (dt / 1000) * 60;
+        monster.x += monster.speed * 0.8 * (dt / 1000) * 60;
+        break;
+    }
+
+    monster.animTimer += dt;
+    if (monster.animTimer > 120) {
+      monster.animFrame = (monster.animFrame + 1) % 4;
+      monster.animTimer = 0;
     }
 
     if (this._shouldDespawn(monster)) {
@@ -195,43 +205,110 @@ class Boss {
     }
   }
 
-  /**
-   * 渲染所有怪物
-   */
+  _moveTowards(monster, targetX, targetY, speed, dt) {
+    const dx = targetX - monster.x;
+    const dy = targetY - monster.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < 1) return;
+
+    const moveSpeed = speed * (dt / 1000) * 60;
+    monster.x += (dx / dist) * moveSpeed;
+    monster.y += (dy / dist) * moveSpeed;
+  }
+
+  _startLeap(monster, player) {
+    monster.state = 'leaping';
+    monster.attackCount++;
+    monster.leapElapsed = 0;
+    monster.leapStartX = monster.x;
+    monster.leapStartY = monster.y;
+    monster.leapTargetX = player.x + player.w / 2;
+    monster.leapTargetY = player.y + player.h / 2;
+  }
+
+  _updateLeap(monster, player, dt) {
+    monster.leapElapsed += dt;
+    const isFinalAttack = monster.attackCount >= monster.maxAttackCount;
+    const progress = Math.min(1, monster.leapElapsed / monster.leapDuration);
+    const arcOffset = Math.sin(progress * Math.PI) * monster.leapArcHeight;
+
+    monster.x = monster.leapStartX + (monster.leapTargetX - monster.leapStartX) * progress;
+    monster.y = monster.leapStartY + (monster.leapTargetY - monster.leapStartY) * progress - arcOffset;
+
+    if (!monster.attackResolved && this._distance(monster.x, monster.y, player.x, player.y) <= this.contactRadius) {
+      monster.attackResolved = true;
+      this._hitPlayer(monster, player, isFinalAttack);
+      if (isFinalAttack) {
+        monster.state = 'exit';
+      } else {
+        monster.state = 'approaching';
+        monster.approachDelay = 500;
+        monster.hitCooldownUntil = Date.now() + 900;
+        monster.y += 120;
+      }
+      return;
+    }
+
+    if (progress >= 1) {
+      if (isFinalAttack) {
+        monster.state = 'exit';
+      } else {
+        monster.state = 'approaching';
+        monster.approachDelay = 350;
+        monster.hitCooldownUntil = Date.now() + 700;
+        monster.y += 80;
+      }
+      if (!monster.attackResolved && this.game.barrage) {
+        this.game.barrage.show(monster.x - 50, monster.y - this.game.cameraY - 100, 'Boss扑空了！', '#74b9ff');
+      }
+    }
+  }
+
+  _hitPlayer(monster, player, isFinalAttack) {
+    this.game.controlLockedUntil = Date.now() + 1000;
+    this.game.controls.keys['ArrowLeft'] = false;
+    this.game.controls.keys['ArrowRight'] = false;
+    this.game.skillSystem.applyBossKnockback(monster.x, { isFinalHit: isFinalAttack });
+    if (this.game.barrage) {
+      const hitText = isFinalAttack ? monster.name + '终结命中！' : monster.name + '重击命中！';
+      this.game.barrage.show(player.x - 40, player.y - this.game.cameraY - 80, hitText, '#ff0066');
+    }
+  }
+
   render(ctx) {
     for (const monster of this.monsters) {
       this._renderMonster(ctx, monster);
     }
   }
 
-  /**
-   * 渲染单个怪物
-   */
   _renderMonster(ctx, monster) {
+    const drawX = monster.x;
+    const drawY = monster.y - this.game.cameraY;
+    const size = monster.state === 'warning' ? this.warningRenderSize : this.renderSize;
+
     if (!monster.framesLoaded) return;
+
+    if (monster.state === 'warning') {
+      ctx.save();
+      ctx.strokeStyle = '#ff9966';
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.arc(drawX, drawY, 110, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
 
     const framePath = monster.frames[monster.animFrame];
     const img = this._getImage(framePath);
-
-    if (img) {
-      const size = 512; // Boss尺寸
-      ctx.drawImage(
-        img,
-        monster.x - size / 2,
-        monster.y - size / 2 - this.game.cameraY,
-        size,
-        size
-      );
-    } else {
-      // 图片未加载时绘制占位符
-      ctx.fillStyle = monster.isBoss ? '#ff0066' : '#ff6600';
-      ctx.fillRect(monster.x - 32, monster.y - 32 - this.game.cameraY, 64, 64);
+    if (img && img.width > 0) {
+      ctx.drawImage(img, drawX - size / 2, drawY - size / 2, size, size);
+      return;
     }
+
+    ctx.fillStyle = monster.isBoss ? '#ff0066' : '#ff6600';
+    ctx.fillRect(drawX - 32, drawY - 32, 64, 64);
   }
 
-  /**
-   * 获取图片资源（带缓存）
-   */
   _getImage(path) {
     if (this.imageCache[path]) {
       return this.imageCache[path];
@@ -254,33 +331,29 @@ class Boss {
     }
   }
 
-  /**
-   * 检测与玩家的碰撞
-   */
   checkCollision(player) {
     for (const monster of this.monsters) {
-      if (monster.state !== 'chasing') continue;
-
-      const dx = player.x - monster.x;
-      const dy = player.y - monster.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-
-      // 碰撞半径
-      if (dist < 64) {
+      if (monster.state !== 'leaping') continue;
+      if (this._distance(player.x, player.y, monster.x, monster.y) < this.contactRadius) {
         return monster;
       }
     }
     return null;
   }
 
-  /**
-   * 检测怪物是否离开活动区域，避免看不见的实例长期残留
-   */
+  _distance(x1, y1, x2, y2) {
+    const dx = x1 - x2;
+    const dy = y1 - y2;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
   _shouldDespawn(monster) {
-    const topBound = this.game.cameraY - 300;
-    const bottomBound = this.game.cameraY + this.game.H + 300;
-    const leftBound = -300;
-    const rightBound = this.game.W + 300;
+    const topPadding = monster.state === 'exit' ? 500 : 1200;
+    const bottomPadding = monster.state === 'exit' ? 1000 : 3200;
+    const topBound = this.game.cameraY - topPadding;
+    const bottomBound = this.game.cameraY + this.game.H + bottomPadding;
+    const leftBound = -400;
+    const rightBound = this.game.W + 400;
 
     return monster.x < leftBound ||
       monster.x > rightBound ||
@@ -288,9 +361,6 @@ class Boss {
       monster.y > bottomBound;
   }
 
-  /**
-   * 移除怪物
-   */
   remove(monster) {
     const idx = this.monsters.indexOf(monster);
     if (idx > -1) {
@@ -298,16 +368,10 @@ class Boss {
     }
   }
 
-  /**
-   * 清空所有怪物
-   */
   clear() {
     this.monsters = [];
   }
 
-  /**
-   * 重置系统
-   */
   reset() {
     this.clear();
   }

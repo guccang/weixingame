@@ -94,7 +94,11 @@ class Game {
     this.lastPraiseTime = 0;
     this.lastMilestone = 0;
     this.shakeTimer = 0;
-    this.lastBossSpawnScore = 0; // 上次生成Boss的分数阈值
+    this.bossSpawnHeight = 500;
+    this.bossSpawnHintShown = false;
+    this.controlLockedUntil = 0;
+    this.bossKnockbackUntil = 0;
+    this.pendingBossLaunch = null;
     this.praiseSystem = new PraiseSystem(); // 夸夸词系统
     this.barrage = new Barrage(); // 弹幕系统
     this.particles = [];
@@ -169,7 +173,12 @@ class Game {
     this.chargeCount = 0;
     this.chargeFull = false;
     this.chargeDashing = false;
-    this.lastBossSpawnScore = 0; // 重置Boss生成阈值
+    this.chargeDashEndTime = 0;
+    this.bossSpawnHintShown = false;
+    this.controlLockedUntil = 0;
+    this.bossKnockbackUntil = 0;
+    this.pendingBossLaunch = null;
+    this.bossSpawnHeight = this.rollBossSpawnHeight();
     this.controls.reset(); // 重置控制系统状态
 
     // 初始化游戏模式特定状态
@@ -190,6 +199,38 @@ class Game {
     this.particles.push(...newParticles);
   }
 
+  isControlLocked() {
+    return Date.now() < this.controlLockedUntil;
+  }
+
+  isImpactDashing() {
+    return this.chargeDashing || Date.now() < this.bossKnockbackUntil;
+  }
+
+  updatePendingBossLaunch() {
+    if (!this.pendingBossLaunch || !this.player) return;
+
+    if (Date.now() < this.pendingBossLaunch.triggerAt) {
+      return;
+    }
+
+    this.player.vx = this.pendingBossLaunch.vx;
+    this.player.vy = this.pendingBossLaunch.vy;
+    this.player.state = 'rise';
+    this.pendingBossLaunch = null;
+  }
+
+  rollBossSpawnHeight() {
+    return 500;
+  }
+
+  getNextBossSpawnHeight(currentHeight) {
+    if (currentHeight < 500) return 500;
+    if (currentHeight < 1000) return 1000;
+    if (currentHeight < 2000) return 2000;
+    return currentHeight + 2000;
+  }
+
   // 更新玩家动画状态
   updatePlayerState() {
     player.updatePlayerState(this.player);
@@ -207,6 +248,13 @@ class Game {
     if (this.gameMode.update(this, 16.67)) {
       return; // 游戏结束
     }
+
+    if (this.isControlLocked()) {
+      this.controls.keys['ArrowLeft'] = false;
+      this.controls.keys['ArrowRight'] = false;
+    }
+
+    this.updatePendingBossLaunch();
 
     player.updateHorizontalMovement(this.player, this.controls);
     player.applyGravity(this.player);
@@ -237,11 +285,15 @@ class Game {
     // 更新Boss系统
     this.bossSystem.update(16.67);
 
-    // Boss出现条件检测（每500分出现一次）
-    const scoreThreshold = Math.floor(this.score / 500);
-    if (scoreThreshold > this.lastBossSpawnScore && this.score >= 500) {
-      this.bossSystem.spawn(1); // 生成ID为1的Boss
-      this.lastBossSpawnScore = scoreThreshold;
+    if (!this.bossSpawnHintShown && this.score >= Math.max(0, this.bossSpawnHeight - 50)) {
+      this.bossSpawnHintShown = true;
+      this.barrage.show(this.W / 2 - 90, 120, '前方检测到Boss动静！', '#ff6b6b');
+    }
+
+    if (this.score >= this.bossSpawnHeight && !this.bossSystem.hasActiveBoss()) {
+      this.bossSystem.spawn(1);
+      this.bossSpawnHeight = this.getNextBossSpawnHeight(this.bossSpawnHeight);
+      this.bossSpawnHintShown = false;
     }
 
     if (player.checkGameOver(this.player, this)) {
@@ -374,6 +426,9 @@ class Game {
     this.chargeCount = 0;
     this.chargeFull = false;
     this.chargeDashing = false;
+    this.controlLockedUntil = 0;
+    this.bossKnockbackUntil = 0;
+    this.pendingBossLaunch = null;
     this.gameOverBtnArea = null;
     this.showCharacterPanel = false;
     this.showJobPanel = false;
