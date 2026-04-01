@@ -37,6 +37,7 @@ function render(game, images, characterConfig, jobConfig) {
     drawPlatforms(ctx, game.platforms, game.cameraY);
     drawPlayer(ctx, game.player, game.cameraY, characterConfig, game.skillSystem);
     drawParticles(ctx, game.particles, game.cameraY);
+    game.bossSystem.render(ctx); // 渲染Boss
     game.barrage.draw(ctx, W);
     drawUI(ctx, W, H, game.score, game.combo, game.state, game.gameMode, game.chargeCount, game.chargeFull, game.chargeDashing);
   } else if (game.state === 'gameover') {
