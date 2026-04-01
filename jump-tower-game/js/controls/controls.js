@@ -13,6 +13,7 @@ class Controls {
     this.tapCount = 0;
     this.lastTapTime = 0;
     this.isSlidingDown = false;
+    this.lastSlideTime = 0;
 
     this.initInput();
   }
@@ -77,12 +78,14 @@ class Controls {
         _this.lastDeltaX = deltaX;
         _this.lastDeltaY = deltaY;
 
-        // 滑动下落（非冲刺期间）
-        if (!_this.game.chargeDashing && _this.game.state === 'playing' && deltaY > 30 && !_this.keys['ArrowLeft'] && !_this.keys['ArrowRight'] && !_this.isSlidingDown) {
+        // 滑动下落（非冲刺期间）- 添加200ms冷却时间防止iOS卡死
+        var now = Date.now();
+        if (!_this.game.chargeDashing && _this.game.state === 'playing' && deltaY > 30 && !_this.keys['ArrowLeft'] && !_this.keys['ArrowRight'] && !_this.isSlidingDown && (now - _this.lastSlideTime > 200)) {
           if (_this.game.player) {
             // 使用技能系统触发下滑
             _this.game.skillSystem.onGesture(0, deltaY);
             _this.isSlidingDown = true;
+            _this.lastSlideTime = now;
           }
         }
 
