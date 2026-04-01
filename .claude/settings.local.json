@@ -30,7 +30,10 @@
       "Bash(node --check js/main.js)",
       "Bash(git pull:*)",
       "Bash(git stash:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(e:/weixingame/art-assets/specs/ratio_4_1.json:*)",
+      "Bash(e:/weixingame/art-assets/prompts/ratio_4_1_prompt.txt:*)",
+      "Bash(python e:/weixingame/.claude/skills/art-prompt-workflow/scripts/split_atlas.py \"E:/weixingame/art-assets/atlas/Gemini_Generated_Image_i4cm1ii4cm1ii4cm.png\" \"E:/weixingame/art-assets/specs/ratio_4_1.json\" \"E:/weixingame/art-assets/output/\")"
     ]
   }
 }
