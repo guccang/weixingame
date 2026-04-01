@@ -1,0 +1,7 @@
+{
+  "basePaths": [
+    "../../jump-tower-game/images/characters/",
+    "../../jump-tower-game/images/monsters/",
+    "../../art-assets/"
+  ]
+}

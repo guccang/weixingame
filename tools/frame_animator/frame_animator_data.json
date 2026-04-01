@@ -1,0 +1,91 @@
+{
+  "basePaths": [
+    "../../jump-tower-game/images/characters/",
+    "../../jump-tower-game/images/monsters/",
+    "../../art-assets/"
+  ],
+  "animations": [
+    {
+      "name": "atlas",
+      "base": "../../art-assets/",
+      "path": "atlas",
+      "frames": [
+        "Gemini_Generated_Image_jvllmcjvllmcjvll.png",
+        "Gemini_Generated_Image_qcufk2qcufk2qcuf.png",
+        "Gemini_Generated_Image_qnp3jrqnp3jrqnp3.png"
+      ]
+    },
+    {
+      "name": "boss",
+      "base": "../../art-assets/",
+      "path": "atlas/boss",
+      "frames": [
+        "boss_frame_1.png",
+        "boss_frame_2.png",
+        "boss_frame_3.png",
+        "boss_frame_4.png",
+        "boss_frame_5.png",
+        "boss_frame_6.png"
+      ]
+    },
+    {
+      "name": "boss1",
+      "base": "../../art-assets/",
+      "path": "atlas/boss1",
+      "frames": [
+        "icon_0_0.png",
+        "icon_0_1.png",
+        "icon_1_0.png",
+        "icon_1_1.png"
+      ]
+    },
+    {
+      "name": "boss2",
+      "base": "../../art-assets/",
+      "path": "atlas/boss2",
+      "frames": [
+        "boss_idle_frame1_1.png",
+        "boss_idle_frame1_2.png",
+        "boss_idle_frame2_1.png",
+        "boss_idle_frame2_2.png"
+      ]
+    },
+    {
+      "name": "chase",
+      "base": "../../jump-tower-game/images/monsters/",
+      "path": "boss/chase",
+      "frames": [
+        "chase_01.png",
+        "chase_02.png",
+        "chase_03.png",
+        "chase_04.png"
+      ]
+    },
+    {
+      "name": "coach",
+      "base": "../../jump-tower-game/images/characters/",
+      "path": "coach",
+      "frames": [
+        "jump_0.png",
+        "jump_1.png",
+        "jump_2.png",
+        "jump_3.png",
+        "jump_4.png",
+        "jump_5.png"
+      ]
+    },
+    {
+      "name": "ironman",
+      "base": "../../jump-tower-game/images/characters/",
+      "path": "ironman",
+      "frames": [
+        "jump_0.png",
+        "jump_1.png",
+        "jump_2.png",
+        "jump_3.png",
+        "jump_4.png",
+        "jump_5.png"
+      ]
+    }
+  ]
+}
