@@ -10,6 +10,28 @@ class LevelGenerator {
     this.platforms = [];
   }
 
+  attachRandomMushroom(platform, height) {
+    if (!platform || platform.type === 'ground') return platform;
+
+    const spawnChance = height > 800 ? 0.16 : 0.1;
+    if (Math.random() >= spawnChance) {
+      platform.mushroom = null;
+      return platform;
+    }
+
+    const mushroomW = 26;
+    const mushroomH = 24;
+    platform.mushroom = {
+      type: 'growth',
+      collected: false,
+      w: mushroomW,
+      h: mushroomH,
+      xOffset: (platform.w - mushroomW) / 2,
+      yOffset: -mushroomH + 2
+    };
+    return platform;
+  }
+
   /**
    * 初始化关卡 - 生成初始平台
    */
@@ -33,7 +55,8 @@ class LevelGenerator {
       if (i > 4 && Math.random() < 0.15) type = 'boost';
       if (i > 6 && Math.random() < 0.15) type = 'moving';
       if (i > 8 && Math.random() < 0.1) type = 'crumble';
-      platforms.push(platformPhysics.createPlatformWithSkin(px, py, type));
+      const platform = platformPhysics.createPlatformWithSkin(px, py, type);
+      platforms.push(this.attachRandomMushroom(platform, -py));
     }
 
     this.platforms = platforms;
@@ -64,7 +87,8 @@ class LevelGenerator {
       if (h > 200 && Math.random() < 0.15) type = 'moving';
       if (h > 800 && Math.random() < 0.1) type = 'crumble';
 
-      this.platforms.push(platformPhysics.createPlatformWithSkin(nx, ny, type));
+      const platform = platformPhysics.createPlatformWithSkin(nx, ny, type);
+      this.platforms.push(this.attachRandomMushroom(platform, h));
     }
 
     // 清理屏幕下方不可见的平台

@@ -17,6 +17,7 @@ function drawPlayer(ctx, player, cameraY, characterConfig, skillSystem) {
   const py = player.y - cameraY;
   const px = player.x;
   const f = player.facing;
+  const isGrown = (player.scale || 1) > 1;
 
   // 尝试使用序列帧图片绘制
   const characterName = player.character || characterConfig.current;
@@ -45,14 +46,21 @@ function drawPlayer(ctx, player, cameraY, characterConfig, skillSystem) {
     }
 
     // 绘制发光效果
-    const glow = ctx.createRadialGradient(0, 0, 5, 0, 0, 35);
-    glow.addColorStop(0, 'rgba(255,221,87,0.3)');
+    const glowRadius = isGrown ? 52 : 35;
+    const glow = ctx.createRadialGradient(0, 0, 5, 0, 0, glowRadius);
+    glow.addColorStop(0, isGrown ? 'rgba(255,77,79,0.35)' : 'rgba(255,221,87,0.3)');
     glow.addColorStop(1, 'rgba(255,221,87,0)');
     ctx.fillStyle = glow;
-    ctx.fillRect(-35, -35, 70, 70);
+    ctx.fillRect(-glowRadius, -glowRadius, glowRadius * 2, glowRadius * 2);
 
     // 绘制角色图片
     ctx.drawImage(frame, -player.w / 2, -player.h / 2, player.w, player.h);
+
+    if (isGrown) {
+      ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(-player.w / 2, -player.h / 2, player.w, player.h);
+    }
     ctx.restore();
     return;
   }
@@ -61,11 +69,12 @@ function drawPlayer(ctx, player, cameraY, characterConfig, skillSystem) {
   ctx.save();
   ctx.translate(px + player.w / 2, py + player.h / 2);
 
-  const glow = ctx.createRadialGradient(0, 0, 5, 0, 0, 35);
-  glow.addColorStop(0, 'rgba(255,221,87,0.3)');
+  const glowRadius = isGrown ? 52 : 35;
+  const glow = ctx.createRadialGradient(0, 0, 5, 0, 0, glowRadius);
+  glow.addColorStop(0, isGrown ? 'rgba(255,77,79,0.35)' : 'rgba(255,221,87,0.3)');
   glow.addColorStop(1, 'rgba(255,221,87,0)');
   ctx.fillStyle = glow;
-  ctx.fillRect(-35, -35, 70, 70);
+  ctx.fillRect(-glowRadius, -glowRadius, glowRadius * 2, glowRadius * 2);
 
   const legAnim = Math.sin(Date.now() * 0.01) * 5;
   ctx.fillStyle = '#2d3436';

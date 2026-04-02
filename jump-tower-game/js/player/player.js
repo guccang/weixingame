@@ -14,11 +14,15 @@ const { characterConfig } = require('../character/character');
  * @returns {Object} 玩家对象
  */
 function createPlayer(W, H) {
+  const baseSize = 64;
   return {
-    x: W / 2 - 32,
+    x: W / 2 - baseSize / 2,
     y: H - 100,
-    w: 64,
-    h: 64,
+    w: baseSize,
+    h: baseSize,
+    baseW: baseSize,
+    baseH: baseSize,
+    scale: 1,
     vx: 0,
     vy: 0,
     facing: 1,
@@ -125,6 +129,23 @@ function handlePlatformCollisions(player, platforms, game, now) {
             const praise = game.praiseSystem.getRandomPraise();
             const colors = ['#ffdd57', '#ff6b6b', '#74b9ff', '#55efc4', '#fd79a8', '#ffeaa7'];
             game.barrage.show(player.x, player.y - game.cameraY - 30, praise, colors[Math.floor(Math.random() * colors.length)]);
+          }
+        }
+
+        if (p.mushroom && !p.mushroom.collected) {
+          const mushroomX = platformPhysics.getMovingPlatformX(p, now) + p.mushroom.xOffset;
+          const mushroomY = p.y + p.mushroom.yOffset;
+          const playerCenterX = player.x + player.w / 2;
+          const playerFeetY = player.y + player.h;
+          const overlapsMushroom =
+            playerCenterX >= mushroomX - 8 &&
+            playerCenterX <= mushroomX + p.mushroom.w + 8 &&
+            playerFeetY >= mushroomY &&
+            player.y <= mushroomY + p.mushroom.h + 12;
+
+          if (overlapsMushroom) {
+            p.mushroom.collected = true;
+            game.activateGrowthMushroom();
           }
         }
       }

@@ -68,7 +68,44 @@ function drawPlatforms(ctx, platforms, cameraY) {
     if (p.falling && p.va) {
       ctx.restore();
     }
+
+    if (p.mushroom && !p.mushroom.collected && !p.dead) {
+      drawMushroom(ctx, p, px, sy);
+    }
   }
+}
+
+function drawMushroom(ctx, platform, px, sy) {
+  const mushroomX = px + platform.mushroom.xOffset;
+  const mushroomY = sy + platform.mushroom.yOffset;
+  const capW = platform.mushroom.w;
+  const capH = platform.mushroom.h * 0.6;
+  const stemW = capW * 0.35;
+  const stemH = platform.mushroom.h * 0.55;
+
+  ctx.save();
+  ctx.shadowColor = 'rgba(255, 77, 79, 0.5)';
+  ctx.shadowBlur = 12;
+
+  ctx.fillStyle = '#fff5e6';
+  ctx.fillRect(
+    mushroomX + (capW - stemW) / 2,
+    mushroomY + capH - 2,
+    stemW,
+    stemH
+  );
+
+  ctx.fillStyle = '#ff4d4f';
+  ctx.beginPath();
+  ctx.ellipse(mushroomX + capW / 2, mushroomY + capH, capW / 2, capH, 0, Math.PI, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(mushroomX + capW * 0.35, mushroomY + capH * 0.9, 3, 0, Math.PI * 2);
+  ctx.arc(mushroomX + capW * 0.6, mushroomY + capH * 0.7, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
 }
 
 /**

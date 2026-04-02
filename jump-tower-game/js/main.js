@@ -99,6 +99,8 @@ class Game {
     this.controlLockedUntil = 0;
     this.bossKnockbackUntil = 0;
     this.pendingBossLaunch = null;
+    this.growthActive = false;
+    this.growthScale = 1.55;
     this.praiseSystem = new PraiseSystem(); // 夸夸词系统
     this.barrage = new Barrage(); // 弹幕系统
     this.particles = [];
@@ -178,6 +180,7 @@ class Game {
     this.controlLockedUntil = 0;
     this.bossKnockbackUntil = 0;
     this.pendingBossLaunch = null;
+    this.growthActive = false;
     this.bossSpawnHeight = this.rollBossSpawnHeight();
     this.controls.reset(); // 重置控制系统状态
 
@@ -218,6 +221,54 @@ class Game {
     this.player.vy = this.pendingBossLaunch.vy;
     this.player.state = 'rise';
     this.pendingBossLaunch = null;
+  }
+
+  setPlayerScale(scale) {
+    if (!this.player) return;
+
+    const baseW = this.player.baseW || this.player.w || 64;
+    const baseH = this.player.baseH || this.player.h || 64;
+    const feetY = this.player.y + this.player.h;
+    const centerX = this.player.x + this.player.w / 2;
+
+    this.player.scale = scale;
+    this.player.w = baseW * scale;
+    this.player.h = baseH * scale;
+    this.player.x = centerX - this.player.w / 2;
+    this.player.y = feetY - this.player.h;
+  }
+
+  activateGrowthMushroom() {
+    if (!this.player) return;
+
+    if (this.growthActive) {
+      return;
+    }
+
+    this.growthActive = true;
+    this.setPlayerScale(this.growthScale);
+    this.spawnParticles(
+      this.player.x + this.player.w / 2,
+      this.player.y + this.player.h / 2,
+      '#ff4d4f',
+      18
+    );
+    if (this.barrage) {
+      this.barrage.show(this.player.x - 20, this.player.y - this.cameraY - 70, '吃到蘑菇，变大了！', '#ff4d4f');
+    }
+  }
+
+  consumeGrowthMushroom() {
+    if (!this.player || !this.growthActive) return;
+
+    this.growthActive = false;
+    this.setPlayerScale(1);
+    this.spawnParticles(
+      this.player.x + this.player.w / 2,
+      this.player.y + this.player.h / 2,
+      '#ffd666',
+      12
+    );
   }
 
   rollBossSpawnHeight() {
@@ -354,6 +405,8 @@ class Game {
 
   gameOver() {
     this.state = 'gameover';
+    this.growthActive = false;
+    this.setPlayerScale(1);
     this.combo = 0;
     // 初始化游戏结束按钮区域，确保在渲染前就存在
     this.gameOverBtnArea = {

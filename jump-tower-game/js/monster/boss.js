@@ -89,7 +89,11 @@ class Boss {
       leapTargetX: 0,
       leapTargetY: 0,
       frames: [],
-      framesLoaded: false
+      framesLoaded: false,
+      vx: 0,
+      vy: 0,
+      rotation: 0,
+      rotationSpeed: 0
     };
 
     this._loadFrames(monster);
@@ -148,6 +152,10 @@ class Boss {
   }
 
   _updateMonster(monster, player, dt) {
+    if (this._tryResolveGrowthCollision(monster, player)) {
+      return;
+    }
+
     monster.targetX = player.x;
     monster.targetY = player.y;
 
@@ -193,6 +201,13 @@ class Boss {
         monster.y += Math.max(monster.speed * 2.5, this.exitSpeed) * (dt / 1000) * 60;
         monster.x += monster.speed * 0.8 * (dt / 1000) * 60;
         break;
+
+      case 'launched':
+        monster.x += monster.vx * (dt / 1000) * 60;
+        monster.y += monster.vy * (dt / 1000) * 60;
+        monster.vy += 0.45 * (dt / 16.67);
+        monster.rotation += monster.rotationSpeed * (dt / 1000) * 60;
+        break;
     }
 
     monster.animTimer += dt;
@@ -204,6 +219,34 @@ class Boss {
     if (this._shouldDespawn(monster)) {
       this.remove(monster);
     }
+  }
+
+  _tryResolveGrowthCollision(monster, player) {
+    if (!this.game.growthActive) return false;
+
+    const playerCenterX = player.x + player.w / 2;
+    const playerCenterY = player.y + player.h / 2;
+    const hitDistance = this.contactRadius + Math.max(player.w, player.h) * 0.35;
+    if (this._distance(playerCenterX, playerCenterY, monster.x, monster.y) > hitDistance) {
+      return false;
+    }
+
+    monster.state = 'exit';
+    monster.attackResolved = true;
+    monster.hitCooldownUntil = Date.now() + 1200;
+    monster.vx = monster.x < playerCenterX ? -18 : 18;
+    monster.vy = -16;
+    monster.rotation = 0;
+    monster.rotationSpeed = monster.vx < 0 ? -0.22 : 0.22;
+    monster.state = 'launched';
+
+    this.game.consumeGrowthMushroom();
+    this.game.shakeTimer = Math.max(this.game.shakeTimer, 12);
+    this.game.spawnParticles(playerCenterX, playerCenterY, '#ff9f1a', 24);
+    if (this.game.barrage) {
+      this.game.barrage.show(player.x - 40, player.y - this.game.cameraY - 90, 'Boss被顶飞了！', '#ff9f1a');
+    }
+    return true;
   }
 
   _moveTowards(monster, targetX, targetY, speed, dt) {
@@ -302,11 +345,27 @@ class Boss {
     const framePath = monster.frames[monster.animFrame];
     const img = this._getImage(framePath);
     if (img && img.width > 0) {
-      ctx.drawImage(img, drawX - size / 2, drawY - size / 2, size, size);
+      if (monster.state === 'launched') {
+        ctx.save();
+        ctx.translate(drawX, drawY);
+        ctx.rotate(monster.rotation || 0);
+        ctx.drawImage(img, -size / 2, -size / 2, size, size);
+        ctx.restore();
+      } else {
+        ctx.drawImage(img, drawX - size / 2, drawY - size / 2, size, size);
+      }
       return;
     }
 
     ctx.fillStyle = monster.isBoss ? '#ff0066' : '#ff6600';
+    if (monster.state === 'launched') {
+      ctx.save();
+      ctx.translate(drawX, drawY);
+      ctx.rotate(monster.rotation || 0);
+      ctx.fillRect(-32, -32, 64, 64);
+      ctx.restore();
+      return;
+    }
     ctx.fillRect(drawX - 32, drawY - 32, 64, 64);
   }
 
