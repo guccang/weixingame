@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build Asset Manifest"
+  short_description: "Generate CloudBase manifest JSON from repo assets"
+  default_prompt: "Generate or refresh the asset manifest for this WeChat mini game project."

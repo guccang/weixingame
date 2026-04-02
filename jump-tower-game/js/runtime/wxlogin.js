@@ -1,11 +1,13 @@
 // 微信登录模块
+const { getConfig } = require('../resource/envConfig');
+
 let loginCallback = null;
 
 // 初始化云开发
 function initCloud() {
   if (wx.cloud) {
     wx.cloud.init({
-      env: 'cloud1-9gazfwmccd451101'
+      env: getConfig().envId
     });
     console.log('云开发初始化成功');
   }

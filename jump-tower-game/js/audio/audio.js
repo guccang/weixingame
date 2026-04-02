@@ -2,6 +2,7 @@
 // 数据从表格加载：Audio.txt
 
 const tableManager = require('../tables/tableManager');
+const assetManager = require('../resource/assetManager');
 
 let instance;
 
@@ -28,7 +29,7 @@ class Audio {
 
     for (const config of audioConfigs) {
       const audio = wx.createInnerAudioContext();
-      audio.src = config.ResPath;
+      audio.src = assetManager.getAudioPath(config.ResPath);
       audio.volume = config.Volume !== undefined ? config.Volume : 1.0;
       audio.loop = config.Loop === true || config.Loop === 'true';
 

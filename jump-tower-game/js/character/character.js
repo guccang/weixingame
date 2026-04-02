@@ -4,6 +4,7 @@
  */
 
 const tableManager = require('../tables/tableManager');
+const assetManager = require('../resource/assetManager');
 
 // 状态到帧索引的映射
 const STATE_TO_FRAME_INDEX = {
@@ -88,7 +89,7 @@ function loadCharacter(characterName) {
         characterConfig.loadedCharacters[characterName] = true;
       }
     };
-    img.src = `images/characters/${characterName}/jump_${i}.png`;
+    img.src = assetManager.getImagePath(`images/characters/${characterName}/jump_${i}.png`);
     characterConfig.frames[characterName].push(img);
   }
 }

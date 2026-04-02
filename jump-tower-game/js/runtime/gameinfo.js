@@ -1,8 +1,9 @@
 const Emitter = require('../libs/tinyemitter');
 const { SCREEN_WIDTH, SCREEN_HEIGHT } = require('../render');
+const assetManager = require('../resource/assetManager');
 
 const atlas = wx.createImage();
-atlas.src = 'images/Common.png';
+atlas.src = assetManager.getImagePath('images/Common.png');
 
 class GameInfo extends Emitter {
   constructor() {

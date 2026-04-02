@@ -5,6 +5,7 @@
  */
 
 const { TableConfigs } = require('./tableConfig');
+const assetManager = require('../resource/assetManager');
 
 const { AudioRow } = require('./tableStruct');
 const { CharacterRow } = require('./tableStruct');
@@ -46,8 +47,7 @@ class TableManager {
     const RowClass = this._getRowClass(tableName);
 
     try {
-      const fs = wx.getFileSystemManager();
-      const content = fs.readFileSync(txtPath, "utf-8");
+      const content = assetManager.getTableText(txtPath);
 
       // 解析 Tab 分隔的文本
       const lines = content.split("\n").filter(line => line.trim());

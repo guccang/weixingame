@@ -1,0 +1,4 @@
+interface:
+  display_name: "Publish Cloud Assets"
+  short_description: "Upload assets and sync manifest to CloudBase"
+  default_prompt: "Upload local game assets to CloudBase storage and sync the manifest document to the asset_manifest collection."

@@ -1,0 +1,266 @@
+{
+  "enabled": true,
+  "version": "1.2.0",
+  "updatedAt": 1775144249795,
+  "assets": [
+    {
+      "key": "ui.bgMain",
+      "type": "image",
+      "localPath": "images/ui_main/bg_main.png",
+      "cloudPath": "assets/images/ui_main/bg_main.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/ui_main/bg_main.png"
+    },
+    {
+      "key": "ui.bgShop",
+      "type": "image",
+      "localPath": "images/ui_main/bg_shop.png",
+      "cloudPath": "assets/images/ui_main/bg_shop.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/ui_main/bg_shop.png"
+    },
+    {
+      "key": "ui.iconCharacter",
+      "type": "image",
+      "localPath": "images/ui_main/icon_character.png",
+      "cloudPath": "assets/images/ui_main/icon_character.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/ui_main/icon_character.png"
+    },
+    {
+      "key": "ui.iconCoin",
+      "type": "image",
+      "localPath": "images/ui_main/icon_coin.png",
+      "cloudPath": "assets/images/ui_main/icon_coin.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/ui_main/icon_coin.png"
+    },
+    {
+      "key": "ui.iconLeaderboard",
+      "type": "image",
+      "localPath": "images/ui_main/icon_leaderboard.png",
+      "cloudPath": "assets/images/ui_main/icon_leaderboard.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/ui_main/icon_leaderboard.png"
+    },
+    {
+      "key": "ui.iconShop",
+      "type": "image",
+      "localPath": "images/ui_main/icon_shop.png",
+      "cloudPath": "assets/images/ui_main/icon_shop.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/ui_main/icon_shop.png"
+    },
+    {
+      "key": "platform.normal",
+      "type": "image",
+      "localPath": "images/platforms/platform_normal.png",
+      "cloudPath": "assets/images/platforms/platform_normal.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/platforms/platform_normal.png"
+    },
+    {
+      "key": "platform.ice",
+      "type": "image",
+      "localPath": "images/platforms/platform_ice.png",
+      "cloudPath": "assets/images/platforms/platform_ice.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/platforms/platform_ice.png"
+    },
+    {
+      "key": "platform.rock",
+      "type": "image",
+      "localPath": "images/platforms/platform_rock.png",
+      "cloudPath": "assets/images/platforms/platform_rock.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/platforms/platform_rock.png"
+    },
+    {
+      "key": "platform.moving",
+      "type": "image",
+      "localPath": "images/platforms/platform_moving.png",
+      "cloudPath": "assets/images/platforms/platform_moving.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/platforms/platform_moving.png"
+    },
+    {
+      "key": "character.ironman.jump.0",
+      "type": "image",
+      "localPath": "images/characters/ironman/jump_0.png",
+      "cloudPath": "assets/images/characters/ironman/jump_0.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/characters/ironman/jump_0.png"
+    },
+    {
+      "key": "character.ironman.jump.1",
+      "type": "image",
+      "localPath": "images/characters/ironman/jump_1.png",
+      "cloudPath": "assets/images/characters/ironman/jump_1.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/characters/ironman/jump_1.png"
+    },
+    {
+      "key": "character.ironman.jump.2",
+      "type": "image",
+      "localPath": "images/characters/ironman/jump_2.png",
+      "cloudPath": "assets/images/characters/ironman/jump_2.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/characters/ironman/jump_2.png"
+    },
+    {
+      "key": "character.ironman.jump.3",
+      "type": "image",
+      "localPath": "images/characters/ironman/jump_3.png",
+      "cloudPath": "assets/images/characters/ironman/jump_3.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/characters/ironman/jump_3.png"
+    },
+    {
+      "key": "character.ironman.jump.4",
+      "type": "image",
+      "localPath": "images/characters/ironman/jump_4.png",
+      "cloudPath": "assets/images/characters/ironman/jump_4.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/characters/ironman/jump_4.png"
+    },
+    {
+      "key": "character.ironman.jump.5",
+      "type": "image",
+      "localPath": "images/characters/ironman/jump_5.png",
+      "cloudPath": "assets/images/characters/ironman/jump_5.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/characters/ironman/jump_5.png"
+    },
+    {
+      "key": "character.coach.jump.0",
+      "type": "image",
+      "localPath": "images/characters/coach/jump_0.png",
+      "cloudPath": "assets/images/characters/coach/jump_0.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/characters/coach/jump_0.png"
+    },
+    {
+      "key": "character.coach.jump.1",
+      "type": "image",
+      "localPath": "images/characters/coach/jump_1.png",
+      "cloudPath": "assets/images/characters/coach/jump_1.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/characters/coach/jump_1.png"
+    },
+    {
+      "key": "character.coach.jump.2",
+      "type": "image",
+      "localPath": "images/characters/coach/jump_2.png",
+      "cloudPath": "assets/images/characters/coach/jump_2.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/characters/coach/jump_2.png"
+    },
+    {
+      "key": "character.coach.jump.3",
+      "type": "image",
+      "localPath": "images/characters/coach/jump_3.png",
+      "cloudPath": "assets/images/characters/coach/jump_3.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/characters/coach/jump_3.png"
+    },
+    {
+      "key": "character.coach.jump.4",
+      "type": "image",
+      "localPath": "images/characters/coach/jump_4.png",
+      "cloudPath": "assets/images/characters/coach/jump_4.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/characters/coach/jump_4.png"
+    },
+    {
+      "key": "character.coach.jump.5",
+      "type": "image",
+      "localPath": "images/characters/coach/jump_5.png",
+      "cloudPath": "assets/images/characters/coach/jump_5.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/characters/coach/jump_5.png"
+    },
+    {
+      "key": "monster.boss.chase.1",
+      "type": "image",
+      "localPath": "images/monsters/boss/chase/chase_01.png",
+      "cloudPath": "assets/images/monsters/boss/chase/chase_01.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/monsters/boss/chase/chase_01.png"
+    },
+    {
+      "key": "monster.boss.chase.2",
+      "type": "image",
+      "localPath": "images/monsters/boss/chase/chase_02.png",
+      "cloudPath": "assets/images/monsters/boss/chase/chase_02.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/monsters/boss/chase/chase_02.png"
+    },
+    {
+      "key": "monster.boss.chase.3",
+      "type": "image",
+      "localPath": "images/monsters/boss/chase/chase_03.png",
+      "cloudPath": "assets/images/monsters/boss/chase/chase_03.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/monsters/boss/chase/chase_03.png"
+    },
+    {
+      "key": "monster.boss.chase.4",
+      "type": "image",
+      "localPath": "images/monsters/boss/chase/chase_04.png",
+      "cloudPath": "assets/images/monsters/boss/chase/chase_04.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/monsters/boss/chase/chase_04.png"
+    },
+    {
+      "key": "audio.bgm",
+      "type": "audio",
+      "localPath": "audio/background_music.mp3",
+      "cloudPath": "assets/audio/background_music.mp3",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/audio/background_music.mp3"
+    },
+    {
+      "key": "audio.click",
+      "type": "audio",
+      "localPath": "audio/click.mp3",
+      "cloudPath": "assets/audio/click.mp3",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/audio/click.mp3"
+    },
+    {
+      "key": "audio.jump",
+      "type": "audio",
+      "localPath": "audio/jump.mp3",
+      "cloudPath": "assets/audio/jump.mp3",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/audio/jump.mp3"
+    },
+    {
+      "key": "table.Audio",
+      "type": "table",
+      "localPath": "tables/Audio.txt",
+      "cloudPath": "assets/tables/Audio.txt",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/tables/Audio.txt"
+    },
+    {
+      "key": "table.Character",
+      "type": "table",
+      "localPath": "tables/Character.txt",
+      "cloudPath": "assets/tables/Character.txt",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/tables/Character.txt"
+    },
+    {
+      "key": "table.GameConfig",
+      "type": "table",
+      "localPath": "tables/GameConfig.txt",
+      "cloudPath": "assets/tables/GameConfig.txt",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/tables/GameConfig.txt"
+    },
+    {
+      "key": "table.Milestones",
+      "type": "table",
+      "localPath": "tables/Milestones.txt",
+      "cloudPath": "assets/tables/Milestones.txt",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/tables/Milestones.txt"
+    },
+    {
+      "key": "table.Monsters",
+      "type": "table",
+      "localPath": "tables/Monsters.txt",
+      "cloudPath": "assets/tables/Monsters.txt",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/tables/Monsters.txt"
+    },
+    {
+      "key": "table.Platforms",
+      "type": "table",
+      "localPath": "tables/Platforms.txt",
+      "cloudPath": "assets/tables/Platforms.txt",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/tables/Platforms.txt"
+    },
+    {
+      "key": "table.Praises",
+      "type": "table",
+      "localPath": "tables/Praises.txt",
+      "cloudPath": "assets/tables/Praises.txt",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/tables/Praises.txt"
+    },
+    {
+      "key": "table.UIText",
+      "type": "table",
+      "localPath": "tables/UIText.txt",
+      "cloudPath": "assets/tables/UIText.txt",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/tables/UIText.txt"
+    }
+  ]
+}

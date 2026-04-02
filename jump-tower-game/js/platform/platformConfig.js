@@ -4,6 +4,7 @@
  */
 
 const tableManager = require('../tables/tableManager');
+const assetManager = require('../resource/assetManager');
 
 // 平台配置
 const platformConfig = {
@@ -85,7 +86,7 @@ function loadImages() {
   for (const p of platformConfig.platforms) {
     if (!platformConfig.images[p.Id]) {
       const img = wx.createImage();
-      img.src = p.ResPath;
+      img.src = assetManager.getImagePath(p.ResPath);
       platformConfig.images[p.Id] = img;
     }
   }

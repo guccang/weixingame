@@ -5,6 +5,7 @@
 
 const skillData = require('./skillData');
 const { characterConfig, STATE_TO_FRAME_INDEX } = require('../character/character');
+const assetManager = require('../resource/assetManager');
 
 /**
  * 活跃技能实例
@@ -78,7 +79,7 @@ class ActiveSkill {
     if (this.config.sound && this.audio) {
       try {
         const audio = wx.createInnerAudioContext();
-        audio.src = this.config.sound;
+        audio.src = assetManager.getAudioPath(this.config.sound);
         audio.onEnded(function() {
           audio.destroy();
         });

@@ -2,6 +2,8 @@
  * 图片资源加载模块
  */
 
+const assetManager = require('./assetManager');
+
 const images = {
   bgMain: null,
   bgShop: null,
@@ -27,12 +29,12 @@ function loadImage(name, src) {
 }
 
 function loadAllImages() {
-  loadImage('bgMain', 'images/ui_main/bg_main.png');
-  loadImage('bgShop', 'images/ui_main/bg_shop.png');
-  loadImage('iconCharacter', 'images/ui_main/icon_character.png');
-  loadImage('iconCoin', 'images/ui_main/icon_coin.png');
-  loadImage('iconLeaderboard', 'images/ui_main/icon_leaderboard.png');
-  loadImage('iconShop', 'images/ui_main/icon_shop.png');
+  loadImage('bgMain', assetManager.getImagePath('ui.bgMain'));
+  loadImage('bgShop', assetManager.getImagePath('ui.bgShop'));
+  loadImage('iconCharacter', assetManager.getImagePath('ui.iconCharacter'));
+  loadImage('iconCoin', assetManager.getImagePath('ui.iconCoin'));
+  loadImage('iconLeaderboard', assetManager.getImagePath('ui.iconLeaderboard'));
+  loadImage('iconShop', assetManager.getImagePath('ui.iconShop'));
 }
 
 loadAllImages();

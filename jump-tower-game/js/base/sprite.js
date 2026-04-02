@@ -1,4 +1,5 @@
 const Emitter = require('../libs/tinyemitter');
+const assetManager = require('../resource/assetManager');
 
 /**
  * 游戏基础的精灵类
@@ -11,7 +12,7 @@ class Sprite extends Emitter {
     this.isActive = true;
 
     this.img = wx.createImage();
-    this.img.src = imgSrc;
+    this.img.src = assetManager.getImagePath(imgSrc);
 
     this.width = width;
     this.height = height;

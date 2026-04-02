@@ -1,4 +1,5 @@
 const Sprite = require('./sprite');
+const assetManager = require('../resource/assetManager');
 
 const __ = {
   timer: Symbol('timer'),
@@ -26,7 +27,7 @@ class Animation extends Sprite {
   initFrames(imgList) {
     this.imgList = imgList.map((src) => {
       const img = wx.createImage();
-      img.src = src;
+      img.src = assetManager.getImagePath(src);
       return img;
     });
 

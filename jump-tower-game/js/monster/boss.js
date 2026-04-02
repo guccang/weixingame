@@ -4,6 +4,7 @@
  */
 
 const { getById, find } = require('../tables/tableManager');
+const assetManager = require('../resource/assetManager');
 
 class Boss {
   constructor(game) {
@@ -322,7 +323,7 @@ class Boss {
       img.onerror = function() {
         console.warn('[Boss] 图片加载失败:', path);
       };
-      img.src = path;
+      img.src = assetManager.getImagePath(path);
       this.imageCache[path] = img;
       return img;
     } catch (e) {
