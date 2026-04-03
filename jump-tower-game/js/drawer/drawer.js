@@ -5,8 +5,11 @@
 const { roundRect } = require('./helper');
 const { drawBackground } = require('./background');
 const { drawPlatforms } = require('./platform');
+const { drawCoins } = require('./coin');
 const { drawPlayer } = require('./player');
 const { drawParticles } = require('./particle');
+const { drawTrails } = require('../effects/trail');
+const { drawPet } = require('../pet/pet');
 const { drawUI } = require('./ui');
 const { drawStartScreen } = require('./startScreen');
 const { drawGameOverScreen } = require('./gameOver');
@@ -35,11 +38,14 @@ function render(game, images, characterConfig, jobConfig) {
   } else if (game.state === 'playing') {
     drawBackground(ctx, W, H, game.cameraY, game.score, game.bgStars);
     drawPlatforms(ctx, game.platforms, game.cameraY);
+    drawCoins(ctx, game.coins, game.cameraY, game.levelGenerator, Date.now());
+    drawTrails(ctx, game.trailEffects, game.cameraY);
+    drawPet(ctx, game.pet, game.cameraY);
     drawPlayer(ctx, game.player, game.cameraY, characterConfig, game.skillSystem);
     drawParticles(ctx, game.particles, game.cameraY);
     game.bossSystem.render(ctx); // 渲染Boss
     game.barrage.draw(ctx, W);
-    drawUI(ctx, W, H, game.score, game.combo, game.state, game.gameMode, game.chargeCount, game.chargeFull, game.chargeDashing);
+    drawUI(ctx, W, H, game.score, game.combo, game.state, game.gameMode, game.chargeCount, game.chargeFull, game.chargeDashing, game.chargeMax, game.progression ? game.progression.coins : 0);
   } else if (game.state === 'gameover') {
     drawGameOverScreen(ctx, game);
   }
@@ -53,6 +59,9 @@ module.exports = {
   roundRect,
   drawBackground,
   drawPlatforms,
+  drawCoins,
+  drawTrails,
+  drawPet,
   drawPlayer,
   drawParticles,
   drawUI,

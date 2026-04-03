@@ -1,0 +1,11 @@
+INT	STRING	STRING	STRING	INT	INT	FLOAT	FLOAT	FLOAT	STRING
+#序号	强化键	强化名	分类	最大等级	基础价格	成长系数	基础效果	每级效果	说明
+#Id	UpgradeId	Name	Category	MaxLevel	BaseCost	CostGrowth	EffectBase	EffectPerLevel	Desc
+1	jump_force	跳跃强化	stat	8	30	1.45	0	0.8	提升基础跳跃力
+2	move_speed	移速强化	stat	8	26	1.42	0	0.35	提升左右移动速度
+3	charge_max	蓄力上限	stat	5	45	1.6	0	1	提升蓄力条上限
+4	growth_scale	蘑菇增幅	effect	6	36	1.52	0	0.08	提升变大后的体型效果
+5	growth_launch	eject强化	effect	6	42	1.55	1	0.12	提升变大后撞飞Boss效果
+6	main_trail	主飘带强化	effect	6	22	1.4	1	0.1	增强脚底主飘带表现
+7	head_ribbon	头带强化	effect	6	20	1.38	1	0.1	增强头部飘带表现
+8	pet_aura	宠物光环	effect	6	24	1.42	1	0.1	增强宠物体积和拖尾表现

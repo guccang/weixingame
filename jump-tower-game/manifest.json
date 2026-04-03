@@ -1,7 +1,7 @@
 {
   "enabled": true,
   "version": "1.2.0",
-  "updatedAt": 1775144249795,
+  "updatedAt": 1775232870109,
   "assets": [
     {
       "key": "ui.bgMain",
@@ -221,6 +221,13 @@
       "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/tables/Character.txt"
     },
     {
+      "key": "table.EconomyConfig",
+      "type": "table",
+      "localPath": "tables/EconomyConfig.txt",
+      "cloudPath": "assets/tables/EconomyConfig.txt",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/tables/EconomyConfig.txt"
+    },
+    {
       "key": "table.GameConfig",
       "type": "table",
       "localPath": "tables/GameConfig.txt",
@@ -254,6 +261,13 @@
       "localPath": "tables/Praises.txt",
       "cloudPath": "assets/tables/Praises.txt",
       "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/tables/Praises.txt"
+    },
+    {
+      "key": "table.Upgrades",
+      "type": "table",
+      "localPath": "tables/Upgrades.txt",
+      "cloudPath": "assets/tables/Upgrades.txt",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/tables/Upgrades.txt"
     },
     {
       "key": "table.UIText",

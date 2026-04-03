@@ -84,6 +84,31 @@ class CharacterRow extends BaseTableRow {
 }
 
 /**
+ * EconomyConfig 表数据行
+ * @property {number} Id - 序号
+ * @property {string} Key - 配置键
+ * @property {string} Name - 配置名
+ * @property {number} Value - 数值
+ * @property {string} Desc - 说明
+ */
+class EconomyConfigRow extends BaseTableRow {
+  constructor() {
+    super();
+    this.Id = 0;
+    this.Key = '';
+    this.Name = '';
+    this.Value = 0;
+    this.Desc = '';
+  }
+
+  static create(obj, fields, types) {
+    const row = new EconomyConfigRow();
+    row.initFromObject(obj, fields, types);
+    return row;
+  }
+}
+
+/**
  * GameConfig 表数据行
  * @property {number} Id - 序号
  * @property {string} Key - 配置键
@@ -239,14 +264,51 @@ class UITextRow extends BaseTableRow {
   }
 }
 
+/**
+ * Upgrades 表数据行
+ * @property {number} Id - 序号
+ * @property {string} UpgradeId - 强化键
+ * @property {string} Name - 强化名
+ * @property {string} Category - 分类
+ * @property {number} MaxLevel - 最大等级
+ * @property {number} BaseCost - 基础价格
+ * @property {number} CostGrowth - 成长系数
+ * @property {number} EffectBase - 基础效果
+ * @property {number} EffectPerLevel - 每级效果
+ * @property {string} Desc - 说明
+ */
+class UpgradesRow extends BaseTableRow {
+  constructor() {
+    super();
+    this.Id = 0;
+    this.UpgradeId = '';
+    this.Name = '';
+    this.Category = '';
+    this.MaxLevel = 0;
+    this.BaseCost = 0;
+    this.CostGrowth = 0;
+    this.EffectBase = 0;
+    this.EffectPerLevel = 0;
+    this.Desc = '';
+  }
+
+  static create(obj, fields, types) {
+    const row = new UpgradesRow();
+    row.initFromObject(obj, fields, types);
+    return row;
+  }
+}
+
 module.exports = {
   BaseTableRow,
   AudioRow,
   CharacterRow,
+  EconomyConfigRow,
   GameConfigRow,
   MilestonesRow,
   MonstersRow,
   PlatformsRow,
   PraisesRow,
+  UpgradesRow,
   UITextRow,
 };

@@ -34,6 +34,18 @@ const CharacterConfig = {
   ],
 };
 
+const EconomyConfigConfig = {
+  name: 'EconomyConfig',
+  file: 'EconomyConfig.txt',
+  fields: [
+    { name: 'Id', type: 'INT', comment: '序号' },
+    { name: 'Key', type: 'STRING', comment: '配置键' },
+    { name: 'Name', type: 'STRING', comment: '配置名' },
+    { name: 'Value', type: 'FLOAT', comment: '数值' },
+    { name: 'Desc', type: 'STRING', comment: '说明' },
+  ],
+};
+
 const GameConfigConfig = {
   name: 'GameConfig',
   file: 'GameConfig.txt',
@@ -109,14 +121,33 @@ const UITextConfig = {
   ],
 };
 
+const UpgradesConfig = {
+  name: 'Upgrades',
+  file: 'Upgrades.txt',
+  fields: [
+    { name: 'Id', type: 'INT', comment: '序号' },
+    { name: 'UpgradeId', type: 'STRING', comment: '强化键' },
+    { name: 'Name', type: 'STRING', comment: '强化名' },
+    { name: 'Category', type: 'STRING', comment: '分类' },
+    { name: 'MaxLevel', type: 'INT', comment: '最大等级' },
+    { name: 'BaseCost', type: 'INT', comment: '基础价格' },
+    { name: 'CostGrowth', type: 'FLOAT', comment: '成长系数' },
+    { name: 'EffectBase', type: 'FLOAT', comment: '基础效果' },
+    { name: 'EffectPerLevel', type: 'FLOAT', comment: '每级效果' },
+    { name: 'Desc', type: 'STRING', comment: '说明' },
+  ],
+};
+
 const TableConfigs = {
   Audio: AudioConfig,
   Character: CharacterConfig,
+  EconomyConfig: EconomyConfigConfig,
   GameConfig: GameConfigConfig,
   Milestones: MilestonesConfig,
   Monsters: MonstersConfig,
   Platforms: PlatformsConfig,
   Praises: PraisesConfig,
+  Upgrades: UpgradesConfig,
   UIText: UITextConfig,
 };
 

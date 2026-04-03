@@ -27,7 +27,7 @@ function getText(key, ...args) {
 /**
  * 绘制游戏UI
  */
-function drawUI(ctx, W, H, score, combo, state, gameMode, chargeCount, chargeFull, chargeDashing) {
+function drawUI(ctx, W, H, score, combo, state, gameMode, chargeCount, chargeFull, chargeDashing, chargeMax, coins) {
   if (state !== 'playing') return;
   ctx.fillStyle = '#ffdd57';
   ctx.font = 'bold 22px sans-serif';
@@ -68,7 +68,7 @@ function drawUI(ctx, W, H, score, combo, state, gameMode, chargeCount, chargeFul
     const chargeBarHeight = 12;
     const chargeBarX = W - chargeBarWidth - 15;
     const chargeBarY = safeTop + 30 + 7 - chargeBarHeight;
-    const chargeMax = 6;
+    const maxCharge = Math.max(1, chargeMax || 6);
 
     ctx.fillStyle = 'rgba(255,255,255,0.3)';
     ctx.fillRect(chargeBarX, chargeBarY, chargeBarWidth, chargeBarHeight);
@@ -82,7 +82,7 @@ function drawUI(ctx, W, H, score, combo, state, gameMode, chargeCount, chargeFul
       ctx.shadowColor = '#55efc4';
       ctx.shadowBlur = 8;
     }
-    const fillWidth = (chargeCount / chargeMax) * chargeBarWidth;
+    const fillWidth = (chargeCount / maxCharge) * chargeBarWidth;
     ctx.fillRect(chargeBarX, chargeBarY, fillWidth, chargeBarHeight);
 
     ctx.shadowBlur = 0;
@@ -90,9 +90,16 @@ function drawUI(ctx, W, H, score, combo, state, gameMode, chargeCount, chargeFul
     ctx.font = 'bold 14px sans-serif';
     ctx.textAlign = 'right';
     ctx.fillText(
-      chargeFull ? getText('CHARGE_FULL') : getText('CHARGE_LABEL', chargeCount, chargeMax),
+      chargeFull ? getText('CHARGE_FULL') : getText('CHARGE_LABEL', chargeCount, maxCharge),
       W - 15, chargeBarY + chargeBarHeight + 18
     );
+  }
+
+  if (typeof coins === 'number') {
+    ctx.fillStyle = '#ffd166';
+    ctx.font = 'bold 16px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('金币 ' + coins, W - 15, safeTop);
   }
 
   ctx.shadowBlur = 0;

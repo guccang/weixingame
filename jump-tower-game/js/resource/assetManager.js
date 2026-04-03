@@ -116,9 +116,8 @@ class AssetManager {
   }
 
   getTableText(ref) {
-    const assetPath = this.getAssetPath(ref);
     const fs = wx.getFileSystemManager();
-    return fs.readFileSync(assetPath, 'utf-8');
+    return fs.readFileSync(ref, 'utf-8');
   }
 
   getManifest() {

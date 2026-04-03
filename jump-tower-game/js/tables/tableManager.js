@@ -9,11 +9,13 @@ const assetManager = require('../resource/assetManager');
 
 const { AudioRow } = require('./tableStruct');
 const { CharacterRow } = require('./tableStruct');
+const { EconomyConfigRow } = require('./tableStruct');
 const { GameConfigRow } = require('./tableStruct');
 const { MilestonesRow } = require('./tableStruct');
 const { MonstersRow } = require('./tableStruct');
 const { PlatformsRow } = require('./tableStruct');
 const { PraisesRow } = require('./tableStruct');
+const { UpgradesRow } = require('./tableStruct');
 const { UITextRow } = require('./tableStruct');
 
 class TableManager {
@@ -94,11 +96,13 @@ class TableManager {
     const classMap = {
       Audio: AudioRow,
       Character: CharacterRow,
+      EconomyConfig: EconomyConfigRow,
       GameConfig: GameConfigRow,
       Milestones: MilestonesRow,
       Monsters: MonstersRow,
       Platforms: PlatformsRow,
       Praises: PraisesRow,
+      Upgrades: UpgradesRow,
       UIText: UITextRow,
     };
     return classMap[tableName];

@@ -113,6 +113,33 @@ class MainUI {
       return true;
     }
 
+    // 如果强化面板显示中
+    if (this.game.showShopPanel) {
+      if (this.game.shopCloseBtnArea) {
+        var closeShopBtn = this.game.shopCloseBtnArea;
+        if (touchX >= closeShopBtn.x && touchX <= closeShopBtn.x + closeShopBtn.w &&
+            touchY >= closeShopBtn.y && touchY <= closeShopBtn.y + closeShopBtn.h) {
+          this.game.audio.playClick();
+          this.game.showShopPanel = false;
+          return true;
+        }
+      }
+
+      if (this.game.shopItemAreas) {
+        for (var s = 0; s < this.game.shopItemAreas.length; s++) {
+          var itemBtn = this.game.shopItemAreas[s];
+          if (touchX >= itemBtn.x && touchX <= itemBtn.x + itemBtn.w &&
+              touchY >= itemBtn.y && touchY <= itemBtn.y + itemBtn.h) {
+            this.game.buyUpgrade(itemBtn.upgradeId);
+            return true;
+          }
+        }
+      }
+
+      this.game.showShopPanel = false;
+      return true;
+    }
+
     // 如果职业面板显示中，优先处理职业选择
     if (this.game.showJobPanel) {
       var selectedJob = this.checkJobSelectClick(touchX, touchY);
@@ -156,6 +183,7 @@ class MainUI {
       if (touchX >= btn.character.x && touchX <= btn.character.x + btn.character.w &&
           touchY >= btn.character.y && touchY <= btn.character.y + btn.character.h) {
         this.game.audio.playClick();
+        this.game.showShopPanel = false;
         this.game.showCharacterPanel = true;
         return true;
       }
@@ -163,6 +191,7 @@ class MainUI {
       if (touchX >= btn.mode.x && touchX <= btn.mode.x + btn.mode.w &&
           touchY >= btn.mode.y && touchY <= btn.mode.y + btn.mode.h) {
         this.game.audio.playClick();
+        this.game.showShopPanel = false;
         this.game.gameMode.showModeSelect = true;
         return true;
       }
@@ -170,18 +199,28 @@ class MainUI {
       if (touchX >= btn.job.x && touchX <= btn.job.x + btn.job.w &&
           touchY >= btn.job.y && touchY <= btn.job.y + btn.job.h) {
         this.game.audio.playClick();
+        this.game.showShopPanel = false;
         this.game.showJobPanel = true;
         return true;
       }
-      // 点击了商店按钮（暂未实现）
+      // 点击了商店按钮
       if (touchX >= btn.shop.x && touchX <= btn.shop.x + btn.shop.w &&
           touchY >= btn.shop.y && touchY <= btn.shop.y + btn.shop.h) {
+        this.game.audio.playClick();
+        this.game.showCharacterPanel = false;
+        this.game.showJobPanel = false;
+        this.game.showLeaderboardPanel = false;
+        this.game.gameMode.showModeSelect = false;
+        this.game.gameMode.showTimeSelect = false;
+        this.game.gameMode.showLandmarkSelect = false;
+        this.game.showShopPanel = true;
         return true;
       }
       // 点击了排行榜按钮
       if (touchX >= btn.leaderboard.x && touchX <= btn.leaderboard.x + btn.leaderboard.w &&
           touchY >= btn.leaderboard.y && touchY <= btn.leaderboard.y + btn.leaderboard.h) {
         this.game.audio.playClick();
+        this.game.showShopPanel = false;
         this.game.showLeaderboardPanel = true;
         this.game.fetchRankList();
         return true;
@@ -207,6 +246,7 @@ class MainUI {
       if (touchX >= mBtn.x && touchX <= mBtn.x + mBtn.w &&
           touchY >= mBtn.y && touchY <= mBtn.y + mBtn.h) {
         this.game.audio.playClick();
+        this.game.showShopPanel = false;
         this.game.gameMode.showModeSelect = true;
         return true;
       }

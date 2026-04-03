@@ -63,6 +63,9 @@ const GameOperations = require('./game/gameOperations');
 
 // Boss/怪物系统
 const BossSystem = require('./monster/boss');
+const trailEffects = require('./effects/trail');
+const petSystem = require('./pet/pet');
+const progressionSystem = require('./progression/progression');
 
 // ==================== 游戏类 ====================
 class Game {
@@ -101,19 +104,40 @@ class Game {
     this.pendingBossLaunch = null;
     this.growthActive = false;
     this.growthScale = 1.55;
+    this.growthLaunchScale = 1;
+    this.baseStats = {
+      PLAYER_SPEED: physics.constants.PLAYER_SPEED,
+      JUMP_FORCE: physics.constants.JUMP_FORCE,
+      BOOST_JUMP_FORCE: physics.constants.BOOST_JUMP_FORCE,
+      DOUBLE_JUMP_FORCE: physics.constants.DOUBLE_JUMP_FORCE,
+      CHARGE_MAX: 6,
+      growthScale: 1.55
+    };
+    this.chargeMax = this.baseStats.CHARGE_MAX;
     this.praiseSystem = new PraiseSystem(); // 夸夸词系统
     this.barrage = new Barrage(); // 弹幕系统
     this.particles = [];
+    this.trailEffects = [];
+    this.coins = [];
+    this.pet = null;
     this.bgStars = [];
     this.platforms = [];
     this.player = null;
     this.showCharacterPanel = false; // 是否显示角色选择面板
     this.showJobPanel = false; // 是否显示职业选择面板
+    this.showShopPanel = false; // 是否显示强化面板
     this.showLeaderboardPanel = false; // 是否显示排行榜面板
     this.rankList = []; // 排行榜数据
     this.rankLoading = false; // 排行榜加载状态
     this.wxUserInfo = null; // 微信用户信息
     this.hasWxLogin = false; // 是否已获取微信登录
+    this.progression = progressionSystem.loadProgress();
+    this.runRewardSummary = null;
+    this.sessionBossCoins = 0;
+    this.sessionPickupCoins = 0;
+    this.shopMessage = '';
+    this.shopMessageColor = '#55efc4';
+    this.shopMessageUntil = 0;
 
     this.controls = new Controls(this); // 控制系统
     this.mainUI = new MainUI(this); // 主界面UI
@@ -124,6 +148,7 @@ class Game {
     this.gameOps = new GameOperations(this); // 游戏操作（分享等）
     this.bossSystem = new BossSystem(this); // Boss系统
     this.animationId = null; // 动画帧ID，用于取消动画循环
+    progressionSystem.applyUpgradesToGame(this, this.progression);
     this.initStars();
     this.initWxLogin(); // 微信登录获取用户信息
   }
@@ -161,8 +186,12 @@ class Game {
   }
 
   initGame() {
+    progressionSystem.applyUpgradesToGame(this, this.progression);
     this.player = player.createPlayer(this.W, this.H);
     this.particles = [];
+    this.trailEffects = [];
+    this.coins = [];
+    this.pet = null;
     this.barrage.clear(); // 清空弹幕
     this.score = 0;
     this.maxHeight = 0;
@@ -181,6 +210,9 @@ class Game {
     this.bossKnockbackUntil = 0;
     this.pendingBossLaunch = null;
     this.growthActive = false;
+    this.runRewardSummary = null;
+    this.sessionBossCoins = 0;
+    this.sessionPickupCoins = 0;
     this.bossSpawnHeight = this.rollBossSpawnHeight();
     this.controls.reset(); // 重置控制系统状态
 
@@ -195,6 +227,8 @@ class Game {
 
     // 使用关卡生成器初始化
     this.platforms = this.levelGenerator.initLevel(this.W, this.H, characterConfig);
+    this.coins = this.levelGenerator.getCoins();
+    this.pet = petSystem.createPet(this.player);
   }
 
   spawnParticles(x, y, color, count) {
@@ -221,6 +255,47 @@ class Game {
     this.player.vy = this.pendingBossLaunch.vy;
     this.player.state = 'rise';
     this.pendingBossLaunch = null;
+  }
+
+  refreshProgressionEffects() {
+    progressionSystem.applyUpgradesToGame(this, this.progression);
+  }
+
+  showShopToast(text, color) {
+    this.shopMessage = text;
+    this.shopMessageColor = color || '#55efc4';
+    this.shopMessageUntil = Date.now() + 1800;
+  }
+
+  buyUpgrade(upgradeId) {
+    const result = progressionSystem.purchaseUpgrade(this.progression, upgradeId);
+    if (!result.success) {
+      this.showShopToast(result.message || '购买失败', '#ff7675');
+      return result;
+    }
+
+    this.progression = result.progress;
+    this.refreshProgressionEffects();
+    this.showShopToast(result.message, '#55efc4');
+    return result;
+  }
+
+  onBossDefeated(monster) {
+    if (!monster || monster.rewardGranted) return;
+
+    const reward = progressionSystem.awardBossDrop(this.progression, monster.dropReward);
+    monster.rewardGranted = true;
+    this.progression = reward.progress;
+    this.sessionBossCoins += reward.coins;
+
+    if (this.barrage && this.player) {
+      this.barrage.show(
+        this.player.x - 40,
+        this.player.y - this.cameraY - 120,
+        'Boss掉落 +' + reward.coins + ' 金币',
+        '#ffd166'
+      );
+    }
   }
 
   setPlayerScale(scale) {
@@ -290,6 +365,89 @@ class Game {
   generatePlatforms() {
     this.levelGenerator.generatePlatforms(this.W, this.cameraY, this.H);
     this.platforms = this.levelGenerator.getPlatforms();
+    this.coins = this.levelGenerator.getCoins();
+  }
+
+  collectSceneCoin(coin, collector) {
+    if (!coin || coin.collected) return;
+
+    const reward = progressionSystem.grantCoins(this.progression, coin.value || 1);
+    coin.collected = true;
+    this.progression = reward.progress;
+    this.sessionPickupCoins += reward.coins;
+
+    const now = Date.now();
+    const pos = this.levelGenerator.getCoinPosition(coin, now);
+    this.spawnParticles(pos.x, pos.y, '#ffd166', 8);
+
+    if (this.barrage && this.player) {
+      const hintX = collector && collector.x !== undefined ? collector.x : this.player.x;
+      const hintY = collector && collector.y !== undefined ? collector.y : this.player.y;
+      this.barrage.show(
+        hintX - 20,
+        hintY - this.cameraY - 60,
+        '+' + reward.coins + ' 金币',
+        '#ffd166'
+      );
+    }
+  }
+
+  updateSceneCoins(now) {
+    if (!this.coins || !this.player) return;
+
+    const playerCenterX = this.player.x + this.player.w / 2;
+    const playerCenterY = this.player.y + this.player.h / 2;
+    const playerPickupRadiusBonus = progressionSystem.getEconomyValue('PLAYER_COIN_PICKUP_RADIUS', 18);
+
+    for (let i = 0; i < this.coins.length; i++) {
+      const coin = this.coins[i];
+      if (!coin || coin.collected) continue;
+
+      const pos = this.levelGenerator.getCoinPosition(coin, now);
+      const playerDx = pos.x - playerCenterX;
+      const playerDy = pos.y - playerCenterY;
+      const playerRadius = (coin.radius || 10) + Math.max(this.player.w, this.player.h) * 0.28 + playerPickupRadiusBonus;
+      if (playerDx * playerDx + playerDy * playerDy <= playerRadius * playerRadius) {
+        this.collectSceneCoin(coin, this.player);
+        continue;
+      }
+    }
+
+    if (this.pet && !this.pet.returningHome && now >= (this.pet.nextCoinCollectAt || 0)) {
+      const petTargetCoin = this.getNearestCoinForPet(now, true);
+      if (petTargetCoin) {
+        this.collectSceneCoin(petTargetCoin, this.pet);
+        this.pet.returningHome = true;
+        this.pet.nextCoinCollectAt = now + progressionSystem.getEconomyValue('PET_COIN_COLLECT_INTERVAL_MS', 1000);
+      }
+    }
+
+    this.coins = this.levelGenerator.getCoins().filter(function(coin) {
+      return coin && !coin.collected;
+    });
+    this.levelGenerator.coins = this.coins;
+  }
+
+  getNearestCoinForPet(now, returnCoin) {
+    if (!this.pet || !this.coins || this.coins.length === 0) return null;
+
+    let nearest = null;
+    let nearestDistSq = Infinity;
+
+    for (let i = 0; i < this.coins.length; i++) {
+      const coin = this.coins[i];
+      if (!coin || coin.collected) continue;
+      const pos = this.levelGenerator.getCoinPosition(coin, now);
+      const dx = pos.x - this.pet.x;
+      const dy = pos.y - this.pet.y;
+      const distSq = dx * dx + dy * dy;
+      if (distSq < nearestDistSq) {
+        nearest = returnCoin ? coin : pos;
+        nearestDistSq = distSq;
+      }
+    }
+
+    return nearest;
   }
 
   update() {
@@ -317,13 +475,16 @@ class Game {
     // 更新玩家动画状态
     this.updatePlayerState();
 
-    player.handlePlatformCollisions(this.player, this.platforms, this, Date.now());
+    const now = Date.now();
+
+    player.handlePlatformCollisions(this.player, this.platforms, this, now);
 
     player.updateCamera(this.player, this);
 
     player.updateScore(this.player, this);
 
     this.generatePlatforms();
+    this.updateSceneCoins(now);
 
     // 更新被撞飞平台的物理
     for (const p of this.platforms) {
@@ -352,6 +513,15 @@ class Game {
     }
 
     this.particles = particlePhysics.updateParticles(this.particles);
+    this.trailEffects = trailEffects.updateTrails(this.trailEffects, this.player, 16.67, now);
+    this.pet = petSystem.updatePet(
+      this.pet,
+      this.player,
+      16.67,
+      now,
+      this.getNearestCoinForPet(now),
+      progressionSystem.getEconomyValue('PET_RETURN_RESET_DISTANCE', 24)
+    );
 
     this.barrage.update();
 
@@ -391,6 +561,7 @@ class Game {
 
   startGame() {
     this.generatePraises();
+    this.showShopPanel = false;
     this.initGame();
     this.state = 'playing';
     this.audio.playBGM();
@@ -404,9 +575,34 @@ class Game {
   }
 
   gameOver() {
+    this.gameMode.onGameOver(this);
+    const rewardResult = progressionSystem.awardRunCoins(this.progression, {
+      mode: this.gameMode.gameMode,
+      score: this.score,
+      combo: this.maxCombo,
+      time: this.finalElapsedTime || 0,
+      challengeCompleted: this.gameMode.gameMode === 'challenge' &&
+        !!this.gameMode.selectedLandmark &&
+        this.score >= this.gameMode.selectedLandmark.targetHeight
+    });
+    this.progression = rewardResult.progress;
+    this.runRewardSummary = {
+      baseCoins: rewardResult.baseCoins,
+      heightCoins: rewardResult.heightCoins,
+      comboCoins: rewardResult.comboCoins,
+      challengeBonus: rewardResult.challengeBonus,
+      modeMultiplier: rewardResult.modeMultiplier,
+      bossCoins: this.sessionBossCoins,
+      pickupCoins: this.sessionPickupCoins,
+      totalCoins: rewardResult.totalCoins + this.sessionBossCoins + this.sessionPickupCoins,
+      balance: rewardResult.progress.coins
+    };
+
     this.state = 'gameover';
     this.growthActive = false;
     this.setPlayerScale(1);
+    this.trailEffects = [];
+    this.pet = null;
     this.combo = 0;
     // 初始化游戏结束按钮区域，确保在渲染前就存在
     this.gameOverBtnArea = {
@@ -419,7 +615,6 @@ class Game {
       homeW: 70,
       homeH: 35
     };
-    this.gameMode.onGameOver(this);
 
     // 保存游戏数据到微信云存储
     this.saveToCloudStorage();
@@ -485,9 +680,14 @@ class Game {
     this.gameOverBtnArea = null;
     this.showCharacterPanel = false;
     this.showJobPanel = false;
+    this.showShopPanel = false;
     this.showLeaderboardPanel = false;
+    this.runRewardSummary = null;
+    this.sessionBossCoins = 0;
+    this.sessionPickupCoins = 0;
     this.gameMode.reset();
     this.skillSystem.reset();
+    this.refreshProgressionEffects();
     this.audio.stopBGM();
   }
 

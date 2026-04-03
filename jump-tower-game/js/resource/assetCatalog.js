@@ -46,16 +46,7 @@ const assets = [
 
   buildAsset('audio.bgm', 'audio', 'audio/background_music.mp3'),
   buildAsset('audio.click', 'audio', 'audio/click.mp3'),
-  buildAsset('audio.jump', 'audio', 'audio/jump.mp3'),
-
-  buildAsset('table.Audio', 'table', 'tables/Audio.txt'),
-  buildAsset('table.Character', 'table', 'tables/Character.txt'),
-  buildAsset('table.GameConfig', 'table', 'tables/GameConfig.txt'),
-  buildAsset('table.Milestones', 'table', 'tables/Milestones.txt'),
-  buildAsset('table.Monsters', 'table', 'tables/Monsters.txt'),
-  buildAsset('table.Platforms', 'table', 'tables/Platforms.txt'),
-  buildAsset('table.Praises', 'table', 'tables/Praises.txt'),
-  buildAsset('table.UIText', 'table', 'tables/UIText.txt')
+  buildAsset('audio.jump', 'audio', 'audio/jump.mp3')
 ];
 
 const localManifest = {

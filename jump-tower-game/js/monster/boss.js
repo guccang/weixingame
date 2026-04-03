@@ -65,6 +65,7 @@ class Boss {
       hp: config.Hp,
       attack: config.Attack,
       speed: config.Speed,
+      dropReward: config.DropReward,
       isBoss: config.IsBoss === true || config.IsBoss === 'true',
       chasePath: config.ChasePath,
       x: spawnX,
@@ -93,7 +94,8 @@ class Boss {
       vx: 0,
       vy: 0,
       rotation: 0,
-      rotationSpeed: 0
+      rotationSpeed: 0,
+      rewardGranted: false
     };
 
     this._loadFrames(monster);
@@ -205,7 +207,7 @@ class Boss {
       case 'launched':
         monster.x += monster.vx * (dt / 1000) * 60;
         monster.y += monster.vy * (dt / 1000) * 60;
-        monster.vy += 0.45 * (dt / 16.67);
+        monster.vy += 0.32 * (dt / 16.67);
         monster.rotation += monster.rotationSpeed * (dt / 1000) * 60;
         break;
     }
@@ -234,11 +236,16 @@ class Boss {
     monster.state = 'exit';
     monster.attackResolved = true;
     monster.hitCooldownUntil = Date.now() + 1200;
-    monster.vx = monster.x < playerCenterX ? -18 : 18;
-    monster.vy = -16;
+    const launchScale = this.game.growthLaunchScale || 1;
+    monster.vx = (monster.x < playerCenterX ? -11 : 11) * launchScale;
+    monster.vy = -11 * launchScale;
     monster.rotation = 0;
-    monster.rotationSpeed = monster.vx < 0 ? -0.22 : 0.22;
+    monster.rotationSpeed = monster.vx < 0 ? -0.14 * launchScale : 0.14 * launchScale;
     monster.state = 'launched';
+
+    if (typeof this.game.onBossDefeated === 'function') {
+      this.game.onBossDefeated(monster);
+    }
 
     this.game.consumeGrowthMushroom();
     this.game.shakeTimer = Math.max(this.game.shakeTimer, 12);

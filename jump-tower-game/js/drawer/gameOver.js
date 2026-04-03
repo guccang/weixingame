@@ -71,7 +71,28 @@ function drawGameOverScreen(ctx, game) {
   }
   ctx.fillStyle = '#ffdd57';
   ctx.font = '18px sans-serif';
-  ctx.fillText('点击下方按钮选择操作', W / 2, H / 2 + 130);
+  if (game.runRewardSummary) {
+    const reward = game.runRewardSummary;
+    ctx.fillStyle = '#ffeaa7';
+    ctx.font = '16px sans-serif';
+    ctx.fillText(
+      '金币 +' + reward.totalCoins +
+      '  (基础' + reward.baseCoins +
+      ' / 高度' + reward.heightCoins +
+      ' / 连跳' + reward.comboCoins +
+      (reward.challengeBonus > 0 ? ' / 闯关' + reward.challengeBonus : '') +
+      (reward.pickupCoins > 0 ? ' / 拾取' + reward.pickupCoins : '') +
+      (reward.bossCoins > 0 ? ' / Boss' + reward.bossCoins : '') + ')',
+      W / 2,
+      H / 2 + 104
+    );
+    ctx.fillStyle = '#55efc4';
+    ctx.fillText('当前金币: ' + reward.balance, W / 2, H / 2 + 130);
+  } else {
+    ctx.fillStyle = '#ffdd57';
+    ctx.font = '18px sans-serif';
+    ctx.fillText('点击下方按钮选择操作', W / 2, H / 2 + 130);
+  }
 
   // 绘制重新开始按钮
   ctx.fillStyle = '#00d084';
