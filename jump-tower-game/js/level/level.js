@@ -61,9 +61,9 @@ class LevelGenerator {
 
   pickPlatformCoinPattern() {
     const roll = Math.random();
-    if (roll < 0.45) return 'line';
-    if (roll < 0.75) return 'zigzag';
-    return 'arc';
+    if (roll < 0.62) return 'single';
+    if (roll < 0.9) return 'vertical';
+    return 'shortColumn';
   }
 
   buildPlatformCoinPattern(platform, type) {
@@ -71,46 +71,43 @@ class LevelGenerator {
     const usableWidth = Math.max(36, platform.w - 26);
     const leftPadding = Math.max(12, (platform.w - usableWidth) / 2);
 
-    if (type === 'line') {
-      const count = platform.w > 90 ? 4 : 3;
-      for (let i = 0; i < count; i++) {
-        coins.push(this.createCoin({
-          platform: platform,
-          xOffset: leftPadding + (usableWidth * (i + 0.5)) / count,
-          yOffset: -22,
-          floatPhase: Math.random() * Math.PI * 2,
-          value: 1,
-          source: 'platform'
-        }));
-      }
-      return coins;
-    }
-
-    if (type === 'zigzag') {
-      const count = 4;
-      for (let i = 0; i < count; i++) {
-        coins.push(this.createCoin({
-          platform: platform,
-          xOffset: leftPadding + (usableWidth * (i + 0.5)) / count,
-          yOffset: -18 - (i % 2 === 0 ? 0 : 12),
-          floatPhase: Math.random() * Math.PI * 2,
-          value: 1,
-          source: 'platform'
-        }));
-      }
-      return coins;
-    }
-
-    const count = 5;
-    for (let i = 0; i < count; i++) {
-      const t = count === 1 ? 0 : i / (count - 1);
-      const arcLift = Math.sin(t * Math.PI) * 20;
+    if (type === 'single') {
       coins.push(this.createCoin({
         platform: platform,
-        xOffset: leftPadding + usableWidth * t,
-        yOffset: -18 - arcLift,
+        xOffset: leftPadding + Math.random() * usableWidth,
+        yOffset: -22,
         floatPhase: Math.random() * Math.PI * 2,
-        value: i === 2 ? 2 : 1,
+        value: Math.random() < 0.12 ? 2 : 1,
+        source: 'platform'
+      }));
+      return coins;
+    }
+
+    if (type === 'vertical') {
+      const count = 3;
+      const columnX = leftPadding + usableWidth * (0.3 + Math.random() * 0.4);
+      for (let i = 0; i < count; i++) {
+        coins.push(this.createCoin({
+          platform: platform,
+          xOffset: columnX,
+          yOffset: -18 - i * 20,
+          floatPhase: Math.random() * Math.PI * 2,
+          value: i === count - 1 ? 2 : 1,
+          source: 'platform'
+        }));
+      }
+      return coins;
+    }
+
+    const count = 4;
+    const columnX = leftPadding + usableWidth * (0.25 + Math.random() * 0.5);
+    for (let i = 0; i < count; i++) {
+      coins.push(this.createCoin({
+        platform: platform,
+        xOffset: columnX + (i % 2 === 0 ? -6 : 6),
+        yOffset: -20 - i * 18,
+        floatPhase: Math.random() * Math.PI * 2,
+        value: i === count - 1 ? 2 : 1,
         source: 'platform'
       }));
     }
@@ -136,15 +133,26 @@ class LevelGenerator {
     const toX = toPlatform ? toPlatform.x + toPlatform.w / 2 : Math.random() * (W - 80) + 40;
     const centerX = (fromX + toX) / 2;
     const verticalSpan = Math.max(40, maxY - minY);
-    const patternType = Math.random() < 0.55 ? 'bridge' : 'diagonal';
+    const patternType = Math.random() < 0.65 ? 'single' : (Math.random() < 0.85 ? 'vertical' : 'shortDiagonal');
 
-    if (patternType === 'diagonal') {
-      const count = 4;
+    if (patternType === 'single') {
+      coins.push(this.createCoin({
+        x: Math.max(28, Math.min(W - 28, centerX)),
+        y: maxY - verticalSpan * (0.25 + Math.random() * 0.35),
+        floatPhase: Math.random() * Math.PI * 2,
+        value: Math.random() < 0.16 ? 2 : 1,
+        source: 'air'
+      }));
+      return coins;
+    }
+
+    if (patternType === 'shortDiagonal') {
+      const count = 3;
       for (let i = 0; i < count; i++) {
         const t = count === 1 ? 0 : i / (count - 1);
         coins.push(this.createCoin({
-          x: fromX + (toX - fromX) * t,
-          y: maxY - verticalSpan * 0.15 - t * Math.min(42, verticalSpan * 0.5),
+          x: centerX + (fromX < toX ? 1 : -1) * i * 12,
+          y: maxY - verticalSpan * 0.2 - t * Math.min(40, verticalSpan * 0.45),
           floatPhase: Math.random() * Math.PI * 2,
           value: i === count - 1 ? 2 : 1,
           source: 'air'
@@ -153,17 +161,13 @@ class LevelGenerator {
       return coins;
     }
 
-    const count = 5;
-    const spanX = Math.max(70, Math.min(160, Math.abs(toX - fromX) + 40));
+    const count = 3;
     for (let i = 0; i < count; i++) {
-      const t = count === 1 ? 0 : i / (count - 1);
-      const x = centerX - spanX / 2 + spanX * t;
-      const y = maxY - 20 - Math.sin(t * Math.PI) * Math.min(52, verticalSpan * 0.7);
       coins.push(this.createCoin({
-        x: Math.max(28, Math.min(W - 28, x)),
-        y: Math.max(minY + 6, y),
+        x: Math.max(28, Math.min(W - 28, centerX + (i % 2 === 0 ? -4 : 4))),
+        y: Math.max(minY + 6, maxY - 18 - i * 20),
         floatPhase: Math.random() * Math.PI * 2,
-        value: i === 2 ? 2 : 1,
+        value: i === count - 1 ? 2 : 1,
         source: 'air'
       }));
     }
@@ -189,36 +193,39 @@ class LevelGenerator {
   }
 
   spawnDynamicCoinPatternAt(W, bandY) {
+    if (Math.random() < 0.45) {
+      return;
+    }
+
     const centerX = Math.random() * (W - 120) + 60;
-    const patternType = Math.random() < 0.5 ? 'sweep' : 'snake';
+    const patternType = Math.random() < 0.6 ? 'single' : (Math.random() < 0.88 ? 'vertical' : 'shortColumn');
     const coins = [];
 
-    if (patternType === 'sweep') {
-      const count = 6;
-      const direction = Math.random() < 0.5 ? -1 : 1;
-      for (let i = 0; i < count; i++) {
-        const t = count === 1 ? 0 : i / (count - 1);
-        const x = centerX + direction * (t - 0.5) * 150;
-        const y = bandY - Math.sin(t * Math.PI) * 36;
+    if (patternType === 'single') {
+      coins.push(this.createCoin({
+        x: centerX,
+        y: bandY,
+        floatPhase: Math.random() * Math.PI * 2,
+        value: Math.random() < 0.16 ? 2 : 1,
+        source: 'dynamic'
+      }));
+    } else if (patternType === 'vertical') {
+      for (let i = 0; i < 3; i++) {
         coins.push(this.createCoin({
-          x: Math.max(28, Math.min(W - 28, x)),
-          y: y,
+          x: centerX,
+          y: bandY - i * 20,
           floatPhase: Math.random() * Math.PI * 2,
-          value: i === Math.floor(count / 2) ? 2 : 1,
+          value: i === 2 ? 2 : 1,
           source: 'dynamic'
         }));
       }
     } else {
-      const count = 7;
-      const step = 24;
-      for (let i = 0; i < count; i++) {
-        const x = centerX + (i - (count - 1) / 2) * step;
-        const y = bandY - Math.sin(i * 0.9) * 26;
+      for (let i = 0; i < 4; i++) {
         coins.push(this.createCoin({
-          x: Math.max(28, Math.min(W - 28, x)),
-          y: y,
+          x: centerX + (i % 2 === 0 ? -5 : 5),
+          y: bandY - i * 18,
           floatPhase: Math.random() * Math.PI * 2,
-          value: i === count - 1 ? 2 : 1,
+          value: i === 3 ? 2 : 1,
           source: 'dynamic'
         }));
       }

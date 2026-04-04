@@ -398,6 +398,7 @@ class Game {
     const playerCenterX = this.player.x + this.player.w / 2;
     const playerCenterY = this.player.y + this.player.h / 2;
     const playerPickupRadiusBonus = progressionSystem.getEconomyValue('PLAYER_COIN_PICKUP_RADIUS', 18);
+    const petPickupRadiusBonus = progressionSystem.getEconomyValue('PET_COIN_PICKUP_RADIUS', 26);
 
     for (let i = 0; i < this.coins.length; i++) {
       const coin = this.coins[i];
@@ -411,14 +412,17 @@ class Game {
         this.collectSceneCoin(coin, this.player);
         continue;
       }
-    }
 
-    if (this.pet && !this.pet.returningHome && now >= (this.pet.nextCoinCollectAt || 0)) {
-      const petTargetCoin = this.getNearestCoinForPet(now, true);
-      if (petTargetCoin) {
-        this.collectSceneCoin(petTargetCoin, this.pet);
-        this.pet.returningHome = true;
-        this.pet.nextCoinCollectAt = now + progressionSystem.getEconomyValue('PET_COIN_COLLECT_INTERVAL_MS', 1000);
+      if (this.pet && !this.pet.returningHome && now >= (this.pet.nextCoinCollectAt || 0)) {
+        const petDx = pos.x - this.pet.x;
+        const petDy = pos.y - this.pet.y;
+        const petRadius = (coin.radius || 10) + petPickupRadiusBonus;
+        if (petDx * petDx + petDy * petDy <= petRadius * petRadius) {
+          this.collectSceneCoin(coin, this.pet);
+          this.pet.returningHome = true;
+          this.pet.nextCoinCollectAt = now + progressionSystem.getEconomyValue('PET_COIN_COLLECT_INTERVAL_MS', 1000);
+          continue;
+        }
       }
     }
 
@@ -428,11 +432,13 @@ class Game {
     this.levelGenerator.coins = this.coins;
   }
 
-  getNearestCoinForPet(now, returnCoin) {
+  getNearestCoinForPet(now) {
     if (!this.pet || !this.coins || this.coins.length === 0) return null;
 
+    const seekRadius = progressionSystem.getEconomyValue('PET_COIN_SEEK_RADIUS', 130);
+    const maxDistSq = seekRadius * seekRadius;
     let nearest = null;
-    let nearestDistSq = Infinity;
+    let nearestDistSq = maxDistSq;
 
     for (let i = 0; i < this.coins.length; i++) {
       const coin = this.coins[i];
@@ -442,7 +448,7 @@ class Game {
       const dy = pos.y - this.pet.y;
       const distSq = dx * dx + dy * dy;
       if (distSq < nearestDistSq) {
-        nearest = returnCoin ? coin : pos;
+        nearest = pos;
         nearestDistSq = distSq;
       }
     }

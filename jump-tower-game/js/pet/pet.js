@@ -53,6 +53,8 @@ function createPet(player) {
     seekWeight: 0,
     returningHome: false,
     nextCoinCollectAt: 0,
+    lockedTargetX: null,
+    lockedTargetY: null,
     trailPoints: [{ x: anchor.x, y: anchor.y }]
   };
 }
@@ -64,6 +66,8 @@ function updatePet(pet, player, dt, now, seekTarget, resetDistance) {
   pet.anchorX = anchor.x;
   pet.anchorY = anchor.y;
   const shouldSeek = !!seekTarget && !pet.returningHome;
+  pet.lockedTargetX = shouldSeek ? seekTarget.x : null;
+  pet.lockedTargetY = shouldSeek ? seekTarget.y : null;
   pet.seekWeight += (((shouldSeek ? 1 : 0) - pet.seekWeight) * 0.12) * (dt / 16.67);
   const target = getPetTarget(anchor, shouldSeek ? seekTarget : null, pet.seekWeight);
   pet.targetX = target.x;
@@ -97,8 +101,8 @@ function getPetTarget(anchor, seekTarget, seekWeight) {
   }
 
   return {
-    x: anchor.x + (seekTarget.x - anchor.x) * Math.min(0.72, seekWeight * 0.85),
-    y: anchor.y + (seekTarget.y - anchor.y) * Math.min(0.72, seekWeight * 0.85)
+    x: anchor.x + (seekTarget.x - anchor.x) * Math.min(1, 0.2 + seekWeight * 1.1),
+    y: anchor.y + (seekTarget.y - anchor.y) * Math.min(1, 0.2 + seekWeight * 1.1)
   };
 }
 
@@ -108,6 +112,7 @@ function drawPet(ctx, pet, cameraY) {
   const x = pet.x;
   const y = pet.y - cameraY;
   drawPetTrail(ctx, pet, cameraY);
+  drawPetTargetLink(ctx, pet, cameraY);
   const glow = ctx.createRadialGradient(x, y, pet.radius * 0.2, x, y, pet.glowRadius);
   glow.addColorStop(0, 'rgba(216, 255, 241, 0.95)');
   glow.addColorStop(0.35, 'rgba(109, 240, 176, 0.68)');
@@ -135,6 +140,36 @@ function drawPet(ctx, pet, cameraY) {
   ctx.fillStyle = PET_CONFIG.coreColor;
   ctx.beginPath();
   ctx.arc(x - 3, y - 3, pet.radius * 0.24, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawPetTargetLink(ctx, pet, cameraY) {
+  if (pet.lockedTargetX === null || pet.lockedTargetY === null || pet.seekWeight <= 0.04) {
+    return;
+  }
+
+  const startX = pet.x;
+  const startY = pet.y - cameraY;
+  const endX = pet.lockedTargetX;
+  const endY = pet.lockedTargetY - cameraY;
+  const ctrlX = (startX + endX) * 0.5;
+  const ctrlY = Math.min(startY, endY) - 18;
+  const alpha = Math.min(0.45, pet.seekWeight * 0.42);
+
+  ctx.save();
+  ctx.strokeStyle = `rgba(109, 240, 176, ${alpha})`;
+  ctx.lineWidth = 1.5 + pet.seekWeight * 1.5;
+  ctx.shadowColor = `rgba(109, 240, 176, ${alpha * 0.9})`;
+  ctx.shadowBlur = 10;
+  ctx.beginPath();
+  ctx.moveTo(startX, startY);
+  ctx.quadraticCurveTo(ctrlX, ctrlY, endX, endY);
+  ctx.stroke();
+
+  ctx.fillStyle = `rgba(216, 255, 241, ${alpha * 1.4})`;
+  ctx.beginPath();
+  ctx.arc(endX, endY, 2.5 + pet.seekWeight * 2, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 }

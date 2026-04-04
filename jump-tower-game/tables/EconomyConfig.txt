@@ -10,10 +10,10 @@ INT	STRING	STRING	FLOAT	STRING
 7	CHALLENGE_REWARD_MULTIPLIER	闯关奖励倍率	1.2	闯关模式奖励倍率
 8	CHALLENGE_CLEAR_BONUS	闯关成功奖励	18	闯关成功额外金币
 9	BOSS_DEFAULT_COIN	Boss默认金币	10	Boss未配置掉落时默认金币
-10	PLATFORM_COIN_CHANCE_LOW	低层平台金币概率	0.42	低层平台生成金币概率
-11	PLATFORM_COIN_CHANCE_MID	中层平台金币概率	0.52	中层平台生成金币概率
-12	PLATFORM_COIN_CHANCE_HIGH	高层平台金币概率	0.62	高层平台生成金币概率
-13	AIR_COIN_CHANCE	空中金币概率	0.24	空中悬浮金币生成概率
+10	PLATFORM_COIN_CHANCE_LOW	低层平台金币概率	0.14	低层平台生成金币概率
+11	PLATFORM_COIN_CHANCE_MID	中层平台金币概率	0.2	中层平台生成金币概率
+12	PLATFORM_COIN_CHANCE_HIGH	高层平台金币概率	0.28	高层平台生成金币概率
+13	AIR_COIN_CHANCE	空中金币概率	0.06	空中悬浮金币生成概率
 14	PLAYER_COIN_PICKUP_RADIUS	玩家拾取半径	18	玩家额外拾取半径
 15	PET_COIN_PICKUP_RADIUS	宠物拾取半径	26	宠物额外拾取半径
 16	PET_COIN_SEEK_RADIUS	宠物寻币半径	130	宠物主动靠近金币的距离

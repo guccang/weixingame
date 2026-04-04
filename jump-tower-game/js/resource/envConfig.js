@@ -17,6 +17,10 @@ function getEnvVersion() {
   return '';
 }
 
+function isDebugLikeEnv(envVersion) {
+  return envVersion === 'develop';
+}
+
 function normalizeMode(mode) {
   if (mode === 'cloud' || mode === 'local' || mode === 'auto') {
     return mode;
@@ -36,7 +40,7 @@ function resolveMode() {
   }
 
   const envVersion = getEnvVersion();
-  if (envVersion === 'develop') {
+  if (isDebugLikeEnv(envVersion)) {
     return 'local';
   }
 
@@ -52,7 +56,7 @@ function getConfig() {
     manifestFunctionName: DEFAULT_MANIFEST_FUNCTION,
     mode: mode,
     envVersion: envVersion,
-    allowCloudFallbackToLocal: envVersion === 'develop' || mode === 'local'
+    allowCloudFallbackToLocal: isDebugLikeEnv(envVersion) || mode === 'local'
   };
 }
 
