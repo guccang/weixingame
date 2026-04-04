@@ -6,6 +6,7 @@
 const skillData = require('./skillData');
 const { characterConfig, STATE_TO_FRAME_INDEX } = require('../character/character');
 const assetManager = require('../resource/assetManager');
+const progressionSystem = require('../progression/progression');
 
 /**
  * 活跃技能实例
@@ -245,19 +246,29 @@ class SkillSystem {
     }
 
     if (direction) {
+      const player = this.game.player;
+      const canUseDownwardSkill = !!player && (player.state === 'fall' || player.vy > 0.5);
       console.log('onGesture: direction=' + direction + ', chargeFull=' + this.game.chargeFull);
       // 如果是下滑且蓄力已满，触发满蓄力释放
-      if (direction === 'down' && this.game.chargeFull) {
+      if (direction === 'down' && !canUseDownwardSkill) {
+        return null;
+      }
+
+      if (direction === 'down' && this.game.chargeFull && this.canUseSkillCapability('charge_dash')) {
         this.triggerChargeFull();
         this.lastGesture = direction;
         return 'chargeFull';
       }
 
       // 如果是下滑但蓄力未满，执行普通下滑（不消耗蓄力）
-      if (direction === 'down') {
+      if (direction === 'down' && this.canUseSkillCapability('slide_fall')) {
         this.triggerSkill('slide');
         this.lastGesture = direction;
         return 'slide';
+      }
+
+      if (direction === 'down') {
+        return null;
       }
 
       const skillId = this.gestureMap[direction];
@@ -296,6 +307,9 @@ class SkillSystem {
    * 触发满蓄力释放
    */
   triggerChargeFull() {
+    if (!this.canUseSkillCapability('charge_dash')) {
+      return null;
+    }
     console.log('triggerChargeFull 被调用！');
     // 先设置冲刺状态，防止碰撞时还未设置
     this.game.chargeDashing = true;
@@ -552,6 +566,9 @@ class SkillSystem {
     if (this.game.isControlLocked && this.game.isControlLocked()) {
       return null;
     }
+    if (!this.canUseSkillCapability('double_jump')) {
+      return null;
+    }
 
     const skillId = 'doubleJump';
     const config = this.skillConfigs[skillId];
@@ -639,6 +656,18 @@ class SkillSystem {
     this.activeSkills.clear();
     this.lastGesture = null;
     this.slideDownSkill = null;
+  }
+
+  canUseSkillCapability(entityId) {
+    if (this.game.skillAvailability) {
+      if (entityId === 'double_jump') return !!this.game.skillAvailability.doubleJump;
+      if (entityId === 'slide_fall') return !!this.game.skillAvailability.slideFall;
+      if (entityId === 'charge_dash') return !!this.game.skillAvailability.chargeDash;
+    }
+    return progressionSystem.canUseCapability(
+      this.game.progression,
+      'skill_' + entityId
+    );
   }
 }
 

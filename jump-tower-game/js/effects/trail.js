@@ -3,6 +3,7 @@
  */
 
 const trailConfig = {
+  enabled: true,
   nodeCount: 20,
   baseSegmentLength: 15,
   minSegmentLength: 13,
@@ -73,6 +74,7 @@ function getTrailConfig() {
 }
 
 function shouldSpawnJumpTrail(player) {
+  if (!trailConfig.enabled) return false;
   if (!player) return false;
   if (player.vy >= 0) return false;
   return player.state === 'jump' || player.state === 'rise';

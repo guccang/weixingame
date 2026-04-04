@@ -115,6 +115,16 @@ class MainUI {
 
     // 如果强化面板显示中
     if (this.game.showShopPanel) {
+      if (this.game.shopResetBtnArea) {
+        var resetBtn = this.game.shopResetBtnArea;
+        if (touchX >= resetBtn.x && touchX <= resetBtn.x + resetBtn.w &&
+            touchY >= resetBtn.y && touchY <= resetBtn.y + resetBtn.h) {
+          this.game.audio.playClick();
+          this.game.performShopAction('reset-progress');
+          return true;
+        }
+      }
+
       if (this.game.shopCloseBtnArea) {
         var closeShopBtn = this.game.shopCloseBtnArea;
         if (touchX >= closeShopBtn.x && touchX <= closeShopBtn.x + closeShopBtn.w &&
@@ -125,12 +135,24 @@ class MainUI {
         }
       }
 
+      if (this.game.shopTabAreas) {
+        for (var t = 0; t < this.game.shopTabAreas.length; t++) {
+          var tabBtn = this.game.shopTabAreas[t];
+          if (touchX >= tabBtn.x && touchX <= tabBtn.x + tabBtn.w &&
+              touchY >= tabBtn.y && touchY <= tabBtn.y + tabBtn.h) {
+            this.game.audio.playClick();
+            this.game.setShopTab(tabBtn.tabId);
+            return true;
+          }
+        }
+      }
+
       if (this.game.shopItemAreas) {
         for (var s = 0; s < this.game.shopItemAreas.length; s++) {
           var itemBtn = this.game.shopItemAreas[s];
           if (touchX >= itemBtn.x && touchX <= itemBtn.x + itemBtn.w &&
               touchY >= itemBtn.y && touchY <= itemBtn.y + itemBtn.h) {
-            this.game.buyUpgrade(itemBtn.upgradeId);
+            this.game.performShopAction(itemBtn.action, itemBtn.itemId);
             return true;
           }
         }
@@ -213,6 +235,7 @@ class MainUI {
         this.game.gameMode.showModeSelect = false;
         this.game.gameMode.showTimeSelect = false;
         this.game.gameMode.showLandmarkSelect = false;
+        this.game.setShopTab(this.game.shopTab || 'upgrades');
         this.game.showShopPanel = true;
         return true;
       }

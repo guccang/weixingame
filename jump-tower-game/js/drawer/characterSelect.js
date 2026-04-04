@@ -3,6 +3,7 @@
  */
 
 const { roundRect } = require('./helper');
+const progressionSystem = require('../progression/progression');
 
 /**
  * 绘制角色选择区域
@@ -36,6 +37,7 @@ function drawCharacterSelect(ctx, game, characterConfig) {
     const x = startX + i * (selectWidth + spacing);
     const y = selectY;
     const isSelected = characterConfig.current === charName;
+    const isUnlocked = progressionSystem.isCharacterUnlocked(game.progression, charName);
 
     // 卡片背景（统一深色背景）
     ctx.fillStyle = 'rgba(30, 30, 60, 0.9)';
@@ -70,6 +72,22 @@ function drawCharacterSelect(ctx, game, characterConfig) {
     ctx.font = 'bold 14px sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText(characterConfig.names[charName] || charName, x + selectWidth / 2, y + selectHeight - 20);
+
+    if (!isUnlocked) {
+      ctx.fillStyle = 'rgba(8, 8, 18, 0.72)';
+      roundRect(ctx, x + 8, y + 8, selectWidth - 16, selectHeight - 16, 8);
+      ctx.fill();
+      ctx.fillStyle = '#ff7675';
+      ctx.font = 'bold 14px sans-serif';
+      ctx.fillText('未解锁', x + selectWidth / 2, y + 72);
+      const catalog = progressionSystem.getCharacterCatalog(game.progression);
+      const item = catalog.find(function(entry) { return entry.id === charName; });
+      if (item) {
+        ctx.fillStyle = '#ffeaa7';
+        ctx.font = '12px sans-serif';
+        ctx.fillText(item.price + ' 金币', x + selectWidth / 2, y + 94);
+      }
+    }
   }
 
   // 绘制关闭按钮 (X) - 在底部导航上方

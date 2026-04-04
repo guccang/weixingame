@@ -52,7 +52,7 @@ class Controls {
       // 开始或重新开始游戏
       if (_this.game.state === 'start' || _this.game.state === 'gameover') {
         // 不在这里自动开始游戏，由mainUI处理开始按钮点击
-      } else if (_this.game.state === 'playing' && !_this.game.isControlLocked() && _this.canDoubleJump && !_this.hasDoubleJumped) {
+      } else if (_this.game.state === 'playing' && !_this.game.isControlLocked() && _this.game.doubleJumpUnlocked && _this.canDoubleJump && !_this.hasDoubleJumped) {
         var now = Date.now();
         if (now - _this.lastTapTime < 300) {
           _this.tapCount++;
@@ -90,9 +90,11 @@ class Controls {
         if (!_this.game.chargeDashing && _this.game.state === 'playing' && deltaY > 30 && !_this.keys['ArrowLeft'] && !_this.keys['ArrowRight'] && !_this.isSlidingDown && (now - _this.lastSlideTime > 200)) {
           if (_this.game.player) {
             // 使用技能系统触发下滑
-            _this.game.skillSystem.onGesture(0, deltaY);
-            _this.isSlidingDown = true;
-            _this.lastSlideTime = now;
+            var triggeredSkill = _this.game.skillSystem.onGesture(0, deltaY);
+            if (triggeredSkill === 'slide' || triggeredSkill === 'chargeFull') {
+              _this.isSlidingDown = true;
+              _this.lastSlideTime = now;
+            }
           }
         }
 
@@ -130,7 +132,7 @@ class Controls {
   }
 
   doDoubleJump() {
-    if (!this.game.player || this.game.isControlLocked() || !this.canDoubleJump || this.hasDoubleJumped) return;
+    if (!this.game.player || this.game.isControlLocked() || !this.game.doubleJumpUnlocked || !this.canDoubleJump || this.hasDoubleJumped) return;
     this.hasDoubleJumped = true;
     // 使用技能系统触发二段跳
     this.game.skillSystem.triggerDoubleJump();

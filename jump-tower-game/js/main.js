@@ -135,9 +135,23 @@ class Game {
     this.runRewardSummary = null;
     this.sessionBossCoins = 0;
     this.sessionPickupCoins = 0;
+    this.runItemEffects = {};
+    this.pendingRunItemEffects = {};
+    this.growthExpiresAt = 0;
+    this.playerCoinPickupBonus = 0;
+    this.petCoinPickupBonus = 0;
+    this.petSeekRadiusBonus = 0;
+    this.growthDurationMs = progressionSystem.BASE_GROWTH_DURATION_MS;
+    this.doubleJumpUnlocked = false;
+    this.skillAvailability = {
+      doubleJump: false,
+      slideFall: false,
+      chargeDash: false
+    };
     this.shopMessage = '';
     this.shopMessageColor = '#55efc4';
     this.shopMessageUntil = 0;
+    this.shopTab = 'upgrades';
 
     this.controls = new Controls(this); // 控制系统
     this.mainUI = new MainUI(this); // 主界面UI
@@ -149,6 +163,7 @@ class Game {
     this.bossSystem = new BossSystem(this); // Boss系统
     this.animationId = null; // 动画帧ID，用于取消动画循环
     progressionSystem.applyUpgradesToGame(this, this.progression);
+    this.syncCharacterSelection();
     this.initStars();
     this.initWxLogin(); // 微信登录获取用户信息
   }
@@ -187,7 +202,9 @@ class Game {
 
   initGame() {
     progressionSystem.applyUpgradesToGame(this, this.progression);
+    this.syncCharacterSelection();
     this.player = player.createPlayer(this.W, this.H);
+    this.player.character = progressionSystem.getSelectedCharacterId(this.progression);
     this.particles = [];
     this.trailEffects = [];
     this.coins = [];
@@ -210,6 +227,7 @@ class Game {
     this.bossKnockbackUntil = 0;
     this.pendingBossLaunch = null;
     this.growthActive = false;
+    this.growthExpiresAt = 0;
     this.runRewardSummary = null;
     this.sessionBossCoins = 0;
     this.sessionPickupCoins = 0;
@@ -228,7 +246,7 @@ class Game {
     // 使用关卡生成器初始化
     this.platforms = this.levelGenerator.initLevel(this.W, this.H, characterConfig);
     this.coins = this.levelGenerator.getCoins();
-    this.pet = petSystem.createPet(this.player);
+    this.pet = progressionSystem.getSelectedPetId(this.progression) ? petSystem.createPet(this.player) : null;
   }
 
   spawnParticles(x, y, color, count) {
@@ -259,6 +277,21 @@ class Game {
 
   refreshProgressionEffects() {
     progressionSystem.applyUpgradesToGame(this, this.progression);
+    this.syncCharacterSelection();
+  }
+
+  syncCharacterSelection() {
+    const selectedCharacterId = progressionSystem.getSelectedCharacterId(this.progression);
+    if (selectedCharacterId && characterConfig.current !== selectedCharacterId) {
+      switchCharacter(selectedCharacterId);
+    }
+    if (this.player) {
+      this.player.character = selectedCharacterId || characterConfig.current;
+    }
+  }
+
+  setShopTab(tabId) {
+    this.shopTab = tabId || 'upgrades';
   }
 
   showShopToast(text, color) {
@@ -277,6 +310,84 @@ class Game {
     this.progression = result.progress;
     this.refreshProgressionEffects();
     this.showShopToast(result.message, '#55efc4');
+    return result;
+  }
+
+  performShopAction(action, itemId) {
+    let result = null;
+    switch (action) {
+      case 'buy-upgrade':
+        return this.buyUpgrade(itemId);
+      case 'buy-character':
+        result = progressionSystem.purchaseCharacter(this.progression, itemId);
+        break;
+      case 'equip-character':
+        result = progressionSystem.equipCharacter(this.progression, itemId);
+        break;
+      case 'buy-skill':
+        result = progressionSystem.purchaseCapability(this.progression, itemId);
+        break;
+      case 'toggle-skill':
+        result = progressionSystem.toggleCapability(this.progression, itemId);
+        break;
+      case 'buy-tail-trail':
+        result = progressionSystem.purchaseTrail(this.progression, 'tail', itemId);
+        break;
+      case 'equip-tail-trail':
+        result = progressionSystem.equipTrail(this.progression, 'tail', itemId);
+        break;
+      case 'unequip-tail-trail':
+        result = progressionSystem.unequipCapability(this.progression, 'trail_tail');
+        break;
+      case 'buy-head-trail':
+        result = progressionSystem.purchaseTrail(this.progression, 'head', itemId);
+        break;
+      case 'equip-head-trail':
+        result = progressionSystem.equipTrail(this.progression, 'head', itemId);
+        break;
+      case 'unequip-head-trail':
+        result = progressionSystem.unequipCapability(this.progression, 'trail_head');
+        break;
+      case 'buy-trail-length':
+        result = progressionSystem.purchaseTrailLength(this.progression);
+        break;
+      case 'buy-pet':
+        result = progressionSystem.purchasePet(this.progression, itemId);
+        break;
+      case 'equip-pet':
+        result = progressionSystem.equipPet(this.progression, itemId);
+        break;
+      case 'buy-item':
+        result = progressionSystem.purchaseItem(this.progression, itemId);
+        break;
+      case 'equip-item':
+        result = progressionSystem.equipItem(this.progression, itemId);
+        break;
+      case 'reset-progress':
+        this.progression = progressionSystem.resetProgress();
+        this.runItemEffects = {};
+        this.pendingRunItemEffects = {};
+        this.growthActive = false;
+        this.growthExpiresAt = 0;
+        this.refreshProgressionEffects();
+        if (this.pet && !progressionSystem.getSelectedPetId(this.progression)) {
+          this.pet = null;
+        }
+        this.showShopToast('玩家数值已清空', '#ffeaa7');
+        return { success: true, progress: this.progression, message: '玩家数值已清空' };
+      default:
+        result = { success: false, message: '未知操作' };
+        break;
+    }
+
+    if (!result.success) {
+      this.showShopToast(result.message || '购买失败', '#ff7675');
+      return result;
+    }
+
+    this.progression = result.progress;
+    this.refreshProgressionEffects();
+    this.showShopToast(result.message || '操作成功', '#55efc4');
     return result;
   }
 
@@ -316,11 +427,8 @@ class Game {
   activateGrowthMushroom() {
     if (!this.player) return;
 
-    if (this.growthActive) {
-      return;
-    }
-
     this.growthActive = true;
+    this.growthExpiresAt = Date.now() + Math.max(1000, this.growthDurationMs + (this.runItemEffects.growthDurationMs || 0));
     this.setPlayerScale(this.growthScale);
     this.spawnParticles(
       this.player.x + this.player.w / 2,
@@ -337,6 +445,7 @@ class Game {
     if (!this.player || !this.growthActive) return;
 
     this.growthActive = false;
+    this.growthExpiresAt = 0;
     this.setPlayerScale(1);
     this.spawnParticles(
       this.player.x + this.player.w / 2,
@@ -397,8 +506,11 @@ class Game {
 
     const playerCenterX = this.player.x + this.player.w / 2;
     const playerCenterY = this.player.y + this.player.h / 2;
-    const playerPickupRadiusBonus = progressionSystem.getEconomyValue('PLAYER_COIN_PICKUP_RADIUS', 18);
-    const petPickupRadiusBonus = progressionSystem.getEconomyValue('PET_COIN_PICKUP_RADIUS', 26);
+    const playerPickupRadiusBonus = progressionSystem.getEconomyValue('PLAYER_COIN_PICKUP_RADIUS', 18) +
+      (this.playerCoinPickupBonus || 0) +
+      (this.runItemEffects.playerCoinPickupRadius || 0);
+    const petPickupRadiusBonus = progressionSystem.getEconomyValue('PET_COIN_PICKUP_RADIUS', 26) +
+      (this.petCoinPickupBonus || 0);
 
     for (let i = 0; i < this.coins.length; i++) {
       const coin = this.coins[i];
@@ -435,7 +547,8 @@ class Game {
   getNearestCoinForPet(now) {
     if (!this.pet || !this.coins || this.coins.length === 0) return null;
 
-    const seekRadius = progressionSystem.getEconomyValue('PET_COIN_SEEK_RADIUS', 130);
+    const seekRadius = progressionSystem.getEconomyValue('PET_COIN_SEEK_RADIUS', 130) +
+      (this.petSeekRadiusBonus || 0);
     const maxDistSq = seekRadius * seekRadius;
     let nearest = null;
     let nearestDistSq = maxDistSq;
@@ -482,6 +595,10 @@ class Game {
     this.updatePlayerState();
 
     const now = Date.now();
+
+    if (this.growthActive && this.growthExpiresAt > 0 && now >= this.growthExpiresAt) {
+      this.consumeGrowthMushroom();
+    }
 
     player.handlePlatformCollisions(this.player, this.platforms, this, now);
 
@@ -556,9 +673,18 @@ class Game {
 
       if (touchX >= x && touchX <= x + selectWidth &&
           touchY >= y && touchY <= y + selectHeight) {
-        characterConfig.current = charName;
-        loadCharacter(charName);
-        this.audio.playClick();
+        if (!progressionSystem.isCharacterUnlocked(this.progression, charName)) {
+          this.showShopToast('先解锁该角色', '#ff7675');
+          return true;
+        }
+        const result = progressionSystem.equipCharacter(this.progression, charName);
+        if (result && result.success) {
+          this.progression = result.progress;
+          this.refreshProgressionEffects();
+          loadCharacter(charName);
+          this.showShopToast(result.message, '#55efc4');
+          this.audio.playClick();
+        }
         return true;
       }
     }
@@ -568,7 +694,12 @@ class Game {
   startGame() {
     this.generatePraises();
     this.showShopPanel = false;
+    const itemResult = progressionSystem.consumeEquippedItem(this.progression);
+    this.progression = itemResult.progress;
+    this.pendingRunItemEffects = itemResult.effects || {};
     this.initGame();
+    this.runItemEffects = Object.assign({}, this.pendingRunItemEffects);
+    this.pendingRunItemEffects = {};
     this.state = 'playing';
     this.audio.playBGM();
     const _this = this;
@@ -578,6 +709,11 @@ class Game {
     setTimeout(function() {
       _this.barrage.show(_this.W / 2 - 60, _this.H / 2 - 60, _this.playerJob + "牛逼！！！");
     }, 1200);
+    if (itemResult.itemName) {
+      setTimeout(function() {
+        _this.barrage.show(_this.W / 2 - 70, _this.H / 2 + 50, '本局使用：' + itemResult.itemName, '#55efc4');
+      }, 1600);
+    }
   }
 
   gameOver() {
@@ -606,6 +742,7 @@ class Game {
 
     this.state = 'gameover';
     this.growthActive = false;
+    this.growthExpiresAt = 0;
     this.setPlayerScale(1);
     this.trailEffects = [];
     this.pet = null;
@@ -691,6 +828,9 @@ class Game {
     this.runRewardSummary = null;
     this.sessionBossCoins = 0;
     this.sessionPickupCoins = 0;
+    this.runItemEffects = {};
+    this.pendingRunItemEffects = {};
+    this.growthExpiresAt = 0;
     this.gameMode.reset();
     this.skillSystem.reset();
     this.refreshProgressionEffects();

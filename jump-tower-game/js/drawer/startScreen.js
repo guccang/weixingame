@@ -181,16 +181,20 @@ function drawCoinBadge(ctx, game, images) {
 
 function drawShopPanel(ctx, game, images, W, H) {
   const panelW = Math.min(W - 48, 360);
-  const panelH = Math.min(H - 120, 470);
+  const panelH = Math.min(H - 110, 520);
   const panelX = (W - panelW) / 2;
-  const panelY = 88;
+  const panelY = 76;
   const contentX = panelX + 18;
   const contentW = panelW - 36;
   const progress = game.progression || progressionSystem.getDefaultProgress();
-  const upgrades = progressionSystem.getUpgradeCatalog(progress);
+  const tabs = progressionSystem.getShopTabs();
+  const activeTab = game.shopTab || 'upgrades';
+  const entries = progressionSystem.getShopCatalogByTab(progress, activeTab);
 
   game.shopItemAreas = [];
   game.shopCloseBtnArea = null;
+  game.shopTabAreas = [];
+  game.shopResetBtnArea = null;
 
   ctx.save();
   if (images.bgShop && images.bgShop.width > 0) {
@@ -208,7 +212,7 @@ function drawShopPanel(ctx, game, images, W, H) {
   ctx.fillStyle = '#ffeaa7';
   ctx.font = 'bold 24px sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('强化工坊', W / 2, panelY + 34);
+  ctx.fillText('成长工坊', W / 2, panelY + 34);
 
   ctx.fillStyle = '#ffd166';
   ctx.font = 'bold 16px sans-serif';
@@ -231,18 +235,57 @@ function drawShopPanel(ctx, game, images, W, H) {
   ctx.fillText('X', closeX + 12, closeY + 17);
   game.shopCloseBtnArea = { x: closeX, y: closeY, w: 24, h: 24 };
 
-  const startY = panelY + 100;
-  const cardH = 44;
+  const tabY = panelY + 76;
+  const tabGap = 6;
+  const tabW = Math.floor((contentW - tabGap * (tabs.length - 1)) / tabs.length);
+  const tabH = 28;
+  tabs.forEach(function(tab, index) {
+    const x = contentX + index * (tabW + tabGap);
+    const isActive = tab.id === activeTab;
+    ctx.fillStyle = isActive ? '#ffd166' : 'rgba(255,255,255,0.1)';
+    roundRect(ctx, x, tabY, tabW, tabH, 14);
+    ctx.fill();
+    ctx.fillStyle = isActive ? '#2d3436' : '#dfe6e9';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(tab.name, x + tabW / 2, tabY + 19);
+    game.shopTabAreas.push({
+      tabId: tab.id,
+      x: x,
+      y: tabY,
+      w: tabW,
+      h: tabH
+    });
+  });
+
+  const resetBtnW = 76;
+  const resetBtnH = 24;
+  const resetBtnX = panelX + 16;
+  const resetBtnY = panelY + 14;
+  ctx.fillStyle = 'rgba(214, 48, 49, 0.9)';
+  roundRect(ctx, resetBtnX, resetBtnY, resetBtnW, resetBtnH, 12);
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 11px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('清空存档', resetBtnX + resetBtnW / 2, resetBtnY + 16);
+  game.shopResetBtnArea = { x: resetBtnX, y: resetBtnY, w: resetBtnW, h: resetBtnH };
+
+  const startY = panelY + 116;
+  const cardH = activeTab === 'trails' ? 58 : 52;
   const gap = 8;
-  const maxCards = Math.min(upgrades.length, Math.floor((panelH - 122) / (cardH + gap)));
+  const maxCards = Math.min(entries.length, Math.floor((panelH - 142) / (cardH + gap)));
 
   for (let i = 0; i < maxCards; i++) {
-    const upgrade = upgrades[i];
+    const entry = entries[i];
+    const meta = getShopEntryMeta(entry);
     const y = startY + i * (cardH + gap);
-    const buyW = 78;
-    const buyH = 28;
-    const buyX = panelX + panelW - buyW - 16;
-    const buyY = y + 8;
+    const primaryW = meta.secondary ? 64 : 82;
+    const secondaryW = 64;
+    const buttonGap = 8;
+    const secondaryX = panelX + panelW - secondaryW - 16;
+    const primaryX = meta.secondary ? (secondaryX - primaryW - buttonGap) : (panelX + panelW - primaryW - 16);
+    const buttonY = y + cardH - 34;
 
     ctx.fillStyle = 'rgba(255,255,255,0.08)';
     roundRect(ctx, contentX, y, contentW, cardH, 14);
@@ -251,36 +294,174 @@ function drawShopPanel(ctx, game, images, W, H) {
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 14px sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText(upgrade.name + ' Lv.' + upgrade.level + '/' + upgrade.maxLevel, contentX + 12, y + 18);
+    ctx.fillText(meta.title, contentX + 12, y + 18);
 
     ctx.fillStyle = '#a5f3fc';
     ctx.font = '12px sans-serif';
-    ctx.fillText(progressionSystem.formatUpgradeEffect(upgrade.id, upgrade.currentEffect), contentX + 12, y + 34);
+    ctx.fillText(meta.desc, contentX + 12, y + 35);
 
-    const buttonColor = upgrade.isMaxLevel ? '#636e72' : (upgrade.affordable ? '#00b894' : '#d63031');
-    ctx.fillStyle = buttonColor;
-    roundRect(ctx, buyX, buyY, buyW, buyH, 14);
-    ctx.fill();
+    if (meta.detail) {
+      ctx.fillStyle = '#ffeaa7';
+      ctx.fillText(meta.detail, contentX + 12, y + 50);
+    }
 
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 12px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(
-      upgrade.isMaxLevel ? '满级' : upgrade.cost + ' 金币',
-      buyX + buyW / 2,
-      buyY + 19
-    );
-
+    drawShopButton(ctx, primaryX, buttonY, primaryW, 24, meta.primary.color, meta.primary.label);
     game.shopItemAreas.push({
-      upgradeId: upgrade.id,
-      x: buyX,
-      y: buyY,
-      w: buyW,
-      h: buyH
+      action: meta.primary.action,
+      itemId: meta.primary.itemId,
+      x: primaryX,
+      y: buttonY,
+      w: primaryW,
+      h: 24
     });
+
+    if (meta.secondary) {
+      drawShopButton(ctx, secondaryX, buttonY, secondaryW, 24, meta.secondary.color, meta.secondary.label);
+      game.shopItemAreas.push({
+        action: meta.secondary.action,
+        itemId: meta.secondary.itemId,
+        x: secondaryX,
+        y: buttonY,
+        w: secondaryW,
+        h: 24
+      });
+    }
   }
 
   ctx.restore();
+}
+
+function drawShopButton(ctx, x, y, w, h, color, text) {
+  ctx.fillStyle = color;
+  roundRect(ctx, x, y, w, h, 12);
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 11px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(text, x + w / 2, y + 16);
+}
+
+function getShopEntryMeta(entry) {
+  if (entry.kind === 'upgrade') {
+    return {
+      title: entry.name + ' Lv.' + entry.level + '/' + entry.maxLevel,
+      desc: progressionSystem.formatUpgradeEffect(entry.id, entry.currentEffect),
+      detail: entry.isMaxLevel ? entry.desc : ('下一档 ' + progressionSystem.formatUpgradeEffect(entry.id, entry.nextEffect)),
+      primary: {
+        label: entry.isMaxLevel ? '满级' : (entry.cost + '金'),
+        color: entry.isMaxLevel ? '#636e72' : (entry.affordable ? '#00b894' : '#d63031'),
+        action: 'buy-upgrade',
+        itemId: entry.id
+      }
+    };
+  }
+
+  if (entry.kind === 'skill') {
+    return {
+      title: entry.name,
+      desc: entry.desc,
+      detail: entry.unlocked ? (entry.enabled ? '已购买，当前启用' : '已购买，当前关闭') : ('价格 ' + entry.price + ' 金币'),
+      primary: {
+        label: entry.unlocked ? (entry.enabled ? '关闭' : '启用') : '购买',
+        color: entry.unlocked ? (entry.enabled ? '#636e72' : '#0984e3') : (entry.affordable ? '#00b894' : '#d63031'),
+        action: entry.unlocked ? 'toggle-skill' : 'buy-skill',
+        itemId: entry.capabilityId
+      }
+    };
+  }
+
+  if (entry.kind === 'character') {
+    return {
+      title: entry.name,
+      desc: entry.desc,
+      detail: entry.selected ? '当前角色' : (entry.unlocked ? '已解锁，可切换' : ('价格 ' + entry.price + ' 金币')),
+      primary: {
+        label: entry.selected ? '使用中' : (entry.unlocked ? '装备' : ('解锁')),
+        color: entry.selected ? '#636e72' : ((entry.unlocked || entry.affordable) ? '#00b894' : '#d63031'),
+        action: entry.unlocked ? 'equip-character' : 'buy-character',
+        itemId: entry.id
+      }
+    };
+  }
+
+  if (entry.kind === 'pet') {
+    return {
+      title: entry.name,
+      desc: entry.desc,
+      detail: entry.selected ? '当前出战' : (entry.unlocked ? '已拥有，可切换/收起' : ('价格 ' + entry.price + ' 金币')),
+      primary: {
+        label: entry.selected ? '收起' : (entry.unlocked ? '装备' : '购买'),
+        color: entry.selected ? '#636e72' : ((entry.unlocked || entry.affordable) ? '#00b894' : '#d63031'),
+        action: entry.unlocked ? 'equip-pet' : 'buy-pet',
+        itemId: entry.id
+      }
+    };
+  }
+
+  if (entry.kind === 'tailTrail' || entry.kind === 'headTrail') {
+    const isHead = entry.kind === 'headTrail';
+    return {
+      title: entry.name,
+      desc: entry.desc,
+      detail: entry.selected ? '当前展示' : (entry.unlocked ? '已解锁，可装备' : ('价格 ' + entry.price + ' 金币')),
+      primary: {
+        label: entry.selected ? '卸下' : (entry.unlocked ? '装备' : '解锁'),
+        color: entry.selected ? '#636e72' : ((entry.unlocked || entry.affordable) ? '#00b894' : '#d63031'),
+        action: entry.selected
+          ? (isHead ? 'unequip-head-trail' : 'unequip-tail-trail')
+          : (entry.unlocked
+          ? (isHead ? 'equip-head-trail' : 'equip-tail-trail')
+          : (isHead ? 'buy-head-trail' : 'buy-tail-trail')),
+        itemId: entry.id
+      }
+    };
+  }
+
+  if (entry.kind === 'trailLength') {
+    return {
+      title: entry.name + ' Lv.' + entry.level + '/' + entry.maxLevel,
+      desc: '当前倍率 x' + entry.currentEffect.toFixed(2),
+      detail: entry.isMaxLevel ? '已达到最大长度' : ('下一档 x' + entry.nextEffect.toFixed(2)),
+      primary: {
+        label: entry.isMaxLevel ? '满级' : (entry.cost + '金'),
+        color: entry.isMaxLevel ? '#636e72' : (entry.affordable ? '#00b894' : '#d63031'),
+        action: 'buy-trail-length',
+        itemId: entry.id
+      }
+    };
+  }
+
+  if (entry.kind === 'item') {
+    return {
+      title: entry.name,
+      desc: entry.desc,
+      detail: '库存 ' + entry.count + (entry.selected ? ' / 本局已装备' : ''),
+      primary: {
+        label: entry.price + '金',
+        color: entry.affordable ? '#00b894' : '#d63031',
+        action: 'buy-item',
+        itemId: entry.id
+      },
+      secondary: {
+        label: entry.selected ? '取消' : '装备',
+        color: entry.count > 0 ? (entry.selected ? '#636e72' : '#0984e3') : '#636e72',
+        action: 'equip-item',
+        itemId: entry.id
+      }
+    };
+  }
+
+  return {
+    title: entry.name || '未命名',
+    desc: entry.desc || '',
+    detail: '',
+    primary: {
+      label: '查看',
+      color: '#636e72',
+      action: '',
+      itemId: entry.id
+    }
+  };
 }
 
 /**
