@@ -207,6 +207,8 @@ class SkillSystem {
     this.chargeMax = 10;
     this.lastGesture = null;
     this.slideDownSkill = null;
+    this.lastDownwardTriggerAt = 0;
+    this.downwardSkillCooldownMs = 180;
 
     this.init();
   }
@@ -246,15 +248,13 @@ class SkillSystem {
     }
 
     if (direction) {
-      const player = this.game.player;
-      const canUseDownwardSkill = !!player && (player.state === 'fall' || player.vy > 0.5);
+      const now = Date.now();
       console.log('onGesture: direction=' + direction + ', chargeFull=' + this.game.chargeFull);
-      // 如果是下滑且蓄力已满，触发满蓄力释放
-      if (direction === 'down' && !canUseDownwardSkill) {
+      if (direction === 'down' && now - this.lastDownwardTriggerAt < this.downwardSkillCooldownMs) {
         return null;
       }
-
       if (direction === 'down' && this.game.chargeFull && this.canUseSkillCapability('charge_dash')) {
+        this.lastDownwardTriggerAt = now;
         this.triggerChargeFull();
         this.lastGesture = direction;
         return 'chargeFull';
@@ -262,6 +262,7 @@ class SkillSystem {
 
       // 如果是下滑但蓄力未满，执行普通下滑（不消耗蓄力）
       if (direction === 'down' && this.canUseSkillCapability('slide_fall')) {
+        this.lastDownwardTriggerAt = now;
         this.triggerSkill('slide');
         this.lastGesture = direction;
         return 'slide';
@@ -656,6 +657,7 @@ class SkillSystem {
     this.activeSkills.clear();
     this.lastGesture = null;
     this.slideDownSkill = null;
+    this.lastDownwardTriggerAt = 0;
   }
 
   canUseSkillCapability(entityId) {
