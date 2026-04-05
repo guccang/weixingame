@@ -412,8 +412,8 @@ function drawAchievementPanel(ctx, game, W, H) {
 
   // 成就列表（支持滚动）
   const startY = panelY + 96;
-  const cardH = 52;
-  const gap = 8;
+  const cardH = 46;
+  const gap = 6;
   const scrollOffset = game.achievementScrollOffset || 0;
   const visibleCount = Math.floor((panelH - 130) / (cardH + gap));
   const maxScroll = Math.max(0, achievements.length - visibleCount);
