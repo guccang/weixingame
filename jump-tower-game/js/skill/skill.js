@@ -272,6 +272,11 @@ class SkillSystem {
         return null;
       }
 
+      // 向上滑不触发任何技能
+      if (direction === 'up') {
+        return null;
+      }
+
       const skillId = this.gestureMap[direction];
       if (skillId) {
         this.triggerSkill(skillId);

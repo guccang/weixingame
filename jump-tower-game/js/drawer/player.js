@@ -56,11 +56,6 @@ function drawPlayer(ctx, player, cameraY, characterConfig, skillSystem) {
     // 绘制角色图片
     ctx.drawImage(frame, -player.w / 2, -player.h / 2, player.w, player.h);
 
-    if (isGrown) {
-      ctx.strokeStyle = 'rgba(255,255,255,0.8)';
-      ctx.lineWidth = 4;
-      ctx.strokeRect(-player.w / 2, -player.h / 2, player.w, player.h);
-    }
     ctx.restore();
     return;
   }
