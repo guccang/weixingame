@@ -298,6 +298,16 @@ class SkillSystem {
       return;
     }
 
+    // 只有跳到不同平台才增加蓄力
+    if (platform && this.game.lastLandedPlatform === platform) {
+      // 同一平台，不增加蓄力，但仍触发跳跃技能
+      this.triggerJumpSkill(platform);
+      return;
+    }
+
+    // 更新上次着陆的平台
+    this.game.lastLandedPlatform = platform;
+
     // 增加蓄力层数
     this.game.chargeCount++;
     if (this.game.chargeCount >= this.chargeMax) {

@@ -94,6 +94,7 @@ class Game {
     this.chargeFull = false;
     this.chargeDashing = false;
     this.chargeDashEndTime = 0;
+    this.lastLandedPlatform = null; // 上次着陆的平台（用于蓄力判断）
     this.cameraY = 0;
     this.lastPraiseTime = 0;
     this.lastMilestone = 0;
@@ -225,6 +226,7 @@ class Game {
     this.chargeFull = false;
     this.chargeDashing = false;
     this.chargeDashEndTime = 0;
+    this.lastLandedPlatform = null;
     this.bossSpawnHintShown = false;
     this.controlLockedUntil = 0;
     this.bossKnockbackUntil = 0;
@@ -854,6 +856,7 @@ class Game {
     this.chargeCount = 0;
     this.chargeFull = false;
     this.chargeDashing = false;
+    this.lastLandedPlatform = null;
     this.controlLockedUntil = 0;
     this.bossKnockbackUntil = 0;
     this.pendingBossLaunch = null;
