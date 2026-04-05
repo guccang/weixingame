@@ -119,12 +119,10 @@ class Boss {
       return;
     }
 
-    const framePaths = [
-      `${chasePath}/chase_01.png`,
-      `${chasePath}/chase_02.png`,
-      `${chasePath}/chase_03.png`,
-      `${chasePath}/chase_04.png`
-    ];
+    const framePaths = [];
+    for (let i = 0; i < 16; i++) {
+      framePaths.push(`${chasePath}/frame_${String(i).padStart(4, '0')}.png`);
+    }
 
     monster.frames = framePaths;
     monster.framesLoaded = true;

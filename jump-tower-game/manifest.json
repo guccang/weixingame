@@ -158,32 +158,116 @@
       "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/characters/coach/jump_5.png"
     },
     {
+      "key": "monster.boss.chase.0",
+      "type": "image",
+      "localPath": "images/monsters/boss/chase/frame_0000.png",
+      "cloudPath": "assets/images/monsters/boss/chase/frame_0000.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/monsters/boss/chase/frame_0000.png"
+    },
+    {
       "key": "monster.boss.chase.1",
       "type": "image",
-      "localPath": "images/monsters/boss/chase/chase_01.png",
-      "cloudPath": "assets/images/monsters/boss/chase/chase_01.png",
-      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/monsters/boss/chase/chase_01.png"
+      "localPath": "images/monsters/boss/chase/frame_0001.png",
+      "cloudPath": "assets/images/monsters/boss/chase/frame_0001.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/monsters/boss/chase/frame_0001.png"
     },
     {
       "key": "monster.boss.chase.2",
       "type": "image",
-      "localPath": "images/monsters/boss/chase/chase_02.png",
-      "cloudPath": "assets/images/monsters/boss/chase/chase_02.png",
-      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/monsters/boss/chase/chase_02.png"
+      "localPath": "images/monsters/boss/chase/frame_0002.png",
+      "cloudPath": "assets/images/monsters/boss/chase/frame_0002.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/monsters/boss/chase/frame_0002.png"
     },
     {
       "key": "monster.boss.chase.3",
       "type": "image",
-      "localPath": "images/monsters/boss/chase/chase_03.png",
-      "cloudPath": "assets/images/monsters/boss/chase/chase_03.png",
-      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/monsters/boss/chase/chase_03.png"
+      "localPath": "images/monsters/boss/chase/frame_0003.png",
+      "cloudPath": "assets/images/monsters/boss/chase/frame_0003.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/monsters/boss/chase/frame_0003.png"
     },
     {
       "key": "monster.boss.chase.4",
       "type": "image",
-      "localPath": "images/monsters/boss/chase/chase_04.png",
-      "cloudPath": "assets/images/monsters/boss/chase/chase_04.png",
-      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/monsters/boss/chase/chase_04.png"
+      "localPath": "images/monsters/boss/chase/frame_0004.png",
+      "cloudPath": "assets/images/monsters/boss/chase/frame_0004.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/monsters/boss/chase/frame_0004.png"
+    },
+    {
+      "key": "monster.boss.chase.5",
+      "type": "image",
+      "localPath": "images/monsters/boss/chase/frame_0005.png",
+      "cloudPath": "assets/images/monsters/boss/chase/frame_0005.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/monsters/boss/chase/frame_0005.png"
+    },
+    {
+      "key": "monster.boss.chase.6",
+      "type": "image",
+      "localPath": "images/monsters/boss/chase/frame_0006.png",
+      "cloudPath": "assets/images/monsters/boss/chase/frame_0006.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/monsters/boss/chase/frame_0006.png"
+    },
+    {
+      "key": "monster.boss.chase.7",
+      "type": "image",
+      "localPath": "images/monsters/boss/chase/frame_0007.png",
+      "cloudPath": "assets/images/monsters/boss/chase/frame_0007.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/monsters/boss/chase/frame_0007.png"
+    },
+    {
+      "key": "monster.boss.chase.8",
+      "type": "image",
+      "localPath": "images/monsters/boss/chase/frame_0008.png",
+      "cloudPath": "assets/images/monsters/boss/chase/frame_0008.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/monsters/boss/chase/frame_0008.png"
+    },
+    {
+      "key": "monster.boss.chase.9",
+      "type": "image",
+      "localPath": "images/monsters/boss/chase/frame_0009.png",
+      "cloudPath": "assets/images/monsters/boss/chase/frame_0009.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/monsters/boss/chase/frame_0009.png"
+    },
+    {
+      "key": "monster.boss.chase.10",
+      "type": "image",
+      "localPath": "images/monsters/boss/chase/frame_0010.png",
+      "cloudPath": "assets/images/monsters/boss/chase/frame_0010.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/monsters/boss/chase/frame_0010.png"
+    },
+    {
+      "key": "monster.boss.chase.11",
+      "type": "image",
+      "localPath": "images/monsters/boss/chase/frame_0011.png",
+      "cloudPath": "assets/images/monsters/boss/chase/frame_0011.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/monsters/boss/chase/frame_0011.png"
+    },
+    {
+      "key": "monster.boss.chase.12",
+      "type": "image",
+      "localPath": "images/monsters/boss/chase/frame_0012.png",
+      "cloudPath": "assets/images/monsters/boss/chase/frame_0012.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/monsters/boss/chase/frame_0012.png"
+    },
+    {
+      "key": "monster.boss.chase.13",
+      "type": "image",
+      "localPath": "images/monsters/boss/chase/frame_0013.png",
+      "cloudPath": "assets/images/monsters/boss/chase/frame_0013.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/monsters/boss/chase/frame_0013.png"
+    },
+    {
+      "key": "monster.boss.chase.14",
+      "type": "image",
+      "localPath": "images/monsters/boss/chase/frame_0014.png",
+      "cloudPath": "assets/images/monsters/boss/chase/frame_0014.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/monsters/boss/chase/frame_0014.png"
+    },
+    {
+      "key": "monster.boss.chase.15",
+      "type": "image",
+      "localPath": "images/monsters/boss/chase/frame_0015.png",
+      "cloudPath": "assets/images/monsters/boss/chase/frame_0015.png",
+      "fileID": "cloud://cloud1-9gazfwmccd451101.636c-cloud1-9gazfwmccd451101-1417726785/assets/images/monsters/boss/chase/frame_0015.png"
     },
     {
       "key": "audio.bgm",
