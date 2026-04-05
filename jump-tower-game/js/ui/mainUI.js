@@ -60,6 +60,8 @@ class MainUI {
 
   // 处理主界面触摸点击
   handleTouch(touchX, touchY) {
+    var pm = this.game.panelManager;
+
     // Debug 金币徽章
     if (this._hitBtn(this.game.coinBadgeArea, touchX, touchY)) {
       this.game.audio.playClick();
@@ -186,7 +188,6 @@ class MainUI {
     // 底部图标按钮
     if (this.game.bottomBtnArea) {
       const btn = this.game.bottomBtnArea;
-      const pm = this.game.panelManager;
       if (this._hitBtn(btn.character, touchX, touchY)) {
         this.game.audio.playClick();
         pm.open('showCharacterPanel');
