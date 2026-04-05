@@ -16,7 +16,8 @@ class LevelGenerator {
   attachRandomMushroom(platform, height) {
     if (!platform || platform.type === 'ground') return platform;
 
-    const spawnChance = height > 800 ? 0.16 : 0.1;
+    // 降低蘑菇生成概率30%
+    const spawnChance = height > 800 ? 0.112 : 0.07;
     if (Math.random() >= spawnChance) {
       platform.mushroom = null;
       return platform;
