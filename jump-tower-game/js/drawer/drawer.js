@@ -45,7 +45,7 @@ function render(game, images, characterConfig, jobConfig) {
     drawParticles(ctx, game.particles, game.cameraY);
     game.bossSystem.render(ctx); // 渲染Boss
     game.barrage.draw(ctx, W);
-    drawUI(ctx, W, H, game.score, game.combo, game.state, game.gameMode, game.chargeCount, game.chargeFull, game.chargeDashing, game.chargeMax, game.progression ? game.progression.coins : 0);
+    drawUI(ctx, W, H, game.score, game.combo, game.state, game.gameMode, game.chargeCount, game.chargeFull, game.chargeDashing, game.chargeMax, game.sessionPickupCoins || 0);
   } else if (game.state === 'gameover') {
     drawGameOverScreen(ctx, game);
   }

@@ -7,6 +7,16 @@ class MainUI {
 
   // 处理主界面触摸点击
   handleTouch(touchX, touchY) {
+    if (this.game.state === 'start' && this.game.coinBadgeArea) {
+      var coinBadge = this.game.coinBadgeArea;
+      if (touchX >= coinBadge.x && touchX <= coinBadge.x + coinBadge.w &&
+          touchY >= coinBadge.y && touchY <= coinBadge.y + coinBadge.h) {
+        this.game.audio.playClick();
+        this.game.grantDebugCoins();
+        return true;
+      }
+    }
+
     // 如果模式选择面板显示中
     if (this.game.gameMode.showModeSelect) {
       // 检查关闭按钮
@@ -198,60 +208,89 @@ class MainUI {
       return true;
     }
 
+    // 如果成就面板显示中
+    if (this.game.showAchievementPanel) {
+      var achPanel = this.game.achievementPanelArea;
+      // 点击在面板区域内
+      if (achPanel &&
+          touchX >= achPanel.x && touchX <= achPanel.x + achPanel.w &&
+          touchY >= achPanel.y && touchY <= achPanel.y + achPanel.h) {
+        // 检测关闭按钮
+        if (this.game.achievementCloseBtnArea &&
+            touchX >= this.game.achievementCloseBtnArea.x &&
+            touchX <= this.game.achievementCloseBtnArea.x + this.game.achievementCloseBtnArea.w &&
+            touchY >= this.game.achievementCloseBtnArea.y &&
+            touchY <= this.game.achievementCloseBtnArea.y + this.game.achievementCloseBtnArea.h) {
+          this.game.audio.playClick();
+          this.game.showAchievementPanel = false;
+        }
+        return true;
+      }
+      // 点击成就按钮区域，不关闭
+      if (this.game.bottomBtnArea && this.game.bottomBtnArea.achievement) {
+        var achBtn = this.game.bottomBtnArea.achievement;
+        if (touchX >= achBtn.x && touchX <= achBtn.x + achBtn.w &&
+            touchY >= achBtn.y && touchY <= achBtn.y + achBtn.h) {
+          return true;
+        }
+      }
+      // 点击面板外，关闭
+      this.game.showAchievementPanel = false;
+      return true;
+    }
+
     // 检测是否点击了底部图标按钮
     if (this.game.bottomBtnArea) {
       var btn = this.game.bottomBtnArea;
+      const pm = this.game.panelManager;
       // 点击了角色按钮
       if (touchX >= btn.character.x && touchX <= btn.character.x + btn.character.w &&
           touchY >= btn.character.y && touchY <= btn.character.y + btn.character.h) {
         this.game.audio.playClick();
-        this.game.showShopPanel = false;
-        this.game.showCharacterPanel = true;
+        pm.open('showCharacterPanel');
         return true;
       }
       // 点击了玩法按钮
       if (touchX >= btn.mode.x && touchX <= btn.mode.x + btn.mode.w &&
           touchY >= btn.mode.y && touchY <= btn.mode.y + btn.mode.h) {
         this.game.audio.playClick();
-        this.game.showShopPanel = false;
-        this.game.gameMode.showModeSelect = true;
+        pm.open('showModeSelect');
         return true;
       }
       // 点击了职业按钮
       if (touchX >= btn.job.x && touchX <= btn.job.x + btn.job.w &&
           touchY >= btn.job.y && touchY <= btn.job.y + btn.job.h) {
         this.game.audio.playClick();
-        this.game.showShopPanel = false;
-        this.game.showJobPanel = true;
+        pm.open('showJobPanel');
         return true;
       }
       // 点击了商店按钮
       if (touchX >= btn.shop.x && touchX <= btn.shop.x + btn.shop.w &&
           touchY >= btn.shop.y && touchY <= btn.shop.y + btn.shop.h) {
         this.game.audio.playClick();
-        this.game.showCharacterPanel = false;
-        this.game.showJobPanel = false;
-        this.game.showLeaderboardPanel = false;
-        this.game.gameMode.showModeSelect = false;
-        this.game.gameMode.showTimeSelect = false;
-        this.game.gameMode.showLandmarkSelect = false;
+        pm.open('showShopPanel');
         this.game.setShopTab(this.game.shopTab || 'upgrades');
-        this.game.showShopPanel = true;
         return true;
       }
       // 点击了排行榜按钮
       if (touchX >= btn.leaderboard.x && touchX <= btn.leaderboard.x + btn.leaderboard.w &&
           touchY >= btn.leaderboard.y && touchY <= btn.leaderboard.y + btn.leaderboard.h) {
         this.game.audio.playClick();
-        this.game.showShopPanel = false;
-        this.game.showLeaderboardPanel = true;
+        pm.open('showLeaderboardPanel');
         this.game.fetchRankList();
+        return true;
+      }
+      // 点击了成就按钮
+      if (touchX >= btn.achievement.x && touchX <= btn.achievement.x + btn.achievement.w &&
+          touchY >= btn.achievement.y && touchY <= btn.achievement.y + btn.achievement.h) {
+        this.game.audio.playClick();
+        pm.open('showAchievementPanel');
         return true;
       }
     }
 
-    // 检测是否点击了开始按钮
-    if (this.game.startBtnArea) {
+    // 检测是否点击了开始按钮（只有没有任何面板打开时才能触发）
+    if (this.game.startBtnArea && !this.game.panelManager.isAnyOpen()) {
       var sBtn = this.game.startBtnArea;
       if (touchX >= sBtn.x && touchX <= sBtn.x + sBtn.w &&
           touchY >= sBtn.y && touchY <= sBtn.y + sBtn.h) {
@@ -263,14 +302,13 @@ class MainUI {
       }
     }
 
-    // 检测是否点击了玩法按钮
+    // 检测是否点击了玩法按钮（兜底逻辑，面板关闭时重新打开）
     if (this.game.bottomBtnArea && this.game.bottomBtnArea.mode) {
       var mBtn = this.game.bottomBtnArea.mode;
       if (touchX >= mBtn.x && touchX <= mBtn.x + mBtn.w &&
           touchY >= mBtn.y && touchY <= mBtn.y + mBtn.h) {
         this.game.audio.playClick();
-        this.game.showShopPanel = false;
-        this.game.gameMode.showModeSelect = true;
+        this.game.panelManager.open('showModeSelect');
         return true;
       }
     }

@@ -8,9 +8,10 @@ const trailEffects = require('../effects/trail');
 const petSystem = require('../pet/pet');
 const physics = require('../physics/physics');
 
-const STORAGE_KEY = 'jump_tower_progress_v2';
-const LEGACY_STORAGE_KEY = 'jump_tower_progress_v1';
-const PROGRESS_VERSION = 2;
+const STORAGE_KEY = 'jump_tower_progress_v3';
+const LEGACY_STORAGE_KEY_V2 = 'jump_tower_progress_v2';
+const LEGACY_STORAGE_KEY_V1 = 'jump_tower_progress_v1';
+const PROGRESS_VERSION = 3;
 const BASE_GROWTH_DURATION_MS = 6500;
 
 const baseTrailConfig = trailEffects.getTrailConfig();
@@ -519,7 +520,18 @@ function getDefaultProgress() {
     selectedTailTrailId: null,
     trailLengthLevel: 0,
     itemInventory: {},
-    equippedItemId: null
+    equippedItemId: null,
+    achievements: {},
+    achievementStats: {
+      totalRuns: 0,
+      totalPlayTime: 0,
+      highestCombo: 0,
+      highestScore: 0,
+      totalCoinsCollected: 0,
+      perfectPlatforms: 0,
+      consecutiveDays: 0,
+      lastPlayDate: null
+    }
   };
 }
 
@@ -530,7 +542,9 @@ function loadProgress() {
   }
 
   try {
-    const stored = wx.getStorageSync(STORAGE_KEY) || wx.getStorageSync(LEGACY_STORAGE_KEY);
+    const stored = wx.getStorageSync(STORAGE_KEY) ||
+      wx.getStorageSync(LEGACY_STORAGE_KEY_V2) ||
+      wx.getStorageSync(LEGACY_STORAGE_KEY_V1);
     if (!stored) {
       return normalizeProgress(progress);
     }
@@ -563,7 +577,8 @@ function resetProgress() {
   if (typeof wx !== 'undefined' && typeof wx.removeStorageSync === 'function') {
     try {
       wx.removeStorageSync(STORAGE_KEY);
-      wx.removeStorageSync(LEGACY_STORAGE_KEY);
+      wx.removeStorageSync(LEGACY_STORAGE_KEY_V2);
+      wx.removeStorageSync(LEGACY_STORAGE_KEY_V1);
     } catch (err) {
       console.warn('[Progression] 清空存档失败，回退为覆盖默认值', err);
     }
@@ -581,6 +596,35 @@ function normalizeProgress(progress) {
   next.ownedCapabilities = next.ownedCapabilities || {};
   next.equippedCapabilities = next.equippedCapabilities || {};
   next.enabledCapabilities = next.enabledCapabilities || {};
+  next.achievements = next.achievements || {};
+  next.achievementStats = Object.assign(getDefaultProgress().achievementStats, next.achievementStats || {});
+
+  // Normalize achievementStats fields
+  const stats = next.achievementStats;
+  stats.totalRuns = Math.max(0, Math.floor(stats.totalRuns || 0));
+  stats.totalPlayTime = Math.max(0, Math.floor(stats.totalPlayTime || 0));
+  stats.highestCombo = Math.max(0, Math.floor(stats.highestCombo || 0));
+  stats.highestScore = Math.max(0, Math.floor(stats.highestScore || 0));
+  stats.totalCoinsCollected = Math.max(0, Math.floor(stats.totalCoinsCollected || 0));
+  stats.perfectPlatforms = Math.max(0, Math.floor(stats.perfectPlatforms || 0));
+  stats.consecutiveDays = Math.max(0, Math.floor(stats.consecutiveDays || 0));
+
+  // Check daily login
+  const today = new Date().toISOString().split('T')[0];
+  const lastPlay = stats.lastPlayDate;
+  if (lastPlay && lastPlay !== today) {
+    const lastDate = new Date(lastPlay);
+    const todayDate = new Date(today);
+    const diffDays = Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24));
+    if (diffDays === 1) {
+      stats.consecutiveDays = (stats.consecutiveDays || 0) + 1;
+    } else if (diffDays > 1) {
+      stats.consecutiveDays = 1;
+    }
+  } else if (!lastPlay) {
+    stats.consecutiveDays = 1;
+  }
+  stats.lastPlayDate = today;
 
   const defaultCharacterId = getDefaultCharacterId();
   next.unlockedCharacters = normalizeUnlockList(next.unlockedCharacters, [defaultCharacterId]);
@@ -1414,9 +1458,105 @@ function getSelectedPetId(progress) {
   return normalizeProgress(progress).selectedPetId;
 }
 
+// ==================== 成就系统相关 ====================
+
+const achievementSystem = require('../achievement/achievementSystem');
+
+/**
+ * 更新游戏结束时的统计信息并检查成就
+ * @param {Object} progress - 当前进度
+ * @param {Object} runSummary - 跑图总结 { score, combo, coinsCollected }
+ * @returns {Object} { progress, unlocks }
+ */
+function updateRunStats(progress, runSummary) {
+  const normalized = normalizeProgress(progress);
+  const summary = runSummary || {};
+
+  // 更新统计
+  normalized.achievementStats.totalRuns += 1;
+  if (summary.score && summary.score > normalized.achievementStats.highestScore) {
+    normalized.achievementStats.highestScore = summary.score;
+  }
+  if (summary.combo && summary.combo > normalized.achievementStats.highestCombo) {
+    normalized.achievementStats.highestCombo = summary.combo;
+  }
+  if (summary.coinsCollected) {
+    normalized.achievementStats.totalCoinsCollected += summary.coinsCollected;
+  }
+
+  // 检查成就
+  const unlocks = checkAndUnlockAchievementsInternal(normalized, ['height', 'combo', 'score', 'runs', 'coins_collected']);
+
+  saveProgress(normalized);
+  return { progress: normalized, unlocks };
+}
+
+/**
+ * 累加收集的金币（不奖励，只统计）
+ */
+function addCoinsCollected(progress, amount) {
+  const normalized = normalizeProgress(progress);
+  const coins = Math.max(0, Math.floor(amount || 0));
+  if (coins > 0) {
+    normalized.achievementStats.totalCoinsCollected += coins;
+    saveProgress(normalized);
+  }
+  return normalized;
+}
+
+/**
+ * 记录完美落地
+ */
+function recordPerfectLanding(progress) {
+  const normalized = normalizeProgress(progress);
+  normalized.achievementStats.perfectPlatforms += 1;
+  saveProgress(normalized);
+  return { progress: normalized };
+}
+
+/**
+ * 检查成就解锁（内部）
+ */
+function checkAndUnlockAchievementsInternal(progress, types) {
+  const unlocks = [];
+  const achievements = achievementSystem.getAllAchievements();
+
+  for (const achievement of achievements) {
+    if (progress.achievements && progress.achievements[achievement.Key]) {
+      continue;
+    }
+    if (types && types.length > 0 && !types.includes(achievement.Type)) {
+      continue;
+    }
+
+    if (achievementSystem.checkAchievement(achievement, progress)) {
+      const title = achievementSystem.getTitleById(achievement.TitleId);
+      progress.achievements[achievement.Key] = {
+        unlocked: true,
+        unlockedAt: Date.now(),
+        titleId: achievement.TitleId
+      };
+
+      unlocks.push({
+        achievement: achievement,
+        title: title,
+        message: achievementSystem.formatUnlockMessage(achievement, title)
+      });
+    }
+  }
+
+  return unlocks;
+}
+
+/**
+ * 获取当前称号
+ */
+function getCurrentTitle(progress) {
+  return achievementSystem.getCurrentTitle(progress);
+}
+
 module.exports = {
   STORAGE_KEY,
-  LEGACY_STORAGE_KEY,
   BASE_GROWTH_DURATION_MS,
   getDefaultProgress,
   loadProgress,
@@ -1433,6 +1573,10 @@ module.exports = {
   grantCoins,
   awardBossDrop,
   awardRunCoins,
+  updateRunStats,
+  addCoinsCollected,
+  recordPerfectLanding,
+  getCurrentTitle,
   applyUpgradesToGame,
   applyCapabilitiesToGame,
   getCapabilityCatalog,

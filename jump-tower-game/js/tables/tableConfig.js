@@ -138,6 +138,32 @@ const UpgradesConfig = {
   ],
 };
 
+const AchievementsConfig = {
+  name: 'Achievements',
+  file: 'Achievements.txt',
+  fields: [
+    { name: 'Id', type: 'INT', comment: '序号' },
+    { name: 'Key', type: 'STRING', comment: 'Key' },
+    { name: 'Name', type: 'STRING', comment: '名称' },
+    { name: 'Desc', type: 'STRING', comment: '描述' },
+    { name: 'Type', type: 'STRING', comment: '类型' },
+    { name: 'Target', type: 'INT', comment: '条件目标' },
+    { name: 'RewardCoins', type: 'INT', comment: '奖励金币' },
+    { name: 'TitleId', type: 'INT', comment: '称号编号' },
+    { name: 'Icon', type: 'STRING', comment: '图标' },
+  ],
+};
+
+const TitlesConfig = {
+  name: 'Titles',
+  file: 'Titles.txt',
+  fields: [
+    { name: 'Id', type: 'INT', comment: '序号' },
+    { name: 'Key', type: 'STRING', comment: 'Key' },
+    { name: 'Name', type: 'STRING', comment: '称号名' },
+  ],
+};
+
 const TableConfigs = {
   Audio: AudioConfig,
   Character: CharacterConfig,
@@ -149,6 +175,8 @@ const TableConfigs = {
   Praises: PraisesConfig,
   Upgrades: UpgradesConfig,
   UIText: UITextConfig,
+  Achievements: AchievementsConfig,
+  Titles: TitlesConfig,
 };
 
 module.exports = { FieldType, TableConfigs };

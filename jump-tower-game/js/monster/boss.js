@@ -320,9 +320,19 @@ class Boss {
     this.game.controls.keys['ArrowLeft'] = false;
     this.game.controls.keys['ArrowRight'] = false;
     this.game.skillSystem.applyBossKnockback(monster.x, { isFinalHit: isFinalAttack });
+
     if (this.game.barrage) {
       const hitText = isFinalAttack ? monster.name + '终结命中！' : monster.name + '重击命中！';
       this.game.barrage.show(player.x - 40, player.y - this.game.cameraY - 80, hitText, '#ff0066');
+    }
+
+    // Boss击飞时偷取玩家100金币（从当前对局金币扣除）
+    const stolenCoins = Math.min(100, this.game.sessionPickupCoins || 0);
+    if (stolenCoins > 0) {
+      this.game.sessionPickupCoins -= stolenCoins;
+      if (this.game.barrage) {
+        this.game.barrage.show(player.x - 40, player.y - this.game.cameraY - 40, monster.name + '偷走' + stolenCoins + '金币！', '#ff9966');
+      }
     }
   }
 

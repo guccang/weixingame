@@ -17,6 +17,8 @@ const { PlatformsRow } = require('./tableStruct');
 const { PraisesRow } = require('./tableStruct');
 const { UpgradesRow } = require('./tableStruct');
 const { UITextRow } = require('./tableStruct');
+const { AchievementsRow } = require('./tableStruct');
+const { TitlesRow } = require('./tableStruct');
 
 class TableManager {
   constructor() {
@@ -104,6 +106,8 @@ class TableManager {
       Praises: PraisesRow,
       Upgrades: UpgradesRow,
       UIText: UITextRow,
+      Achievements: AchievementsRow,
+      Titles: TitlesRow,
     };
     return classMap[tableName];
   }

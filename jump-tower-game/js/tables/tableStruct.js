@@ -299,6 +299,60 @@ class UpgradesRow extends BaseTableRow {
   }
 }
 
+/**
+ * Achievements 表数据行
+ * @property {number} Id - 序号
+ * @property {string} Key - Key
+ * @property {string} Name - 名称
+ * @property {string} Desc - 描述
+ * @property {string} Type - 类型
+ * @property {number} Target - 条件目标
+ * @property {number} RewardCoins - 奖励金币
+ * @property {number} TitleId - 称号编号
+ * @property {string} Icon - 图标
+ */
+class AchievementsRow extends BaseTableRow {
+  constructor() {
+    super();
+    this.Id = 0;
+    this.Key = '';
+    this.Name = '';
+    this.Desc = '';
+    this.Type = '';
+    this.Target = 0;
+    this.RewardCoins = 0;
+    this.TitleId = 0;
+    this.Icon = '';
+  }
+
+  static create(obj, fields, types) {
+    const row = new AchievementsRow();
+    row.initFromObject(obj, fields, types);
+    return row;
+  }
+}
+
+/**
+ * Titles 表数据行
+ * @property {number} Id - 序号
+ * @property {string} Key - Key
+ * @property {string} Name - 称号名
+ */
+class TitlesRow extends BaseTableRow {
+  constructor() {
+    super();
+    this.Id = 0;
+    this.Key = '';
+    this.Name = '';
+  }
+
+  static create(obj, fields, types) {
+    const row = new TitlesRow();
+    row.initFromObject(obj, fields, types);
+    return row;
+  }
+}
+
 module.exports = {
   BaseTableRow,
   AudioRow,
@@ -311,4 +365,6 @@ module.exports = {
   PraisesRow,
   UpgradesRow,
   UITextRow,
+  AchievementsRow,
+  TitlesRow,
 };

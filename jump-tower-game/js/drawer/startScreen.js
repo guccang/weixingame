@@ -37,7 +37,7 @@ function drawStartScreen(ctx, game, images, characterConfig, jobConfig) {
 
   // 如果角色面板显示中，隐藏主页面UI
   // 只有当没有显示任何面板时，才绘制开始按钮和标题
-  if (!game.showCharacterPanel && !game.showJobPanel && !game.showShopPanel && !game.gameMode.showModeSelect && !game.gameMode.showTimeSelect && !game.gameMode.showLandmarkSelect) {
+  if (!game.panelManager.isAnyOpen()) {
     // 标题文字
     ctx.fillStyle = '#ffdd57';
     ctx.font = 'bold 36px sans-serif';
@@ -93,6 +93,7 @@ function drawStartScreen(ctx, game, images, characterConfig, jobConfig) {
     { key: 'shop', color: '#fd79a8', text: '强化', img: images.iconShop, highlight: game.showShopPanel },
     { key: 'character', color: '#74b9ff', text: '角色', img: images.iconCharacter },
     { key: 'mode', color: '#ffdd57', text: '玩法', img: null, highlight: game.gameMode.showModeSelect },
+    { key: 'achievement', color: '#fdcb6e', text: '成就', img: null, highlight: game.showAchievementPanel },
     { key: 'job', color: jobConfig.colors[game.playerJob] || '#ff6b6b', text: '职业', img: null, highlight: game.showJobPanel },
     { key: 'leaderboard', color: '#55efc4', text: '排行', img: images.iconLeaderboard }
   ];
@@ -135,6 +136,8 @@ function drawStartScreen(ctx, game, images, characterConfig, jobConfig) {
     drawJobSelect(ctx, game, jobConfig);
   } else if (game.showShopPanel) {
     drawShopPanel(ctx, game, images, W, H);
+  } else if (game.showAchievementPanel) {
+    drawAchievementPanel(ctx, game, W, H);
   } else if (game.gameMode.showModeSelect) {
     drawModeSelect(ctx, game, W, H);
   } else if (game.gameMode.showTimeSelect) {
@@ -150,10 +153,17 @@ function drawStartScreen(ctx, game, images, characterConfig, jobConfig) {
 
 function drawCoinBadge(ctx, game, images) {
   const balance = game.progression ? game.progression.coins : 0;
-  const x = game.W - 126;
+  const x = 24;
   const y = 24;
   const w = 102;
   const h = 34;
+
+  game.coinBadgeArea = {
+    x: x,
+    y: y,
+    w: w,
+    h: h
+  };
 
   ctx.save();
   ctx.fillStyle = 'rgba(18, 18, 36, 0.72)';
@@ -339,6 +349,133 @@ function drawShopButton(ctx, x, y, w, h, color, text) {
   ctx.font = 'bold 11px sans-serif';
   ctx.textAlign = 'center';
   ctx.fillText(text, x + w / 2, y + 16);
+}
+
+function drawAchievementPanel(ctx, game, W, H) {
+  const achievementSystem = require('../achievement/achievementSystem');
+
+  const panelW = Math.min(W - 48, 380);
+  const panelH = Math.min(H - 110, 520);
+  const panelX = (W - panelW) / 2;
+  const panelY = 76;
+  const contentX = panelX + 18;
+  const contentW = panelW - 36;
+  const progress = game.progression || progressionSystem.getDefaultProgress();
+
+  game.achievementCloseBtnArea = null;
+  game.achievementPanelArea = { x: panelX, y: panelY, w: panelW, h: panelH };
+
+  ctx.save();
+  ctx.fillStyle = 'rgba(12, 12, 28, 0.95)';
+  ctx.strokeStyle = 'rgba(253, 203, 110, 0.85)';
+  ctx.lineWidth = 2;
+  roundRect(ctx, panelX, panelY, panelW, panelH, 22);
+  ctx.fill();
+  ctx.stroke();
+
+  // 标题
+  ctx.fillStyle = '#fdcb6e';
+  ctx.font = 'bold 24px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('成就', W / 2, panelY + 34);
+
+  // 当前称号
+  const currentTitle = achievementSystem.getCurrentTitle(progress);
+  if (currentTitle) {
+    ctx.fillStyle = '#ffeaa7';
+    ctx.font = '14px sans-serif';
+    ctx.fillText('当前称号: ' + currentTitle.Name, W / 2, panelY + 58);
+  } else {
+    ctx.fillStyle = '#636e72';
+    ctx.font = '14px sans-serif';
+    ctx.fillText('尚未获得称号', W / 2, panelY + 58);
+  }
+
+  // 关闭按钮
+  const closeX = panelX + panelW - 38;
+  const closeY = panelY + 14;
+  ctx.fillStyle = 'rgba(255,255,255,0.14)';
+  roundRect(ctx, closeX, closeY, 24, 24, 12);
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 16px sans-serif';
+  ctx.fillText('X', closeX + 12, closeY + 17);
+  game.achievementCloseBtnArea = { x: closeX, y: closeY, w: 24, h: 24 };
+
+  // 已解锁/总成就数
+  const achievements = achievementSystem.getAllAchievements();
+  const unlockedCount = Object.keys(progress.achievements || {}).length;
+  ctx.fillStyle = '#dfe6e9';
+  ctx.font = '12px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('已解锁: ' + unlockedCount + ' / ' + achievements.length, W / 2, panelY + 82);
+
+  // 成就列表（支持滚动）
+  const startY = panelY + 96;
+  const cardH = 52;
+  const gap = 8;
+  const scrollOffset = game.achievementScrollOffset || 0;
+  const visibleCount = Math.floor((panelH - 130) / (cardH + gap));
+  const maxScroll = Math.max(0, achievements.length - visibleCount);
+  game.achievementMaxScroll = maxScroll;
+
+  for (let i = 0; i < achievements.length; i++) {
+    if (i < scrollOffset || i >= scrollOffset + visibleCount) continue;
+    const ach = achievements[i];
+    const unlocked = progress.achievements && progress.achievements[ach.Key];
+    const y = startY + (i - scrollOffset) * (cardH + gap);
+
+    ctx.fillStyle = unlocked ? 'rgba(253, 203, 110, 0.15)' : 'rgba(255,255,255,0.06)';
+    roundRect(ctx, contentX, y, contentW, cardH, 14);
+    ctx.fill();
+
+    // 状态图标
+    const iconX = contentX + 10;
+    const iconY = y + cardH / 2;
+    if (unlocked) {
+      ctx.fillStyle = '#fdcb6e';
+      ctx.font = 'bold 18px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('★', iconX, iconY + 6);
+    } else {
+      ctx.fillStyle = 'rgba(255,255,255,0.2)';
+      ctx.font = 'bold 18px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('☆', iconX, iconY + 6);
+    }
+
+    // 名称
+    ctx.fillStyle = unlocked ? '#ffeaa7' : '#dfe6e9';
+    ctx.font = 'bold 14px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(ach.Name, contentX + 34, y + 18);
+
+    // 描述
+    ctx.fillStyle = unlocked ? '#b2bec3' : '#636e72';
+    ctx.font = '11px sans-serif';
+    ctx.fillText(ach.Desc, contentX + 34, y + 34);
+
+    // 奖励
+    if (ach.RewardCoins > 0) {
+      ctx.fillStyle = '#ffd166';
+      ctx.font = '10px sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText('+' + ach.RewardCoins + '金', panelX + panelW - 16, y + 18);
+    }
+
+    // 称号
+    if (ach.TitleId) {
+      const title = achievementSystem.getTitleById(ach.TitleId);
+      if (title) {
+        ctx.fillStyle = unlocked ? '#fd79a8' : '#636e72';
+        ctx.font = '10px sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText('称号: ' + title.Name, panelX + panelW - 16, y + 34);
+      }
+    }
+  }
+
+  ctx.restore();
 }
 
 function getShopEntryMeta(entry) {

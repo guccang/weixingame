@@ -29,6 +29,7 @@ const Barrage = require('./barrage/barrage');
 
 // 主界面UI
 const MainUI = require('./ui/mainUI');
+const UIPanelManager = require('./ui/panelManager');
 
 // 控制系统
 const Controls = require('./controls/controls');
@@ -152,12 +153,15 @@ class Game {
     this.shopMessageColor = '#55efc4';
     this.shopMessageUntil = 0;
     this.shopTab = 'upgrades';
+    this.coinBadgeArea = null;
+    this.debugCoinGrantAmount = 1000;
 
     this.controls = new Controls(this); // 控制系统
     this.mainUI = new MainUI(this); // 主界面UI
     this.audio = new Audio(); // 音效管理
     this.levelGenerator = new LevelGenerator(); // 关卡生成器
     this.gameMode = new GameMode(); // 游戏模式管理
+    this.panelManager = new UIPanelManager(this); // UI面板管理器
     this.skillSystem = new SkillSystem(this); // 技能系统
     this.gameOps = new GameOperations(this); // 游戏操作（分享等）
     this.bossSystem = new BossSystem(this); // Boss系统
@@ -298,6 +302,14 @@ class Game {
     this.shopMessage = text;
     this.shopMessageColor = color || '#55efc4';
     this.shopMessageUntil = Date.now() + 1800;
+  }
+
+  grantDebugCoins() {
+    const reward = progressionSystem.grantCoins(this.progression, this.debugCoinGrantAmount);
+    this.progression = reward.progress;
+    this.refreshProgressionEffects();
+    this.showShopToast('测试金币 +' + reward.coins, '#ffeaa7');
+    return reward;
   }
 
   buyUpgrade(upgradeId) {
@@ -484,6 +496,9 @@ class Game {
     coin.collected = true;
     this.progression = reward.progress;
     this.sessionPickupCoins += reward.coins;
+
+    // 成就统计：累计拾取金币
+    progressionSystem.addCoinsCollected(this.progression, reward.coins);
 
     const now = Date.now();
     const pos = this.levelGenerator.getCoinPosition(coin, now);
@@ -728,6 +743,28 @@ class Game {
         this.score >= this.gameMode.selectedLandmark.targetHeight
     });
     this.progression = rewardResult.progress;
+
+    // 成就统计：更新游戏统计并检查成就
+    const achievementResult = progressionSystem.updateRunStats(this.progression, {
+      score: this.score,
+      combo: this.maxCombo,
+      coinsCollected: this.sessionPickupCoins
+    });
+    this.progression = achievementResult.progress;
+
+    // 显示成就解锁通知
+    if (achievementResult.unlocks && achievementResult.unlocks.length > 0 && this.barrage) {
+      let delay = 2000;
+      for (const unlock of achievementResult.unlocks) {
+        setTimeout(() => {
+          if (this.barrage) {
+            this.barrage.show(this.W / 2 - 100, this.H / 2 - 80, unlock.message, '#ffd700');
+          }
+        }, delay);
+        delay += 1200;
+      }
+    }
+
     this.runRewardSummary = {
       baseCoins: rewardResult.baseCoins,
       heightCoins: rewardResult.heightCoins,
@@ -747,6 +784,7 @@ class Game {
     this.trailEffects = [];
     this.pet = null;
     this.combo = 0;
+    this.shakeTimer = 0;
     // 初始化游戏结束按钮区域，确保在渲染前就存在
     this.gameOverBtnArea = {
       restartX: this.W / 2 - 80,
