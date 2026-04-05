@@ -30,6 +30,7 @@ const Barrage = require('./barrage/barrage');
 // 主界面UI
 const MainUI = require('./ui/mainUI');
 const UIPanelManager = require('./ui/panelManager');
+const ScrollHandler = require('./ui/scrollHandler');
 
 // 控制系统
 const Controls = require('./controls/controls');
@@ -162,6 +163,7 @@ class Game {
     this.levelGenerator = new LevelGenerator(); // 关卡生成器
     this.gameMode = new GameMode(); // 游戏模式管理
     this.panelManager = new UIPanelManager(this); // UI面板管理器
+    this.scrollHandler = new ScrollHandler(this); // 滚动处理器
     this.skillSystem = new SkillSystem(this); // 技能系统
     this.gameOps = new GameOperations(this); // 游戏操作（分享等）
     this.bossSystem = new BossSystem(this); // Boss系统

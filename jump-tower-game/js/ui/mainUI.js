@@ -17,15 +17,15 @@ class MainUI {
   }
 
   // 处理返回按钮点击（通用方法）
-  _handleBackButton(btnAreaKey, targetPanelKey, touchX, touchY) {
+  _handleBackButton(btnAreaKey, touchX, touchY) {
     const btn = this.game[btnAreaKey];
     if (!btn) return false;
     if (this._hitBtn(btn, touchX, touchY)) {
       this.game.audio.playClick();
-      if (targetPanelKey) {
-        this.game.panelManager.open(targetPanelKey);
-      } else {
-        this.game.panelManager.closeAll();
+      // 使用历史栈返回，如果没有历史则关闭所有面板
+      const prevPanel = this.game.panelManager.back();
+      if (prevPanel === null) {
+        // 没有历史，已关闭所有面板
       }
       return true;
     }
@@ -69,8 +69,7 @@ class MainUI {
 
     // 模式选择面板
     if (this.game.panelManager.isOpen('showModeSelect')) {
-      if (this._handleBackButton('closeModeSelect', null, touchX, touchY)) {
-        this.game.panelManager.close('showModeSelect');
+      if (this._handleBackButton('closeModeSelect', touchX, touchY)) {
         return true;
       }
       if (this._handleButtonDict('modeBtnArea', (modeName) => {
@@ -86,7 +85,7 @@ class MainUI {
 
     // 时间选择面板
     if (this.game.panelManager.isOpen('showTimeSelect')) {
-      if (this._handleBackButton('backToModeSelect', 'showModeSelect', touchX, touchY)) {
+      if (this._handleBackButton('backToModeSelect', touchX, touchY)) {
         return true;
       }
       if (this._handleButtonArray('timeBtnArea', (btn) => {
@@ -100,7 +99,7 @@ class MainUI {
 
     // 地标选择面板
     if (this.game.panelManager.isOpen('showLandmarkSelect')) {
-      if (this._handleBackButton('backToModeSelect', 'showModeSelect', touchX, touchY)) {
+      if (this._handleBackButton('backToModeSelect', touchX, touchY)) {
         return true;
       }
       if (this._handleButtonArray('landmarkBtnArea', (btn) => {

@@ -3,6 +3,7 @@
  * 集中管理所有面板的开启/关闭/查询，彻底解决面板互斥和"关闭后触发开始按钮"类bug
  * 支持面板生命周期钩子，用于埋点、音效等副作用
  * 统一管理所有面板状态，逐步迁移至内部存储
+ * 支持面板历史栈，实现返回导航功能
  */
 
 class UIPanelManager {
@@ -25,6 +26,9 @@ class UIPanelManager {
       beforeClose: {},
       afterClose: {}
     };
+    // 历史栈（用于返回导航）
+    this.history = [];
+    this.maxHistorySize = 10;
   }
 
   // 注册钩子函数
@@ -122,16 +126,27 @@ class UIPanelManager {
     for (const key of openPanels) {
       this._runHooks('afterClose', key);
     }
+    // 清空历史栈
+    this.history = [];
   }
 
   // 打开指定面板（同时关闭其他所有面板）
-  open(panelKey) {
+  open(panelKey, saveHistory = true) {
     // 触发打开前钩子
     this._runHooks('beforeOpen', panelKey);
 
     this.closeAll();
     this.panels[panelKey] = true;
     this._syncToExternal(panelKey);
+
+    // 记录历史
+    if (saveHistory) {
+      this.history.push(panelKey);
+      // 限制历史栈大小
+      if (this.history.length > this.maxHistorySize) {
+        this.history.shift();
+      }
+    }
 
     // 触发打开后钩子
     this._runHooks('afterOpen', panelKey);
@@ -147,6 +162,12 @@ class UIPanelManager {
     this.panels[panelKey] = false;
     this._syncToExternal(panelKey);
 
+    // 从历史栈中移除
+    const index = this.history.indexOf(panelKey);
+    if (index !== -1) {
+      this.history.splice(index, 1);
+    }
+
     // 触发关闭后钩子
     this._runHooks('afterClose', panelKey);
   }
@@ -158,6 +179,43 @@ class UIPanelManager {
     } else {
       this.open(panelKey);
     }
+  }
+
+  /**
+   * 返回上一个面板（用于导航）
+   * @returns {string|null} 返回到的面板key，如果没有历史则返回null
+   */
+  back() {
+    // 移除当前面板
+    const current = this.history.pop();
+
+    if (this.history.length === 0) {
+      // 没有历史了，关闭所有面板
+      this.closeAll();
+      return null;
+    }
+
+    // 获取上一个面板
+    const prev = this.history[this.history.length - 1];
+    if (prev) {
+      this.open(prev, false); // 不重复记录历史
+    }
+    return prev;
+  }
+
+  /**
+   * 获取历史栈深度
+   */
+  getHistoryDepth() {
+    return this.history.length;
+  }
+
+  /**
+   * 清空历史栈但保持当前面板状态
+   */
+  clearHistory() {
+    const current = this.getActivePanel();
+    this.history = current ? [current] : [];
   }
 
   // 打开底部图标对应的面板（关闭其他面板）

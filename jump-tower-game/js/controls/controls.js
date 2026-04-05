@@ -80,7 +80,7 @@ class Controls {
         var touchX = touches[0].clientX;
         var touchY = touches[0].clientY;
 
-        // 开始界面：处理成就面板滚动和面板守卫
+        // 开始界面：处理面板滚动和面板守卫
         if (_this.game.state === 'start') {
           var touchDx = touchX - _this.touchStartX;
           var touchDy = touchY - _this.touchStartY;
@@ -90,23 +90,9 @@ class Controls {
           _this.lastDeltaX = touchDx;
           _this.lastDeltaY = touchDy;
 
-          // 成就面板支持上下滚动
-          if (_this.game.showAchievementPanel && _this.game.achievementPanelArea && isMoving) {
-            var achPanel = _this.game.achievementPanelArea;
-            if (touchX >= achPanel.x && touchX <= achPanel.x + achPanel.w &&
-                touchY >= achPanel.y && touchY <= achPanel.y + achPanel.h) {
-              var deltaY = touchY - _this.touchStartY;
-              if (Math.abs(deltaY) > 20) {
-                var scroll = _this.game.achievementScrollOffset || 0;
-                if (deltaY < 0 && scroll < _this.game.achievementMaxScroll) {
-                  scroll++;
-                } else if (deltaY > 0 && scroll > 0) {
-                  scroll--;
-                }
-                _this.game.achievementScrollOffset = scroll;
-                _this.touchStartY = touchY;
-              }
-            }
+          // 使用 ScrollHandler 处理面板滚动
+          if (_this.game.scrollHandler && _this.game.scrollHandler.handleMove(touchX, touchY, _this.touchStartX, _this.touchStartY)) {
+            return;
           }
 
           // 面板打开时，onTouchMove不处理点击（避免面板关闭后误触发开始按钮）
