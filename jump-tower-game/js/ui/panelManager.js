@@ -1,71 +1,162 @@
 /**
  * UI面板管理器
  * 集中管理所有面板的开启/关闭/查询，彻底解决面板互斥和"关闭后触发开始按钮"类bug
+ * 支持面板生命周期钩子，用于埋点、音效等副作用
+ * 统一管理所有面板状态，逐步迁移至内部存储
  */
 
 class UIPanelManager {
   constructor(game) {
     this.game = game;
+    // 内部面板状态（单一数据源）
+    this.panels = {
+      showCharacterPanel: false,
+      showShopPanel: false,
+      showAchievementPanel: false,
+      showLeaderboardPanel: false,
+      showModeSelect: false,
+      showTimeSelect: false,
+      showLandmarkSelect: false
+    };
+    // 钩子系统
+    this.hooks = {
+      beforeOpen: {},
+      afterOpen: {},
+      beforeClose: {},
+      afterClose: {}
+    };
   }
 
-  // 所有面板状态字段（game顶层）
-  _topLevelPanels() {
-    return [
-      'showCharacterPanel',
-      'showShopPanel',
-      'showAchievementPanel',
-      'showLeaderboardPanel'
-    ];
+  // 注册钩子函数
+  on(event, panelKey, fn) {
+    if (!this.hooks[event]) {
+      this.hooks[event] = {};
+    }
+    if (!this.hooks[event][panelKey]) {
+      this.hooks[event][panelKey] = [];
+    }
+    this.hooks[event][panelKey].push(fn);
   }
 
-  // gameMode下的面板状态字段
-  _gameModePanels() {
-    return [
-      'showModeSelect',
-      'showTimeSelect',
-      'showLandmarkSelect'
-    ];
+  // 移除钩子函数
+  off(event, panelKey, fn) {
+    const hooks = this.hooks[event]?.[panelKey];
+    if (!hooks) return;
+    const index = hooks.indexOf(fn);
+    if (index !== -1) {
+      hooks.splice(index, 1);
+    }
+  }
+
+  // 执行钩子
+  _runHooks(event, panelKey) {
+    const hooks = this.hooks[event]?.[panelKey] || [];
+    for (const fn of hooks) {
+      try {
+        fn(this.game);
+      } catch (e) {
+        console.error('[UIPanelManager] Hook error:', event, panelKey, e);
+      }
+    }
+  }
+
+  // 同步内部状态到外部（兼容旧代码，逐步迁移）
+  _syncToExternal(panelKey) {
+    const value = this.panels[panelKey];
+    // gameMode 下的面板
+    if (['showModeSelect', 'showTimeSelect', 'showLandmarkSelect'].includes(panelKey)) {
+      this.game.gameMode[panelKey] = value;
+    } else {
+      // game 顶层面板
+      this.game[panelKey] = value;
+    }
+  }
+
+  // 从外部状态同步到内部（初始化时使用）
+  _syncFromExternal() {
+    const g = this.game;
+    this.panels.showCharacterPanel = !!g.showCharacterPanel;
+    this.panels.showShopPanel = !!g.showShopPanel;
+    this.panels.showAchievementPanel = !!g.showAchievementPanel;
+    this.panels.showLeaderboardPanel = !!g.showLeaderboardPanel;
+    this.panels.showModeSelect = !!g.gameMode.showModeSelect;
+    this.panels.showTimeSelect = !!g.gameMode.showTimeSelect;
+    this.panels.showLandmarkSelect = !!g.gameMode.showLandmarkSelect;
+  }
+
+  // 获取面板状态（推荐使用此方法访问面板状态）
+  isOpen(panelKey) {
+    return this.panels[panelKey] || false;
   }
 
   // 判断是否有任意面板打开
   isAnyOpen() {
-    const g = this.game;
-    for (const key of this._topLevelPanels()) {
-      if (g[key]) return true;
+    return Object.values(this.panels).some(v => v);
+  }
+
+  // 获取当前打开的面板key
+  getActivePanel() {
+    for (const key in this.panels) {
+      if (this.panels[key]) return key;
     }
-    for (const key of this._gameModePanels()) {
-      if (g.gameMode[key]) return true;
-    }
-    return false;
+    return null;
   }
 
   // 关闭所有面板
   closeAll() {
-    const g = this.game;
-    for (const key of this._topLevelPanels()) {
-      g[key] = false;
+    // 先收集所有打开的面板（为了触发钩子）
+    const openPanels = [];
+    for (const key in this.panels) {
+      if (this.panels[key]) openPanels.push(key);
     }
-    for (const key of this._gameModePanels()) {
-      g.gameMode[key] = false;
+    // 触发关闭前钩子
+    for (const key of openPanels) {
+      this._runHooks('beforeClose', key);
+    }
+    // 关闭所有面板
+    for (const key in this.panels) {
+      this.panels[key] = false;
+      this._syncToExternal(key);
+    }
+    // 触发关闭后钩子
+    for (const key of openPanels) {
+      this._runHooks('afterClose', key);
     }
   }
 
   // 打开指定面板（同时关闭其他所有面板）
   open(panelKey) {
+    // 触发打开前钩子
+    this._runHooks('beforeOpen', panelKey);
+
     this.closeAll();
-    if (this._topLevelPanels().includes(panelKey)) {
-      this.game[panelKey] = true;
-    } else if (this._gameModePanels().includes(panelKey)) {
-      this.game.gameMode[panelKey] = true;
-    }
+    this.panels[panelKey] = true;
+    this._syncToExternal(panelKey);
+
+    // 触发打开后钩子
+    this._runHooks('afterOpen', panelKey);
   }
 
   // 关闭指定面板
   close(panelKey) {
-    if (this._topLevelPanels().includes(panelKey)) {
-      this.game[panelKey] = false;
-    } else if (this._gameModePanels().includes(panelKey)) {
-      this.game.gameMode[panelKey] = false;
+    if (!this.panels[panelKey]) return;
+
+    // 触发关闭前钩子
+    this._runHooks('beforeClose', panelKey);
+
+    this.panels[panelKey] = false;
+    this._syncToExternal(panelKey);
+
+    // 触发关闭后钩子
+    this._runHooks('afterClose', panelKey);
+  }
+
+  // 切换面板（如果打开则关闭，如果关闭则打开）
+  toggle(panelKey) {
+    if (this.panels[panelKey]) {
+      this.close(panelKey);
+    } else {
+      this.open(panelKey);
     }
   }
 
@@ -82,6 +173,11 @@ class UIPanelManager {
     if (panelKey) {
       this.open(panelKey);
     }
+  }
+
+  // 重置所有面板状态
+  reset() {
+    this.closeAll();
   }
 }
 
