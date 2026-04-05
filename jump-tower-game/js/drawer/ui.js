@@ -97,9 +97,12 @@ function drawUI(ctx, W, H, score, combo, state, gameMode, chargeCount, chargeFul
 
   if (typeof coins === 'number') {
     ctx.fillStyle = '#ffd166';
-    ctx.font = 'bold 16px sans-serif';
-    ctx.textAlign = 'right';
-    ctx.fillText('金币 ' + coins, W - 15, safeTop);
+    ctx.shadowColor = 'rgba(255, 209, 102, 0.8)';
+    ctx.shadowBlur = 10;
+    ctx.font = 'bold 20px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('💰 ' + coins, 15, safeTop + 60);
+    ctx.shadowBlur = 0;
   }
 
   ctx.shadowBlur = 0;
