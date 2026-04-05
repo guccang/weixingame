@@ -125,7 +125,6 @@ class Game {
     this.platforms = [];
     this.player = null;
     this.showCharacterPanel = false; // 是否显示角色选择面板
-    this.showJobPanel = false; // 是否显示职业选择面板
     this.showShopPanel = false; // 是否显示强化面板
     this.showLeaderboardPanel = false; // 是否显示排行榜面板
     this.rankList = []; // 排行榜数据
@@ -860,7 +859,6 @@ class Game {
     this.pendingBossLaunch = null;
     this.gameOverBtnArea = null;
     this.showCharacterPanel = false;
-    this.showJobPanel = false;
     this.showShopPanel = false;
     this.showLeaderboardPanel = false;
     this.runRewardSummary = null;

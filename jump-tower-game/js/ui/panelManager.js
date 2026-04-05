@@ -12,7 +12,6 @@ class UIPanelManager {
   _topLevelPanels() {
     return [
       'showCharacterPanel',
-      'showJobPanel',
       'showShopPanel',
       'showAchievementPanel',
       'showLeaderboardPanel'
@@ -75,7 +74,6 @@ class UIPanelManager {
     const iconToPanel = {
       character: 'showCharacterPanel',
       shop: 'showShopPanel',
-      job: 'showJobPanel',
       leaderboard: 'showLeaderboardPanel',
       achievement: 'showAchievementPanel',
       mode: 'showModeSelect'

@@ -5,7 +5,6 @@
 const { roundRect } = require('./helper');
 const { drawBackground } = require('./background');
 const { drawCharacterSelect } = require('./characterSelect');
-const { drawJobSelect } = require('./jobSelect');
 const { drawModeSelect, drawTimeSelect, drawLandmarkSelect } = require('./modeSelect');
 const { drawLeaderboardPanel } = require('./leaderboard');
 const progressionSystem = require('../progression/progression');
@@ -94,7 +93,6 @@ function drawStartScreen(ctx, game, images, characterConfig, jobConfig) {
     { key: 'character', color: '#74b9ff', text: '角色', img: images.iconCharacter },
     { key: 'mode', color: '#ffdd57', text: '玩法', img: null, highlight: game.gameMode.showModeSelect },
     { key: 'achievement', color: '#fdcb6e', text: '成就', img: null, highlight: game.showAchievementPanel },
-    { key: 'job', color: jobConfig.colors[game.playerJob] || '#ff6b6b', text: '职业', img: null, highlight: game.showJobPanel },
     { key: 'leaderboard', color: '#55efc4', text: '排行', img: images.iconLeaderboard }
   ];
   const btnCount = icons.length;
@@ -132,8 +130,6 @@ function drawStartScreen(ctx, game, images, characterConfig, jobConfig) {
   // 根据状态显示面板
   if (game.showCharacterPanel) {
     drawCharacterSelect(ctx, game, characterConfig);
-  } else if (game.showJobPanel) {
-    drawJobSelect(ctx, game, jobConfig);
   } else if (game.showShopPanel) {
     drawShopPanel(ctx, game, images, W, H);
   } else if (game.showAchievementPanel) {
