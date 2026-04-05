@@ -236,6 +236,21 @@ function getCapabilityCatalog() {
     }
   });
   capabilities.push({
+    id: getCapabilityId(CAPABILITY_TYPES.SKILL, 'charge_on_jump'),
+    entityId: 'charge_on_jump',
+    type: CAPABILITY_TYPES.SKILL,
+    name: '跳跃蓄力',
+    price: 200,
+    unlockMode: 'permanent',
+    equipMode: 'toggle',
+    defaultOwned: false,
+    defaultEquipped: false,
+    desc: '购买后每次跳跃都增加蓄力（不受平台限制）。',
+    effects: {
+      allowsChargeOnJump: true
+    }
+  });
+  capabilities.push({
     id: getCapabilityId(CAPABILITY_TYPES.SKILL, 'slide_fall'),
     entityId: 'slide_fall',
     type: CAPABILITY_TYPES.SKILL,
@@ -1294,6 +1309,7 @@ function applyCapabilitiesToGame(game, progress) {
 
   game.skillAvailability = {
     doubleJump: canUseCapability(normalized, getCapabilityId(CAPABILITY_TYPES.SKILL, 'double_jump')),
+    chargeOnJump: canUseCapability(normalized, getCapabilityId(CAPABILITY_TYPES.SKILL, 'charge_on_jump')),
     slideFall: canUseCapability(normalized, getCapabilityId(CAPABILITY_TYPES.SKILL, 'slide_fall')),
     chargeDash: canUseCapability(normalized, getCapabilityId(CAPABILITY_TYPES.SKILL, 'charge_dash'))
   };

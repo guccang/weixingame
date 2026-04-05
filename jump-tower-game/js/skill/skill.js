@@ -298,8 +298,11 @@ class SkillSystem {
       return;
     }
 
-    // 只有跳到不同平台才增加蓄力
-    if (platform && this.game.lastLandedPlatform === platform) {
+    // 检查是否有"跳跃蓄力"技能
+    const hasChargeOnJumpSkill = this.game.skillAvailability && this.game.skillAvailability.chargeOnJump;
+
+    // 只有跳到不同平台才增加蓄力（除非有跳跃蓄力技能）
+    if (!hasChargeOnJumpSkill && platform && this.game.lastLandedPlatform === platform) {
       // 同一平台，不增加蓄力，但仍触发跳跃技能
       this.triggerJumpSkill(platform);
       return;
