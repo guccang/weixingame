@@ -117,8 +117,11 @@ class MainUI {
         this.game.panelManager.close('showCharacterPanel');
         return true;
       }
-      if (this._hitBtn(this.game.bottomBtnArea?.character, touchX, touchY)) {
-        return true;
+      if (this.game.bottomBtnArea) {
+        var charBtn = this.game.bottomBtnArea.character;
+        if (charBtn && this._hitBtn(charBtn, touchX, touchY)) {
+          return true;
+        }
       }
       this.game.panelManager.close('showCharacterPanel');
       return true;
@@ -170,8 +173,11 @@ class MainUI {
         }
         return true;
       }
-      if (this._hitBtn(this.game.bottomBtnArea?.achievement, touchX, touchY)) {
-        return true;
+      if (this.game.bottomBtnArea) {
+        var achBtn = this.game.bottomBtnArea.achievement;
+        if (achBtn && this._hitBtn(achBtn, touchX, touchY)) {
+          return true;
+        }
       }
       this.game.panelManager.close('showAchievementPanel');
       return true;

@@ -44,7 +44,9 @@ class UIPanelManager {
 
   // 移除钩子函数
   off(event, panelKey, fn) {
-    const hooks = this.hooks[event]?.[panelKey];
+    const eventHooks = this.hooks[event];
+    if (!eventHooks) return;
+    const hooks = eventHooks[panelKey];
     if (!hooks) return;
     const index = hooks.indexOf(fn);
     if (index !== -1) {
@@ -54,10 +56,11 @@ class UIPanelManager {
 
   // 执行钩子
   _runHooks(event, panelKey) {
-    const hooks = this.hooks[event]?.[panelKey] || [];
-    for (const fn of hooks) {
+    const eventHooks = this.hooks[event];
+    const hooks = (eventHooks && eventHooks[panelKey]) || [];
+    for (var i = 0; i < hooks.length; i++) {
       try {
-        fn(this.game);
+        hooks[i](this.game);
       } catch (e) {
         console.error('[UIPanelManager] Hook error:', event, panelKey, e);
       }
