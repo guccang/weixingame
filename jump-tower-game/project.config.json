@@ -84,16 +84,7 @@
         "value": ".eslintrc.js"
       }
     ],
-    "include": [
-      {
-        "type": "folder",
-        "value": "images"
-      },
-      {
-        "type": "folder",
-        "value": "audio"
-      }
-    ]
+    "include": []
   },
   "isGameTourist": false,
   "editorSetting": {},
