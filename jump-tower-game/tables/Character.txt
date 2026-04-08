@@ -3,3 +3,9 @@ INT	STRING	STRING
 #Id	Name	JumpFolder
 1	钢铁侠	ironman
 2	教练	coach
+3	程序	chengxu
+4	刀盾狗	daodundog
+5	护士	hushi
+6	健身教练	coach_fitness
+7	绿色巨人	green_giant
+8	蝙蝠侠	batman
