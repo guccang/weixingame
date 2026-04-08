@@ -53,6 +53,7 @@ const { GameMode } = require('./game/index');
 
 // 绘制系统
 const drawer = require('./drawer/drawer');
+const { getGameOverButtonLayout } = require('./drawer/gameOver');
 
 // 关卡生成系统
 const LevelGenerator = require('./level/level');
@@ -789,16 +790,7 @@ class Game {
     this.combo = 0;
     this.shakeTimer = 0;
     // 初始化游戏结束按钮区域，确保在渲染前就存在
-    this.gameOverBtnArea = {
-      restartX: this.W / 2 - 80,
-      restartY: this.H / 2 + 155,
-      restartW: 70,
-      restartH: 35,
-      homeX: this.W / 2 + 10,
-      homeY: this.H / 2 + 155,
-      homeW: 70,
-      homeH: 35
-    };
+    this.gameOverBtnArea = getGameOverButtonLayout(this);
 
     // 保存游戏数据到微信云存储
     this.saveToCloudStorage();

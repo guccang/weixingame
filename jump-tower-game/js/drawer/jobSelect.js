@@ -3,6 +3,7 @@
  */
 
 const { roundRect } = require('./helper');
+const { drawCloseButton } = require('./menuTheme');
 
 /**
  * 绘制职业选择面板
@@ -77,32 +78,16 @@ function drawJobSelect(ctx, game, jobConfig) {
     ctx.fillText(jobName, x + selectWidth / 2, y + selectHeight - 15);
   }
 
-  // 绘制关闭按钮 (X) - 在底部导航上方
-  const closeBtnSize = 40;
-  const closeBtnX = W / 2 - closeBtnSize / 2;
-  const closeBtnY = H - 160; // 底部导航在 H - 100，关闭按钮在其上方
+  // 绘制关闭按钮 (X) - 统一放到右上角
+  const closeBtnSize = 36;
+  const closeBtnX = W - closeBtnSize - 18;
+  const closeBtnY = 22;
 
   // 保存关闭按钮区域
   game.closeJobPanel = { x: closeBtnX, y: closeBtnY, w: closeBtnSize, h: closeBtnSize };
-
-  // 绘制圆形背景
-  ctx.fillStyle = 'rgba(255, 107, 107, 0.8)';
-  ctx.beginPath();
-  ctx.arc(closeBtnX + closeBtnSize / 2, closeBtnY + closeBtnSize / 2, closeBtnSize / 2, 0, Math.PI * 2);
-  ctx.fill();
-
-  // 绘制 X
-  ctx.strokeStyle = '#fff';
-  ctx.lineWidth = 3;
-  ctx.lineCap = 'round';
-  const padding = 12;
-  ctx.beginPath();
-  ctx.moveTo(closeBtnX + padding, closeBtnY + padding);
-  ctx.lineTo(closeBtnX + closeBtnSize - padding, closeBtnY + closeBtnSize - padding);
-  ctx.moveTo(closeBtnX + closeBtnSize - padding, closeBtnY + padding);
-  ctx.lineTo(closeBtnX + padding, closeBtnY + closeBtnSize - padding);
-  ctx.stroke();
-  ctx.lineCap = 'butt';
+  drawCloseButton(ctx, closeBtnX, closeBtnY, closeBtnSize, {
+    glow: 'rgba(255, 127, 127, 0.12)'
+  });
 
   ctx.textAlign = 'left';
 }

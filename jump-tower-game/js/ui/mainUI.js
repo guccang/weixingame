@@ -115,6 +115,11 @@ class MainUI {
 
     // 角色选择面板
     if (this.game.panelManager.isOpen('showCharacterPanel')) {
+      if (this._hitBtn(this.game.closeCharacterPanel, touchX, touchY)) {
+        this.game.audio.playClick();
+        this.game.panelManager.close('showCharacterPanel');
+        return true;
+      }
       if (this.game.checkCharacterSelectClick(touchX, touchY)) {
         this.game.panelManager.close('showCharacterPanel');
         return true;
