@@ -3,7 +3,7 @@
  */
 
 const { roundRect } = require('./helper');
-const { drawBackground } = require('./background');
+const { drawBackground, drawStartBackground, drawGameOverBackground } = require('./background');
 const { drawPlatforms } = require('./platform');
 const { drawCoins } = require('./coin');
 const { drawPlayer } = require('./player');
@@ -36,7 +36,7 @@ function render(game, images, characterConfig, jobConfig) {
   if (game.state === 'start') {
     drawStartScreen(ctx, game, images, characterConfig, jobConfig);
   } else if (game.state === 'playing') {
-    drawBackground(ctx, W, H, game.cameraY, game.score, game.bgStars);
+    drawBackground(ctx, W, H, game.cameraY, game.score, game.bgStars, images);
     drawPlatforms(ctx, game.platforms, game.cameraY);
     drawCoins(ctx, game.coins, game.cameraY, game.levelGenerator, Date.now());
     drawTrails(ctx, game.trailEffects, game.cameraY);
@@ -47,7 +47,7 @@ function render(game, images, characterConfig, jobConfig) {
     game.barrage.draw(ctx, W);
     drawUI(ctx, W, H, game.score, game.combo, game.state, game.gameMode, game.chargeCount, game.chargeFull, game.chargeDashing, game.chargeMax, game.sessionPickupCoins || 0);
   } else if (game.state === 'gameover') {
-    drawGameOverScreen(ctx, game);
+    drawGameOverScreen(ctx, game, images);
   }
 
   ctx.restore();
@@ -58,6 +58,8 @@ module.exports = {
   // 导出各子模块供外部使用
   roundRect,
   drawBackground,
+  drawStartBackground,
+  drawGameOverBackground,
   drawPlatforms,
   drawCoins,
   drawTrails,

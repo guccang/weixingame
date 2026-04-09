@@ -7,6 +7,8 @@ const assetManager = require('./assetManager');
 const images = {
   bgMain: null,
   bgShop: null,
+  bg0101: null,
+  bg0102: null,
   iconCharacter: null,
   iconCoin: null,
   iconLeaderboard: null,
@@ -15,7 +17,7 @@ const images = {
   iconAchievement: null,
   loaded: false,
   loadCount: 0,
-  totalCount: 8
+  totalCount: 10
 };
 
 function loadImage(name, src) {
@@ -33,6 +35,8 @@ function loadImage(name, src) {
 function loadAllImages() {
   loadImage('bgMain', assetManager.getImagePath('ui.bgMain'));
   loadImage('bgShop', assetManager.getImagePath('ui.bgShop'));
+  loadImage('bg0101', assetManager.getImagePath('ui.bg0101'));
+  loadImage('bg0102', assetManager.getImagePath('ui.bg0102'));
   loadImage('iconCharacter', assetManager.getImagePath('ui.iconCharacter'));
   loadImage('iconCoin', assetManager.getImagePath('ui.iconCoin'));
   loadImage('iconLeaderboard', assetManager.getImagePath('ui.iconLeaderboard'));

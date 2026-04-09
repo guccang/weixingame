@@ -15,6 +15,8 @@ function buildAsset(key, type, localPath) {
 const assets = [
   buildAsset('ui.bgMain', 'image', 'images/ui_main/bg_main.png'),
   buildAsset('ui.bgShop', 'image', 'images/ui_main/bg_shop.png'),
+  buildAsset('ui.bg0101', 'image', 'images/ui_main/Bg01_01.png'),
+  buildAsset('ui.bg0102', 'image', 'images/ui_main/Bg01_02.png'),
   buildAsset('ui.iconCharacter', 'image', 'images/ui_main/icon_character.png'),
   buildAsset('ui.iconCoin', 'image', 'images/ui_main/icon_coin.png'),
   buildAsset('ui.iconLeaderboard', 'image', 'images/ui_main/icon_leaderboard.png'),

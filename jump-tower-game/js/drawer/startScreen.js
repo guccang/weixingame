@@ -4,7 +4,7 @@
  */
 
 const { roundRect } = require('./helper');
-const { drawBackground } = require('./background');
+const { drawStartBackground } = require('./background');
 const { drawCharacterSelect } = require('./characterSelect');
 const { drawModeSelect, drawTimeSelect, drawLandmarkSelect } = require('./modeSelect');
 const { drawLeaderboardPanel } = require('./leaderboard');
@@ -25,19 +25,8 @@ function drawStartScreen(ctx, game, images, characterConfig, jobConfig) {
   game.layout = game.layoutLoader.resolve('startScreen', W, H);
   const layout = game.layout;
 
-  // 绘制主界面背景图
-  if (images.bgMain && images.bgMain.width > 0) {
-    const scale = Math.max(W / images.bgMain.width, H / images.bgMain.height);
-    const imgW = images.bgMain.width * scale;
-    const imgH = images.bgMain.height * scale;
-    const imgX = (W - imgW) / 2;
-    const imgY = (H - imgH) / 2;
-    ctx.drawImage(images.bgMain, imgX, imgY, imgW, imgH);
-  } else {
-    drawBackground(ctx, W, H, game.cameraY, game.score, game.bgStars);
-    ctx.fillStyle = 'rgba(10,10,46,0.95)';
-    ctx.fillRect(0, 0, W, H);
-  }
+  // 绘制主界面背景图（优先使用 Bg01 滚屏背景）
+  drawStartBackground(ctx, W, H, images);
 
   // 如果角色面板显示中，隐藏主页面UI
   // 只有当没有显示任何面板时，才绘制开始按钮和标题

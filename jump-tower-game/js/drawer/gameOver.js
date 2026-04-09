@@ -2,7 +2,7 @@
  * 游戏结束界面绘制模块
  */
 
-const { drawBackground } = require('./background');
+const { drawGameOverBackground } = require('./background');
 const { GAME_MODES } = require('../game/constants');
 const {
   font,
@@ -209,8 +209,9 @@ function drawRewardChip(ctx, x, y, w, h, label, value) {
  * 绘制游戏结束界面
  * @param {CanvasRenderingContext2D} ctx - canvas上下文
  * @param {Object} game - 游戏实例
+ * @param {Object} images - 图片资源
  */
-function drawGameOverScreen(ctx, game) {
+function drawGameOverScreen(ctx, game, images) {
   const { W, H, score } = game;
   const meta = getResultMeta(game);
   const reward = game.runRewardSummary;
@@ -218,7 +219,7 @@ function drawGameOverScreen(ctx, game) {
   const message = getFinalMessage(game);
   const rewardItems = getRewardItems(reward);
 
-  drawBackground(ctx, W, H, game.cameraY, score, game.bgStars);
+  drawGameOverBackground(ctx, W, H, game.cameraY, score, game.bgStars, images);
   drawSceneBackdrop(ctx, W, H);
 
   drawGlassPanel(ctx, layout.panelX, layout.panelY, layout.panelW, layout.panelH, {
