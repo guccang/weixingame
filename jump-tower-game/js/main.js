@@ -683,38 +683,118 @@ class Game {
     drawer.render(this, images, characterConfig, jobConfig);
   }
 
+  // 处理角色列表滚动（仅在touchMove中调用，返回是否处理了滚动）
+  handleCharacterScroll(touchX, touchY) {
+    const scroll = this.characterScroll;
+    if (!scroll) return false;
+
+    const { scrollAreaTop, scrollAreaBottom, maxScroll } = scroll;
+
+    // 优先检测是否在拖动滑动条
+    const scrollBar = this.characterScrollBar;
+    if (scrollBar && maxScroll > 0) {
+      // 检测是否在滑动条区域（扩展触摸区域便于拖动）
+      const barHitArea = {
+        x: scrollBar.x - 10,
+        y: scrollBar.y,
+        w: scrollBar.width + 20,
+        h: scrollBar.height
+      };
+      if (touchX >= barHitArea.x && touchX <= barHitArea.x + barHitArea.w &&
+          touchY >= barHitArea.y && touchY <= barHitArea.y + barHitArea.h) {
+        // 根据触摸位置计算滚动值
+        const relativeY = touchY - scrollBar.y;
+        const scrollRatio = relativeY / scrollBar.height;
+        this.characterScrollY = Math.max(0, Math.min(maxScroll, scrollRatio * maxScroll));
+        return true;
+      }
+    }
+
+    // 内容区拖动中：跟随手指移动
+    if (this.isDraggingCharacterList) {
+      const deltaY = touchY - this.characterDragStartY;
+      // 手指向上移动(deltaY < 0)时，内容向上滚动(scrollY减少)
+      const newScrollY = this.characterDragStartScrollY - deltaY;
+      this.characterScrollY = Math.max(0, Math.min(maxScroll, newScrollY));
+      return true;
+    }
+    return false;
+  }
+
+  // 开始角色列表拖动（仅在检测到移动后调用）
+  startCharacterDrag(touchX, touchY) {
+    const scroll = this.characterScroll;
+    if (!scroll) return false;
+    const { scrollAreaTop, scrollAreaBottom } = scroll;
+    if (touchY >= scrollAreaTop && touchY <= scrollAreaBottom) {
+      this.isDraggingCharacterList = true;
+      this.characterDragStartY = touchY;
+      this.characterDragStartScrollY = this.characterScrollY;
+      return true;
+    }
+    return false;
+  }
+
+  // 停止角色列表拖动
+  stopCharacterDrag() {
+    this.isDraggingCharacterList = false;
+    this.characterDragStartY = 0;
+    this.characterDragStartScrollY = 0;
+  }
+
   // 检测角色选择点击
   checkCharacterSelectClick(touchX, touchY) {
-    const list = characterConfig.list;
-    const listCount = list.length;
-    const selectWidth = 120;
-    const selectHeight = 140;
-    const spacing = 20;
-    const totalWidth = listCount * selectWidth + (listCount - 1) * spacing;
-    const startX = (this.W - totalWidth) / 2;
-    const selectY = this.H * 0.35;
+    const scroll = this.characterScroll;
+    if (!scroll) return false;
+
+    const { startX, scrollAreaTop, selectWidth, selectHeight, spacing, colCount, rowSpacing, listCount, list } = scroll;
+
+    // 计算滚动偏移
+    const scrollOffset = this.characterScrollY;
 
     for (let i = 0; i < listCount; i++) {
+      const row = Math.floor(i / colCount);
+      const col = i % colCount;
       const charName = list[i];
-      const x = startX + i * (selectWidth + spacing);
-      const y = selectY;
+      const x = startX + col * (selectWidth + spacing);
+      const y = scrollAreaTop + row * rowSpacing - scrollOffset;
 
+      // 检查是否在卡片范围内
       if (touchX >= x && touchX <= x + selectWidth &&
           touchY >= y && touchY <= y + selectHeight) {
         if (!progressionSystem.isCharacterUnlocked(this.progression, charName)) {
           this.showShopToast('先解锁该角色', '#ff7675');
-          return true;
+          return false;  // 未解锁不关闭面板
         }
-        const result = progressionSystem.equipCharacter(this.progression, charName);
-        if (result && result.success) {
-          this.progression = result.progress;
-          this.refreshProgressionEffects();
-          loadCharacter(charName);
-          this.showShopToast(result.message, '#55efc4');
-          this.audio.playClick();
-        }
+        // 只标记待确认选择，不真正切换
+        this.characterPendingSelect = charName;
+        this.audio.playClick();
         return true;
       }
+    }
+    return false;
+  }
+
+  // 确认角色选择
+  confirmCharacterSelect() {
+    const pending = this.characterPendingSelect;
+    if (!pending) {
+      this.showShopToast('请先选择一个角色', '#ff7675');
+      return false;
+    }
+    if (!progressionSystem.isCharacterUnlocked(this.progression, pending)) {
+      this.showShopToast('该角色未解锁', '#ff7675');
+      return false;
+    }
+    const result = progressionSystem.equipCharacter(this.progression, pending);
+    if (result && result.success) {
+      this.progression = result.progress;
+      this.refreshProgressionEffects();
+      loadCharacter(pending);
+      switchCharacter(pending);
+      this.showShopToast(result.message, '#55efc4');
+      this.characterPendingSelect = null;  // 清除待确认状态
+      return true;
     }
     return false;
   }

@@ -115,22 +115,36 @@ class MainUI {
 
     // 角色选择面板
     if (this.game.panelManager.isOpen('showCharacterPanel')) {
+      // 处理关闭按钮
       if (this._hitBtn(this.game.closeCharacterPanel, touchX, touchY)) {
         this.game.audio.playClick();
+        this.game.characterPendingSelect = null;  // 清除待确认状态
         this.game.panelManager.close('showCharacterPanel');
         return true;
       }
+      // 处理滚动（不关闭面板）
+      if (this.game.handleCharacterScroll(touchX, touchY)) {
+        return true;
+      }
+      // 处理确认按钮
+      if (this._hitBtn(this.game.characterConfirmBtn, touchX, touchY)) {
+        if (this.game.confirmCharacterSelect()) {
+          this.game.panelManager.close('showCharacterPanel');
+        }
+        return true;
+      }
+      // 处理角色选择（只标记待确认，不关闭面板）
       if (this.game.checkCharacterSelectClick(touchX, touchY)) {
-        this.game.panelManager.close('showCharacterPanel');
         return true;
       }
+      // 点击底部按钮区域不关闭面板
       if (this.game.bottomBtnArea) {
         var charBtn = this.game.bottomBtnArea.character;
         if (charBtn && this._hitBtn(charBtn, touchX, touchY)) {
           return true;
         }
       }
-      this.game.panelManager.close('showCharacterPanel');
+      // 点击其他区域不关闭面板（只消费事件）
       return true;
     }
 

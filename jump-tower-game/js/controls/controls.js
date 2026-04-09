@@ -95,6 +95,25 @@ class Controls {
             return;
           }
 
+          // 角色面板内容拖动
+          if (_this.game.panelManager.isOpen('showCharacterPanel')) {
+            var touchDy = touchY - _this.touchStartY;
+            var isVerticalDrag = Math.abs(touchDy) > 10;
+
+            // 如果已开始拖动，更新拖动位置
+            if (_this.game.isDraggingCharacterList) {
+              _this.game.handleCharacterScroll(touchX, touchY);
+              return;
+            }
+
+            // 如果检测到垂直移动超过阈值，开始拖动
+            if (isVerticalDrag) {
+              if (_this.game.startCharacterDrag && _this.game.startCharacterDrag(touchX, touchY)) {
+                return;
+              }
+            }
+          }
+
           // 面板打开时，onTouchMove不处理点击（避免面板关闭后误触发开始按钮）
           if (_this.game.panelManager.isAnyOpen()) {
             return;
@@ -142,6 +161,18 @@ class Controls {
 
     // 触摸结束
     wx.onTouchEnd(function(e) {
+      // 角色面板：如果没有拖动，视为点击
+      if (_this.game.panelManager.isOpen('showCharacterPanel') && !_this.game.isDraggingCharacterList) {
+        // 使用touchStart坐标处理点击
+        if (_this.game.checkCharacterSelectClick && _this.game.checkCharacterSelectClick(_this.touchStartX, _this.touchStartY)) {
+          // 点击了角色，不关闭面板
+        }
+      }
+
+      // 停止角色列表拖动
+      if (_this.game.isDraggingCharacterList) {
+        _this.game.stopCharacterDrag();
+      }
       // 处理手势结束时的技能触发（蓄力冲刺期间不处理滑动）
       if (_this.touchStartX !== null && _this.touchStartY !== null && _this.game.state === 'playing' && !_this.game.chargeDashing) {
         // 计算最终滑动方向并触发技能

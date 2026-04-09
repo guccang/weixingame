@@ -52,7 +52,7 @@ function drawStartScreen(ctx, game, images, characterConfig, jobConfig) {
         ctx.shadowColor = titleEl.style.shadow.color;
         ctx.shadowBlur = titleEl.style.shadow.blur;
       }
-      ctx.fillText('秀彬跳跳', titleEl.bounds.x + titleEl.bounds.width / 2, titleEl.bounds.y);
+      ctx.fillText('秀彬跳一跳', titleEl.bounds.x + titleEl.bounds.width / 2, titleEl.bounds.y);
       ctx.shadowBlur = 0;
     }
 
@@ -163,7 +163,7 @@ function drawStartScreen(ctx, game, images, characterConfig, jobConfig) {
 function drawCoinBadge(ctx, game, images) {
   const balance = game.progression ? game.progression.coins : 0;
   const x = 24;
-  const y = 24;
+  const y = 90; // 向下移动，避免与文字重叠
   const w = 102;
   const h = 34;
 
@@ -611,63 +611,50 @@ function getShopEntryMeta(entry) {
 }
 
 /**
- * 绘制当前选中的角色和职业
+ * 绘制当前选中的角色（序列帧动画）
  */
 function drawCurrentCharacter(ctx, game, characterConfig, jobConfig) {
-  const { W, H, playerJob } = game;
+  const { W, H } = game;
   const charName = characterConfig.current;
   const charDisplayName = characterConfig.names[charName] || charName;
-  const frames = characterConfig.frames[charName];
 
-  // 角色显示区域
-  const charBoxWidth = 120;
-  const charBoxHeight = 140;
-  const charBoxX = W / 2 - charBoxWidth - 10;
-  const charBoxY = H / 2;
-
-  // 职业显示区域
-  const jobBoxWidth = 120;
-  const jobBoxHeight = 140;
-  const jobBoxX = W / 2 + 10;
-  const jobBoxY = H / 2;
+  // 角色显示区域 - 居中上方
+  const charBoxWidth = 140;
+  const charBoxHeight = 160;
+  const charBoxX = W / 2 - charBoxWidth / 2;
+  const charBoxY = H / 2 - 100; // 上方位置
 
   // 绘制角色框背景
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-  ctx.strokeStyle = 'rgba(255, 221, 87, 0.5)';
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+  ctx.strokeStyle = 'rgba(255, 221, 87, 0.4)';
   ctx.lineWidth = 2;
-  roundRect(ctx, charBoxX, charBoxY, charBoxWidth, charBoxHeight, 10);
+  roundRect(ctx, charBoxX, charBoxY, charBoxWidth, charBoxHeight, 12);
   ctx.fill();
   ctx.stroke();
 
-  // 绘制角色图片
-  if (frames && frames[0] && frames[0].width > 0) {
-    ctx.drawImage(frames[0], charBoxX + 28, charBoxY + 15, 64, 64);
+  // 序列帧动画 - 使用idle状态
+  const frame = characterConfig.frames[charName];
+  if (frame && frame.length > 0) {
+    // 简单的帧动画切换
+    const frameIndex = Math.floor(Date.now() / 150) % frame.length;
+    const currentFrame = frame[frameIndex];
+    if (currentFrame && currentFrame.width > 0) {
+      const imgSize = 100;
+      ctx.drawImage(
+        currentFrame,
+        charBoxX + (charBoxWidth - imgSize) / 2,
+        charBoxY + 20,
+        imgSize,
+        imgSize
+      );
+    }
   }
 
   // 绘制角色名称
   ctx.fillStyle = '#ffdd57';
-  ctx.font = '16px sans-serif';
+  ctx.font = 'bold 16px sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText(charDisplayName, charBoxX + charBoxWidth / 2, charBoxY + 100);
-
-  // 绘制职业框背景
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-  ctx.strokeStyle = 'rgba(255, 107, 107, 0.5)';
-  ctx.lineWidth = 2;
-  roundRect(ctx, jobBoxX, jobBoxY, jobBoxWidth, jobBoxHeight, 10);
-  ctx.fill();
-  ctx.stroke();
-
-  // 绘制职业图标
-  ctx.fillStyle = jobConfig.colors[playerJob] || '#ff6b6b';
-  ctx.beginPath();
-  ctx.arc(jobBoxX + jobBoxWidth / 2, jobBoxY + 40, 25, 0, Math.PI * 2);
-  ctx.fill();
-
-  // 绘制职业名称
-  ctx.fillStyle = '#ffdd57';
-  ctx.font = '16px sans-serif';
-  ctx.fillText(playerJob, jobBoxX + jobBoxWidth / 2, jobBoxY + 100);
+  ctx.fillText(charDisplayName, charBoxX + charBoxWidth / 2, charBoxY + 140);
   ctx.textAlign = 'left';
 }
 

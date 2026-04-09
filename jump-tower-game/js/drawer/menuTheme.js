@@ -134,17 +134,17 @@ function drawBadge(ctx, x, y, text, options) {
     stroke: opts.stroke || 'rgba(255, 255, 255, 0.14)'
   });
 
-  let textX = x + paddingX;
+  let textX = x + width / 2;  // 居中
   if (opts.dotColor) {
     ctx.fillStyle = opts.dotColor;
     ctx.beginPath();
     ctx.arc(x + paddingX, y + height / 2, 4, 0, Math.PI * 2);
     ctx.fill();
-    textX += 12;
+    textX = x + paddingX + 12;  // 如果有圆点，文字在圆点后面
   }
 
   ctx.fillStyle = opts.color || '#e6f7ff';
-  ctx.textAlign = 'left';
+  ctx.textAlign = opts.dotColor ? 'left' : 'center';  // 有圆点时左对齐，否则居中
   ctx.textBaseline = 'middle';
   ctx.fillText(text, textX, y + height / 2 + 1);
   ctx.restore();
