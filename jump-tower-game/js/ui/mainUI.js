@@ -237,11 +237,22 @@ class MainUI {
     }
 
     // 开始按钮
-    if (!pm.isAnyOpen() && this._hitBtn(this.game.startBtnArea, touchX, touchY)) {
-      this.game.audio.playClick();
-      this.game.gameMode.selectMode('endless');
-      this.game.startGame();
-      return true;
+    // 主界面无面板打开时
+    if (!pm.isAnyOpen()) {
+      // 点击角色预览区域，打开角色选择面板
+      if (this._hitBtn(this.game.characterPreviewArea, touchX, touchY)) {
+        this.game.audio.playClick();
+        pm.open('showCharacterPanel');
+        return true;
+      }
+      // 点击开始按钮
+      if (this._hitBtn(this.game.startBtnArea, touchX, touchY)) {
+        this.game.audio.playClick();
+        this.game.gameMode.selectMode('endless');
+        this.game.startGame();
+        return true;
+      }
+      return false;
     }
 
     return false;

@@ -14,7 +14,7 @@ const { characterConfig } = require('../character/character');
  * @returns {Object} 玩家对象
  */
 function createPlayer(W, H) {
-  const baseSize = 64;
+  const baseSize = 80;
   return {
     x: W / 2 - baseSize / 2,
     y: H - 100,

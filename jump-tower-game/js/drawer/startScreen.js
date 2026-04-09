@@ -624,6 +624,9 @@ function drawCurrentCharacter(ctx, game, characterConfig, jobConfig) {
   const charBoxX = W / 2 - charBoxWidth / 2;
   const charBoxY = H / 2 - 100; // 上方位置
 
+  // 保存角色预览点击区域
+  game.characterPreviewArea = { x: charBoxX, y: charBoxY, w: charBoxWidth, h: charBoxHeight };
+
   // 绘制角色框背景
   ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
   ctx.strokeStyle = 'rgba(255, 221, 87, 0.4)';
