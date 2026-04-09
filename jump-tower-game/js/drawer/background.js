@@ -3,8 +3,9 @@
  * 使用 Bg01_01 + Bg01_02 拼接实现无限滚屏（垂直滚动）
  */
 
-// Bg01 图片尺寸（544x976）
-const BG_HEIGHT = 976;
+// Bg01 图片原始尺寸（544x976）
+const BG_ORIG_WIDTH = 544;
+const BG_ORIG_HEIGHT = 976;
 // 背景滚动速度系数（绝对值为相对于相机的速度比，负数=反方向）
 // -0.5 = 反方向、半速滚动
 const BG_SCROLL_SPEED = 0.2;
@@ -41,14 +42,18 @@ function drawBackground(ctx, W, H, cameraY, score, bgStars, images) {
  * @param {Object} images - 图片资源
  */
 function drawScrollingBackground(ctx, W, H, cameraY, images) {
+  // 宽度填满屏幕，高度按原始比例缩放
+  const scale = W / BG_ORIG_WIDTH;
+  const bgH = BG_ORIG_HEIGHT * scale;
+
   const scrollOffset = cameraY * BG_SCROLL_SPEED;
 
   // 世界坐标中屏幕顶部对应的位置
   const worldTop = scrollOffset;
-  // 找到第一个图片槽位的索引（每个槽位高度为 BG_HEIGHT）
-  const slotIndex = Math.floor(worldTop / BG_HEIGHT);
+  // 找到第一个图片槽位的索引（每个槽位高度为 bgH）
+  const slotIndex = Math.floor(worldTop / bgH);
   // 该槽位在世界中的起始位置
-  const slotWorldTop = slotIndex * BG_HEIGHT;
+  const slotWorldTop = slotIndex * bgH;
   // 该槽位在屏幕上的 y 坐标（可能为负，表示只显示图片下半部分）
   let y = slotWorldTop - worldTop;
   let idx = slotIndex;
@@ -56,8 +61,8 @@ function drawScrollingBackground(ctx, W, H, cameraY, images) {
   // 从上方开始交替绘制 bg0101 / bg0102，直到覆盖整个屏幕
   while (y < H) {
     const img = (((idx % 2) + 2) % 2 === 0) ? images.bg0101 : images.bg0102;
-    ctx.drawImage(img, 0, y, W, BG_HEIGHT);
-    y += BG_HEIGHT;
+    ctx.drawImage(img, 0, y, W, bgH);
+    y += bgH;
     idx++;
   }
 }
@@ -129,10 +134,11 @@ function drawStartBackground(ctx, W, H, images) {
   // 优先使用 Bg01 背景
   if (images && images.bg0101 && images.bg0102 &&
       images.bg0101.width > 0 && images.bg0102.width > 0) {
-    // 水平拉伸 Bg01 图片覆盖整个屏幕
-    // Bg01_01 在上，Bg01_02 在下，垂直拼接后拉伸覆盖屏幕
-    ctx.drawImage(images.bg0101, 0, 0, W, BG_HEIGHT);
-    ctx.drawImage(images.bg0102, 0, BG_HEIGHT, W, BG_HEIGHT);
+    // 宽度填满屏幕，高度按原始比例缩放
+    const scale = W / BG_ORIG_WIDTH;
+    const bgH = BG_ORIG_HEIGHT * scale;
+    ctx.drawImage(images.bg0101, 0, 0, W, bgH);
+    ctx.drawImage(images.bg0102, 0, bgH, W, bgH);
     return;
   }
 
@@ -169,9 +175,12 @@ function drawGameOverBackground(ctx, W, H, cameraY, score, bgStars, images) {
   // 如果有 Bg01 图片，使用滚屏背景（静止状态）
   if (images && images.bg0101 && images.bg0102 &&
       images.bg0101.width > 0 && images.bg0102.width > 0) {
+    // 宽度填满屏幕，高度按原始比例缩放
+    const scale = W / BG_ORIG_WIDTH;
+    const bgH = BG_ORIG_HEIGHT * scale;
     // 游戏结束时背景静止，不滚动
-    ctx.drawImage(images.bg0101, 0, 0, W, Math.min(BG_HEIGHT, H));
-    ctx.drawImage(images.bg0102, 0, BG_HEIGHT, W, Math.min(BG_HEIGHT, Math.max(H - BG_HEIGHT, 0)));
+    ctx.drawImage(images.bg0101, 0, 0, W, Math.min(bgH, H));
+    ctx.drawImage(images.bg0102, 0, Math.min(bgH, H), W, Math.min(bgH, Math.max(H - bgH, 0)));
     return;
   }
 
