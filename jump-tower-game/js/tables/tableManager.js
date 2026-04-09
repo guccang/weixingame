@@ -1,12 +1,12 @@
 /**
  * 表格数据管理器
  * 直接从 tables/*.txt 文件读取数据
- * 生成时间: 2026-04-01 13:38:03
+ * 生成时间: 2026-04-09 13:56:08
  */
 
 const { TableConfigs } = require('./tableConfig');
-const assetManager = require('../resource/assetManager');
 
+const { AchievementsRow } = require('./tableStruct');
 const { AudioRow } = require('./tableStruct');
 const { CharacterRow } = require('./tableStruct');
 const { EconomyConfigRow } = require('./tableStruct');
@@ -15,10 +15,9 @@ const { MilestonesRow } = require('./tableStruct');
 const { MonstersRow } = require('./tableStruct');
 const { PlatformsRow } = require('./tableStruct');
 const { PraisesRow } = require('./tableStruct');
-const { UpgradesRow } = require('./tableStruct');
-const { UITextRow } = require('./tableStruct');
-const { AchievementsRow } = require('./tableStruct');
 const { TitlesRow } = require('./tableStruct');
+const { UITextRow } = require('./tableStruct');
+const { UpgradesRow } = require('./tableStruct');
 
 class TableManager {
   constructor() {
@@ -51,7 +50,8 @@ class TableManager {
     const RowClass = this._getRowClass(tableName);
 
     try {
-      const content = assetManager.getTableText(txtPath);
+      const fs = wx.getFileSystemManager();
+      const content = fs.readFileSync(txtPath, "utf-8");
 
       // 解析 Tab 分隔的文本
       const lines = content.split("\n").filter(line => line.trim());
@@ -96,6 +96,7 @@ class TableManager {
 
   _getRowClass(tableName) {
     const classMap = {
+      Achievements: AchievementsRow,
       Audio: AudioRow,
       Character: CharacterRow,
       EconomyConfig: EconomyConfigRow,
@@ -104,10 +105,9 @@ class TableManager {
       Monsters: MonstersRow,
       Platforms: PlatformsRow,
       Praises: PraisesRow,
-      Upgrades: UpgradesRow,
-      UIText: UITextRow,
-      Achievements: AchievementsRow,
       Titles: TitlesRow,
+      UIText: UITextRow,
+      Upgrades: UpgradesRow,
     };
     return classMap[tableName];
   }

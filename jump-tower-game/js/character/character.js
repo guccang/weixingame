@@ -16,9 +16,6 @@ const STATE_TO_FRAME_INDEX = {
   'land': 5    // 落地
 };
 
-// 序列帧总数
-const FRAME_COUNT = 6;
-
 // 角色配置（从表格初始化）
 const characterConfig = {
   // 当前选中的角色文件夹名
@@ -27,6 +24,8 @@ const characterConfig = {
   list: [],
   // 角色中文名称映射（JumpFolder -> Name）
   names: {},
+  // 角色序列帧数量映射（JumpFolder -> FrameCount）
+  frameCounts: {},
   // 已加载的角色资源
   frames: {},
   // 加载状态
@@ -48,6 +47,8 @@ function initFromTable() {
     characterConfig.list.push(row.JumpFolder);
     // 设置名称映射
     characterConfig.names[row.JumpFolder] = row.Name;
+    // 设置帧数量映射
+    characterConfig.frameCounts[row.JumpFolder] = row.FrameCount || 6;
   }
 
   // 设置默认角色（第一个）
@@ -81,10 +82,10 @@ function loadCharacter(characterName) {
   characterConfig.frames[characterName] = [];
   let frameCount = 0; // 实际加载成功的帧数
   let stopped = false; // 是否已停止加载
-  const MAX_DYNAMIC_FRAMES = 6; // 最大帧数（所有角色序列帧均从jump_0到jump_5共6帧）
+  const maxFrames = characterConfig.frameCounts[characterName] || 6; // 从表格读取帧数
 
   // 动态检测实际帧数
-  for (let i = 0; i < MAX_DYNAMIC_FRAMES; i++) {
+  for (let i = 0; i < maxFrames; i++) {
     // 如果已确定帧序列结束，不再尝试加载更多
     if (stopped) {
       break;

@@ -1,11 +1,12 @@
-INT	STRING	STRING
-#序号	角色名字	跳跃序列帧文件夹
-#Id	Name	JumpFolder
-1	钢铁侠	ironman
-2	教练	coach
-3	程序	chengxu
-4	刀盾狗	daodundog
-5	护士	hushi
-6	健身教练	coach_fitness
-7	绿色巨人	green_giant
-8	蝙蝠侠	batman
+INT	STRING	STRING	INT
+#序号	角色名字	跳跃序列帧文件夹	序列帧数量
+#Id	Name	JumpFolder	FrameCount
+1	钢铁侠	ironman	6
+2	教练	coach	6
+3	程序	chengxu	6
+4	刀盾狗	daodundog	6
+5	护士	hushi	5
+6	健身教练	coach_fitness	6
+7	绿色巨人	green_giant	6
+8	蝙蝠侠	batman	6
+9	超人	superman	6

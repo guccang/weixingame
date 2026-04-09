@@ -1,6 +1,6 @@
 /**
  * 表格配置 - 自动生成
- * 生成时间: 2026-04-01 13:38:03
+ * 生成时间: 2026-04-09 13:56:08
  */
 
 const FieldType = {
@@ -8,6 +8,22 @@ const FieldType = {
   STRING: 'STRING',
   FLOAT: 'FLOAT',
   BOOL: 'BOOL',
+};
+
+const AchievementsConfig = {
+  name: 'Achievements',
+  file: 'Achievements.txt',
+  fields: [
+    { name: 'Id', type: 'INT', comment: '序号' },
+    { name: 'Key', type: 'STRING', comment: 'Key' },
+    { name: 'Name', type: 'STRING', comment: '名称' },
+    { name: 'Desc', type: 'STRING', comment: '描述' },
+    { name: 'Type', type: 'STRING', comment: '类型' },
+    { name: 'Target', type: 'INT', comment: '条件目标' },
+    { name: 'RewardCoins', type: 'INT', comment: '奖励金币' },
+    { name: 'TitleId', type: 'INT', comment: '称号编号' },
+    { name: 'Icon', type: 'STRING', comment: '图标' },
+  ],
 };
 
 const AudioConfig = {
@@ -31,6 +47,7 @@ const CharacterConfig = {
     { name: 'Id', type: 'INT', comment: '序号' },
     { name: 'Name', type: 'STRING', comment: '角色名字' },
     { name: 'JumpFolder', type: 'STRING', comment: '跳跃序列帧文件夹' },
+    { name: 'FrameCount', type: 'INT', comment: '序列帧数量' },
   ],
 };
 
@@ -109,6 +126,16 @@ const PraisesConfig = {
   ],
 };
 
+const TitlesConfig = {
+  name: 'Titles',
+  file: 'Titles.txt',
+  fields: [
+    { name: 'Id', type: 'INT', comment: '序号' },
+    { name: 'Key', type: 'STRING', comment: 'Key' },
+    { name: 'Name', type: 'STRING', comment: '称号名' },
+  ],
+};
+
 const UITextConfig = {
   name: 'UIText',
   file: 'UIText.txt',
@@ -138,33 +165,8 @@ const UpgradesConfig = {
   ],
 };
 
-const AchievementsConfig = {
-  name: 'Achievements',
-  file: 'Achievements.txt',
-  fields: [
-    { name: 'Id', type: 'INT', comment: '序号' },
-    { name: 'Key', type: 'STRING', comment: 'Key' },
-    { name: 'Name', type: 'STRING', comment: '名称' },
-    { name: 'Desc', type: 'STRING', comment: '描述' },
-    { name: 'Type', type: 'STRING', comment: '类型' },
-    { name: 'Target', type: 'INT', comment: '条件目标' },
-    { name: 'RewardCoins', type: 'INT', comment: '奖励金币' },
-    { name: 'TitleId', type: 'INT', comment: '称号编号' },
-    { name: 'Icon', type: 'STRING', comment: '图标' },
-  ],
-};
-
-const TitlesConfig = {
-  name: 'Titles',
-  file: 'Titles.txt',
-  fields: [
-    { name: 'Id', type: 'INT', comment: '序号' },
-    { name: 'Key', type: 'STRING', comment: 'Key' },
-    { name: 'Name', type: 'STRING', comment: '称号名' },
-  ],
-};
-
 const TableConfigs = {
+  Achievements: AchievementsConfig,
   Audio: AudioConfig,
   Character: CharacterConfig,
   EconomyConfig: EconomyConfigConfig,
@@ -173,10 +175,9 @@ const TableConfigs = {
   Monsters: MonstersConfig,
   Platforms: PlatformsConfig,
   Praises: PraisesConfig,
-  Upgrades: UpgradesConfig,
-  UIText: UITextConfig,
-  Achievements: AchievementsConfig,
   Titles: TitlesConfig,
+  UIText: UITextConfig,
+  Upgrades: UpgradesConfig,
 };
 
 module.exports = { FieldType, TableConfigs };

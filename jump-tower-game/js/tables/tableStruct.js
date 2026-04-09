@@ -1,6 +1,6 @@
 /**
  * 表格数据结构定义 - 自动生成
- * 生成时间: 2026-04-01 13:38:03
+ * 生成时间: 2026-04-09 13:56:08
  */
 
 const { FieldType } = require('./tableConfig');
@@ -30,6 +30,39 @@ class BaseTableRow {
       case FieldType.BOOL: return value === true || value === "true" || value === "1";
       default: return String(value || "");
     }
+  }
+}
+
+/**
+ * Achievements 表数据行
+ * @property {number} Id - 序号
+ * @property {string} Key - Key
+ * @property {string} Name - 名称
+ * @property {string} Desc - 描述
+ * @property {string} Type - 类型
+ * @property {number} Target - 条件目标
+ * @property {number} RewardCoins - 奖励金币
+ * @property {number} TitleId - 称号编号
+ * @property {string} Icon - 图标
+ */
+class AchievementsRow extends BaseTableRow {
+  constructor() {
+    super();
+    this.Id = 0;
+    this.Key = '';
+    this.Name = '';
+    this.Desc = '';
+    this.Type = '';
+    this.Target = 0;
+    this.RewardCoins = 0;
+    this.TitleId = 0;
+    this.Icon = '';
+  }
+
+  static create(obj, fields, types) {
+    const row = new AchievementsRow();
+    row.initFromObject(obj, fields, types);
+    return row;
   }
 }
 
@@ -67,6 +100,7 @@ class AudioRow extends BaseTableRow {
  * @property {number} Id - 序号
  * @property {string} Name - 角色名字
  * @property {string} JumpFolder - 跳跃序列帧文件夹
+ * @property {number} FrameCount - 序列帧数量
  */
 class CharacterRow extends BaseTableRow {
   constructor() {
@@ -74,6 +108,7 @@ class CharacterRow extends BaseTableRow {
     this.Id = 0;
     this.Name = '';
     this.JumpFolder = '';
+    this.FrameCount = 0;
   }
 
   static create(obj, fields, types) {
@@ -240,6 +275,27 @@ class PraisesRow extends BaseTableRow {
 }
 
 /**
+ * Titles 表数据行
+ * @property {number} Id - 序号
+ * @property {string} Key - Key
+ * @property {string} Name - 称号名
+ */
+class TitlesRow extends BaseTableRow {
+  constructor() {
+    super();
+    this.Id = 0;
+    this.Key = '';
+    this.Name = '';
+  }
+
+  static create(obj, fields, types) {
+    const row = new TitlesRow();
+    row.initFromObject(obj, fields, types);
+    return row;
+  }
+}
+
+/**
  * UIText 表数据行
  * @property {number} Id - 序号
  * @property {string} Key - 文本键
@@ -299,62 +355,9 @@ class UpgradesRow extends BaseTableRow {
   }
 }
 
-/**
- * Achievements 表数据行
- * @property {number} Id - 序号
- * @property {string} Key - Key
- * @property {string} Name - 名称
- * @property {string} Desc - 描述
- * @property {string} Type - 类型
- * @property {number} Target - 条件目标
- * @property {number} RewardCoins - 奖励金币
- * @property {number} TitleId - 称号编号
- * @property {string} Icon - 图标
- */
-class AchievementsRow extends BaseTableRow {
-  constructor() {
-    super();
-    this.Id = 0;
-    this.Key = '';
-    this.Name = '';
-    this.Desc = '';
-    this.Type = '';
-    this.Target = 0;
-    this.RewardCoins = 0;
-    this.TitleId = 0;
-    this.Icon = '';
-  }
-
-  static create(obj, fields, types) {
-    const row = new AchievementsRow();
-    row.initFromObject(obj, fields, types);
-    return row;
-  }
-}
-
-/**
- * Titles 表数据行
- * @property {number} Id - 序号
- * @property {string} Key - Key
- * @property {string} Name - 称号名
- */
-class TitlesRow extends BaseTableRow {
-  constructor() {
-    super();
-    this.Id = 0;
-    this.Key = '';
-    this.Name = '';
-  }
-
-  static create(obj, fields, types) {
-    const row = new TitlesRow();
-    row.initFromObject(obj, fields, types);
-    return row;
-  }
-}
-
 module.exports = {
   BaseTableRow,
+  AchievementsRow,
   AudioRow,
   CharacterRow,
   EconomyConfigRow,
@@ -363,8 +366,7 @@ module.exports = {
   MonstersRow,
   PlatformsRow,
   PraisesRow,
-  UpgradesRow,
-  UITextRow,
-  AchievementsRow,
   TitlesRow,
+  UITextRow,
+  UpgradesRow,
 };
