@@ -79,18 +79,45 @@ function loadCharacter(characterName) {
   }
 
   characterConfig.frames[characterName] = [];
-  let loadCount = 0;
+  let frameCount = 0; // 实际加载成功的帧数
+  let stopped = false; // 是否已停止加载
+  const MAX_DYNAMIC_FRAMES = 6; // 最大帧数（所有角色序列帧均从jump_0到jump_5共6帧）
 
-  for (let i = 0; i < FRAME_COUNT; i++) {
+  // 动态检测实际帧数
+  for (let i = 0; i < MAX_DYNAMIC_FRAMES; i++) {
+    // 如果已确定帧序列结束，不再尝试加载更多
+    if (stopped) {
+      break;
+    }
+
     const img = wx.createImage();
-    img.onload = function() {
-      loadCount++;
-      if (loadCount >= FRAME_COUNT) {
+    const imgPath = assetManager.getImagePath(`images/characters/${characterName}/jump_${i}.png`);
+    img.onload = (function(idx) {
+      return function() {
+        // 只有成功加载的有效帧才加入
+        if (this.width > 0) {
+          characterConfig.frames[characterName][idx] = this;
+          frameCount++;
+          // 成功加载后继续尝试下一帧
+        }
+      };
+    })(i);
+    img.onerror = (function() {
+      return function() {
+        // 遇到第一个不存在的帧号时停止加载
+        stopped = true;
+        // 标记加载完成
         characterConfig.loadedCharacters[characterName] = true;
-      }
-    };
-    img.src = assetManager.getImagePath(`images/characters/${characterName}/jump_${i}.png`);
-    characterConfig.frames[characterName].push(img);
+      };
+    })();
+    img.src = imgPath;
+    // 预先分配数组位置，避免索引错位
+    characterConfig.frames[characterName].push(null);
+  }
+
+  // 如果循环正常结束（未通过onerror停止），标记加载完成
+  if (!stopped && frameCount > 0) {
+    characterConfig.loadedCharacters[characterName] = true;
   }
 }
 
@@ -101,8 +128,19 @@ function getCharacterFrame(characterName, state) {
   if (!characterConfig.loadedCharacters[characterName]) {
     return null;
   }
+  const frames = characterConfig.frames[characterName];
+  if (!frames || frames.length === 0) {
+    return null;
+  }
   const frameIndex = STATE_TO_FRAME_INDEX[state];
-  return characterConfig.frames[characterName][frameIndex] || null;
+  // 计算实际加载的有效帧数
+  const actualFrameCount = frames.filter(function(f) { return f && f.width > 0; }).length;
+  if (actualFrameCount === 0) {
+    return null;
+  }
+  // 帧索引越界时返回最后一帧（适用于帧数不足的情况）
+  const validIndex = Math.min(frameIndex, actualFrameCount - 1);
+  return frames[validIndex] || null;
 }
 
 /**

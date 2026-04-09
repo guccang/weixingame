@@ -61,6 +61,9 @@ const LevelGenerator = require('./level/level');
 // 技能系统
 const SkillSystem = require('./skill/skill');
 
+// 布局系统
+const { getLayoutLoader } = require('./layout/layoutLoader');
+
 // 游戏操作模块
 const GameOperations = require('./game/gameOperations');
 
@@ -169,6 +172,12 @@ class Game {
     this.gameOps = new GameOperations(this); // 游戏操作（分享等）
     this.bossSystem = new BossSystem(this); // Boss系统
     this.animationId = null; // 动画帧ID，用于取消动画循环
+
+    // 初始化布局系统
+    this.layoutLoader = getLayoutLoader();
+    this.layoutLoader.loadLayoutFile('startScreen', 'startScreen.json');
+    this.layout = null; // 当前解析的布局缓存
+
     progressionSystem.applyUpgradesToGame(this, this.progression);
     this.syncCharacterSelection();
     this.initStars();

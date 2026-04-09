@@ -6,17 +6,18 @@
     "coverView": false,
     "lazyloadPlaceholderEnable": false,
     "skylineRenderEnable": false,
-    "preloadBackgroundData": false,
-    "autoAudits": false,
-    "useApiHook": true,
-    "showShadowRootInWxmlPanel": false,
-    "useStaticServer": false,
-    "useLanDebug": false,
-    "showES6CompileOption": false,
+    "preloadBackground": false,
+    "autoAuditsEnable": false,
+    "newFeature": false,
+    "uglifyFileName": false,
+    "uploadWithSourceMap": true,
     "compileHotReLoad": false,
     "bigPackageSizeSupport": false,
     "checkInvalidKey": true,
     "ignoreDevUnusedFiles": true
   },
-  "condition": {}
+  "condition": {},
+  "packOptions": {
+    "ignore": []
+  }
 }
