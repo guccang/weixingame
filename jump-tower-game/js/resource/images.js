@@ -11,9 +11,11 @@ const images = {
   iconCoin: null,
   iconLeaderboard: null,
   iconShop: null,
+  iconMode: null,
+  iconAchievement: null,
   loaded: false,
   loadCount: 0,
-  totalCount: 6
+  totalCount: 8
 };
 
 function loadImage(name, src) {
@@ -35,6 +37,8 @@ function loadAllImages() {
   loadImage('iconCoin', assetManager.getImagePath('ui.iconCoin'));
   loadImage('iconLeaderboard', assetManager.getImagePath('ui.iconLeaderboard'));
   loadImage('iconShop', assetManager.getImagePath('ui.iconShop'));
+  loadImage('iconMode', assetManager.getImagePath('ui.iconMode'));
+  loadImage('iconAchievement', assetManager.getImagePath('ui.iconAchievement'));
 }
 
 loadAllImages();

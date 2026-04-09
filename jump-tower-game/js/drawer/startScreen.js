@@ -99,13 +99,13 @@ function drawStartScreen(ctx, game, images, characterConfig, jobConfig) {
   // 底部图标按钮区域（使用布局引擎的Flex布局）
   const bottomBarEl = layout.elements.bottomBar;
   if (bottomBarEl && bottomBarEl.children) {
-    const iconY = H - 100;
-    const iconSize = 50;
+    const iconY = H - 105;
+    const iconSize = 60;
     const icons = [
       { key: 'shop', color: '#fd79a8', text: '强化', img: images.iconShop, highlight: game.showShopPanel },
       { key: 'character', color: '#74b9ff', text: '角色', img: images.iconCharacter },
-      { key: 'mode', color: '#ffdd57', text: '玩法', img: null, highlight: game.gameMode.showModeSelect },
-      { key: 'achievement', color: '#fdcb6e', text: '成就', img: null, highlight: game.showAchievementPanel },
+      { key: 'mode', color: '#ffdd57', text: '玩法', img: images.iconMode, highlight: game.gameMode.showModeSelect },
+      { key: 'achievement', color: '#fdcb6e', text: '成就', img: images.iconAchievement, highlight: game.showAchievementPanel },
       { key: 'leaderboard', color: '#55efc4', text: '排行', img: images.iconLeaderboard }
     ];
 

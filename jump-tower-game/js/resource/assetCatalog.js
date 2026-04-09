@@ -19,6 +19,8 @@ const assets = [
   buildAsset('ui.iconCoin', 'image', 'images/ui_main/icon_coin.png'),
   buildAsset('ui.iconLeaderboard', 'image', 'images/ui_main/icon_leaderboard.png'),
   buildAsset('ui.iconShop', 'image', 'images/ui_main/icon_shop.png'),
+  buildAsset('ui.iconMode', 'image', 'images/ui_main/icon_mode.png'),
+  buildAsset('ui.iconAchievement', 'image', 'images/ui_main/icon_achievement.png'),
 
   buildAsset('platform.normal', 'image', 'images/platforms/platform_normal.png'),
   buildAsset('platform.ice', 'image', 'images/platforms/platform_ice.png'),

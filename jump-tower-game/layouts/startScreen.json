@@ -1,8 +1,8 @@
 {
   "id": "startScreen",
   "vars": {
-    "iconSize": 50,
-    "bottomBarHeight": 100
+    "iconSize": 60,
+    "bottomBarHeight": 105
   },
   "elements": [
     {
@@ -71,36 +71,36 @@
       "offset": { "x": 0, "y": -100 },
       "flex": {
         "direction": "row",
-        "gap": 0,
-        "justify": "space-between",
+        "gap": 10,
+        "justify": "center",
         "align": "center"
       },
-      "size": { "width": "100%", "height": 50 },
+      "size": { "width": "100%", "height": 100 },
       "children": [
         {
           "id": "shop",
           "type": "iconButton",
-          "size": { "width": 50, "height": 50 }
+          "size": { "width": 60, "height": 60 }
         },
         {
           "id": "character",
           "type": "iconButton",
-          "size": { "width": 50, "height": 50 }
+          "size": { "width": 60, "height": 60 }
         },
         {
           "id": "mode",
           "type": "iconButton",
-          "size": { "width": 50, "height": 50 }
+          "size": { "width": 60, "height": 60 }
         },
         {
           "id": "achievement",
           "type": "iconButton",
-          "size": { "width": 50, "height": 50 }
+          "size": { "width": 60, "height": 60 }
         },
         {
           "id": "leaderboard",
           "type": "iconButton",
-          "size": { "width": 50, "height": 50 }
+          "size": { "width": 60, "height": 60 }
         }
       ]
     }
