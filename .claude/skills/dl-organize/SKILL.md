@@ -112,6 +112,34 @@ mkdir -p "D:/GitWechatGame/jump-tower-game/images/characters/<英文名>"
 cp -r D:/GitWechatGame/jump-tower-game/images/_temp/<子目录名>/* D:/GitWechatGame/jump-tower-game/images/characters/<英文名>/
 ```
 
+**移动完成后自动重命名帧图文件为统一格式** `jump_0.png`, `jump_1.png`, ...（按实际帧数）：
+```bash
+cd "D:/GitWechatGame/jump-tower-game/images/characters/<英文名>"
+
+# 删除meta.json等非帧图文件
+rm -f meta.json
+
+# 使用Python脚本批量重命名为 jump_0.png, jump_1.png, ...
+python -c "
+import os
+import re
+import glob
+
+files = sorted(glob.glob('*.png'))
+print('Found files:', [f for f in files])
+
+index = 0
+for f in files:
+    new_name = f'jump_{index}.png'
+    if f != new_name:
+        os.rename(f, new_name)
+        print(f'Rename: {f} -> {new_name}')
+    index += 1
+
+print(f'Total frames renamed: {index}')
+"
+```
+
 **怪物**：
 ```bash
 mkdir -p "D:/GitWechatGame/jump-tower-game/images/monsters/<英文名>"

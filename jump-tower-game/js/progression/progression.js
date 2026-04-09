@@ -642,7 +642,9 @@ function normalizeProgress(progress) {
   stats.lastPlayDate = today;
 
   const defaultCharacterId = getDefaultCharacterId();
-  next.unlockedCharacters = normalizeUnlockList(next.unlockedCharacters, [defaultCharacterId]);
+  // 默认全解锁：所有角色都自动解锁
+  const allCharacterIds = getCharacterRows().map(function(row) { return row.JumpFolder; });
+  next.unlockedCharacters = normalizeUnlockList(next.unlockedCharacters, allCharacterIds);
   if (!next.selectedCharacterId || next.unlockedCharacters.indexOf(next.selectedCharacterId) === -1) {
     next.selectedCharacterId = next.unlockedCharacters[0] || defaultCharacterId;
   }

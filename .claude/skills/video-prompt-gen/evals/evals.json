@@ -1,0 +1,26 @@
+{
+  "skill_name": "video-prompt-gen",
+  "evals": [
+    {
+      "id": 1,
+      "name": "pixel-warrior-walk",
+      "prompt": "生成一个像素风战士行走动画的视频提示词，角色是穿着银色盔甲、手持大剑的骑士",
+      "expected_output": "包含完整的 Veo 提示词，有 pixel/art 风格关键词，walk 动作，side view，solid background",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "cartoon-mage-jump",
+      "prompt": "帮我生成卡通风格法师跳跃动画的视频提示词，法师穿蓝色长袍，手持法杖",
+      "expected_output": "包含完整的 Veo 提示词，有 cartoon 风格关键词，jump 动作，法师角色描述",
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "anime-character-idle",
+      "prompt": "生成动漫风格角色待机动画提示词，角色是白发红眼的少年剑士",
+      "expected_output": "包含完整的 Veo 提示词，有 anime 风格关键词，idle 动作，角色特征描述",
+      "files": []
+    }
+  ]
+}

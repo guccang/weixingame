@@ -57,10 +57,6 @@
             },
             {
                 "type": "folder",
-                "value": "images"
-            },
-            {
-                "type": "folder",
                 "value": "cloudfunctions"
             },
             {
