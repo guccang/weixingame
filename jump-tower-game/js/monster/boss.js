@@ -120,8 +120,19 @@ class Boss {
     }
 
     const framePaths = [];
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 32; i++) {
+      const key = `monster.boss.chase.${i}`;
+      if (!assetManager.getAsset(key)) {
+        break;
+      }
       framePaths.push(`${chasePath}/frame_${String(i).padStart(4, '0')}.png`);
+    }
+
+    if (framePaths.length === 0) {
+      // fallback: 最多尝试16帧
+      for (let i = 0; i < 16; i++) {
+        framePaths.push(`${chasePath}/frame_${String(i).padStart(4, '0')}.png`);
+      }
     }
 
     monster.frames = framePaths;
@@ -212,7 +223,7 @@ class Boss {
 
     monster.animTimer += dt;
     if (monster.animTimer > 120) {
-      monster.animFrame = (monster.animFrame + 1) % 4;
+      monster.animFrame = (monster.animFrame + 1) % monster.frames.length;
       monster.animTimer = 0;
     }
 

@@ -1,7 +1,7 @@
 /**
  * 表格数据管理器
  * 直接从 tables/*.txt 文件读取数据
- * 生成时间: 2026-04-09 13:56:08
+ * 生成时间: 2026-04-09 19:09:25
  */
 
 const { TableConfigs } = require('./tableConfig');

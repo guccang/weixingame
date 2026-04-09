@@ -654,7 +654,7 @@ class Game {
     }
 
     if (this.score >= this.bossSpawnHeight && !this.bossSystem.hasActiveBoss()) {
-      this.bossSystem.spawn(1);
+      this.bossSystem.spawn(2);
       this.bossSpawnHeight = this.getNextBossSpawnHeight(this.bossSpawnHeight);
       this.bossSpawnHintShown = false;
     }
