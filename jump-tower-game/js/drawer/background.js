@@ -170,12 +170,8 @@ function drawGameOverBackground(ctx, W, H, cameraY, score, bgStars, images) {
   if (images && images.bg0101 && images.bg0102 &&
       images.bg0101.width > 0 && images.bg0102.width > 0) {
     // 游戏结束时背景静止，不滚动
-    for (let x = 0; x < W; x += BG_WIDTH) {
-      ctx.drawImage(images.bg0101, x, 0, BG_WIDTH, Math.min(BG_HEIGHT, H));
-      if (x + BG_WIDTH < W + BG_WIDTH) {
-        ctx.drawImage(images.bg0102, x + BG_WIDTH, 0, BG_WIDTH, Math.min(BG_HEIGHT, H));
-      }
-    }
+    ctx.drawImage(images.bg0101, 0, 0, W, Math.min(BG_HEIGHT, H));
+    ctx.drawImage(images.bg0102, 0, BG_HEIGHT, W, Math.min(BG_HEIGHT, Math.max(H - BG_HEIGHT, 0)));
     return;
   }
 
