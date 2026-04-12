@@ -73,8 +73,29 @@ function getDifficultyConfig() {
 }
 
 function getBossConfig() {
+  const leaperMonsterId = getConfigValue('BOSS_MONSTER_ID', 2);
+  const throwerMonsterId = getConfigValue('BOSS_THROWER_MONSTER_ID', 3);
+  const pool = [
+    {
+      monsterId: leaperMonsterId,
+      behaviorType: 'leaper',
+      weight: getConfigValue('BOSS_LEAPER_WEIGHT', 1),
+      warningText: '前方检测到Boss动静！'
+    },
+    {
+      monsterId: throwerMonsterId,
+      behaviorType: 'thrower',
+      weight: getConfigValue('BOSS_THROWER_WEIGHT', 1),
+      warningText: '上方检测到空投干扰！'
+    }
+  ].filter(function(entry) {
+    return typeof entry.monsterId === 'number' && entry.monsterId > 0 && entry.weight > 0;
+  });
+
   return {
-    monsterId: getConfigValue('BOSS_MONSTER_ID', 2),
+    monsterId: leaperMonsterId,
+    leaperMonsterId,
+    throwerMonsterId,
     warningLeadHeight: getConfigValue('BOSS_WARNING_LEAD_HEIGHT', 50),
     spawnHeights: [
       getConfigValue('BOSS_SPAWN_HEIGHT_1', 500),
@@ -85,7 +106,133 @@ function getBossConfig() {
     }).sort(function(a, b) {
       return a - b;
     }),
-    repeatInterval: getConfigValue('BOSS_SPAWN_REPEAT_INTERVAL', 2000)
+    repeatInterval: getConfigValue('BOSS_SPAWN_REPEAT_INTERVAL', 2000),
+    pool,
+    thrower: {
+      topOffset: getConfigValue('BOSS_THROWER_TOP_OFFSET', 118),
+      horizontalPadding: getConfigValue('BOSS_THROWER_HORIZONTAL_PADDING', 92),
+      patrolSpeed: getConfigValue('BOSS_THROWER_PATROL_SPEED', 4.8),
+      repositionSpeed: getConfigValue('BOSS_THROWER_REPOSITION_SPEED', 6.4),
+      eventDurationMs: getConfigValue('BOSS_THROWER_EVENT_DURATION_MS', 12000),
+      maxThrows: getConfigValue('BOSS_THROWER_MAX_THROWS', 6),
+      throwIntervalMin: getConfigValue('BOSS_THROWER_THROW_INTERVAL_MIN', 1350),
+      throwIntervalMax: getConfigValue('BOSS_THROWER_THROW_INTERVAL_MAX', 2200),
+      throwPauseMs: getConfigValue('BOSS_THROWER_THROW_PAUSE_MS', 260),
+      projectileFallSpeed: getConfigValue('BOSS_THROWER_PROJECTILE_FALL_SPEED', 1.15),
+      projectileDriftX: getConfigValue('BOSS_THROWER_PROJECTILE_DRIFT_X', 0.18),
+      projectileSwayAmplitude: getConfigValue('BOSS_THROWER_PROJECTILE_SWAY_AMPLITUDE', 12),
+      projectileSwaySpeed: getConfigValue('BOSS_THROWER_PROJECTILE_SWAY_SPEED', 0.0045),
+      positiveWeight: getConfigValue('BOSS_THROWER_POSITIVE_WEIGHT', 0.72),
+      negativeWeight: getConfigValue('BOSS_THROWER_NEGATIVE_WEIGHT', 0.28),
+      multiThrowChance: getConfigValue('BOSS_THROWER_MULTI_THROW_CHANCE', 0.35),
+      multiThrowCount: getConfigValue('BOSS_THROWER_MULTI_THROW_COUNT', 2)
+    }
+  };
+}
+
+function getRunEventConfig() {
+  return {
+    buffOfferStartHeight: getConfigValue('RUN_BUFF_OFFER_START_HEIGHT', 600),
+    buffOfferInterval: getConfigValue('RUN_BUFF_OFFER_INTERVAL', 900),
+    goalRewardCoins: getConfigValue('RUN_GOAL_REWARD_COINS', 28),
+    goalTargets: {
+      coins: getConfigValue('RUN_GOAL_COIN_TARGET', 12),
+      movingLandings: getConfigValue('RUN_GOAL_MOVING_TARGET', 4),
+      chargeDashes: getConfigValue('RUN_GOAL_CHARGE_TARGET', 2),
+      specialLandings: getConfigValue('RUN_GOAL_SPECIAL_TARGET', 3)
+    },
+    themeEvent: {
+      durationHeight: getConfigValue('THEME_EVENT_DURATION_HEIGHT', 450),
+      repeatInterval: getConfigValue('THEME_EVENT_REPEAT_INTERVAL', 1800)
+    },
+    platformSpecial: {
+      chargeChance: getConfigValue('PLATFORM_SPECIAL_CHARGE_CHANCE', 0.12),
+      resonanceChance: getConfigValue('PLATFORM_SPECIAL_RESONANCE_CHANCE', 0.14),
+      riskChance: getConfigValue('PLATFORM_SPECIAL_RISK_CHANCE', 0.1),
+      riskWidthScale: getConfigValue('PLATFORM_SPECIAL_RISK_WIDTH_SCALE', 0.72),
+      riskRewardCoins: getConfigValue('PLATFORM_SPECIAL_RISK_REWARD_COINS', 5),
+      chargeBonus: getConfigValue('PLATFORM_SPECIAL_CHARGE_BONUS', 1),
+      resonanceStreakRequirement: getConfigValue('PLATFORM_RESONANCE_STREAK_REQUIREMENT', 3),
+      resonanceBonusForce: getConfigValue('PLATFORM_RESONANCE_BONUS_FORCE', 4.5)
+    },
+    bossChargeDash: {
+      interruptRadius: getConfigValue('BOSS_CHARGE_DASH_INTERRUPT_RADIUS', 125),
+      rewardCoins: getConfigValue('BOSS_CHARGE_DASH_REWARD_COINS', 32)
+    },
+    buffs: {
+      magnetRadiusBonus: getConfigValue('RUN_BUFF_MAGNET_RADIUS_BONUS', 28),
+      movingSlowScale: getConfigValue('RUN_BUFF_MOVING_SLOW_SCALE', 0.72),
+      dashSegmentBonus: getConfigValue('RUN_BUFF_DASH_SEGMENT_BONUS', 1),
+      comboThreshold: getConfigValue('RUN_BUFF_COMBO_THRESHOLD', 6),
+      comboCoinBonus: getConfigValue('RUN_BUFF_COMBO_COIN_BONUS', 8),
+      bossRewardBonus: getConfigValue('RUN_BUFF_BOSS_REWARD_BONUS', 24)
+    }
+  };
+}
+
+function getPickupConfig() {
+  return {
+    spawnStartHeight: getConfigValue('PICKUP_SPAWN_START_HEIGHT', 300),
+    negativeStartHeight: getConfigValue('PICKUP_NEGATIVE_START_HEIGHT', 1200),
+    positiveChanceLow: getConfigValue('PICKUP_POSITIVE_CHANCE_LOW', 0.12),
+    positiveChanceHigh: getConfigValue('PICKUP_POSITIVE_CHANCE_HIGH', 0.16),
+    negativeChanceHigh: getConfigValue('PICKUP_NEGATIVE_CHANCE_HIGH', 0.08),
+    platformBonuses: {
+      moving: getConfigValue('PICKUP_PLATFORM_BONUS_MOVING', 0.05),
+      risk: getConfigValue('PICKUP_PLATFORM_BONUS_RISK', 0.08)
+    },
+    platformPenalties: {
+      charge: getConfigValue('PICKUP_PLATFORM_PENALTY_CHARGE', 0.03),
+      resonance: getConfigValue('PICKUP_PLATFORM_PENALTY_RESONANCE', 0.02)
+    },
+    playerSpeedMultiplier: {
+      min: getConfigValue('PICKUP_PLAYER_SPEED_MULTIPLIER_MIN', 0.65),
+      max: getConfigValue('PICKUP_PLAYER_SPEED_MULTIPLIER_MAX', 1.5)
+    },
+    maxFallSpeedMultiplier: {
+      min: getConfigValue('PICKUP_MAX_FALL_SPEED_MULTIPLIER_MIN', 0.75),
+      max: getConfigValue('PICKUP_MAX_FALL_SPEED_MULTIPLIER_MAX', 1.6)
+    },
+    movingPlatformSpeedScale: {
+      min: getConfigValue('PICKUP_MOVING_PLATFORM_SPEED_SCALE_MIN', 0.65),
+      max: getConfigValue('PICKUP_MOVING_PLATFORM_SPEED_SCALE_MAX', 1.6)
+    },
+    durations: {
+      swiftWind: getConfigValue('PICKUP_DURATION_SWIFT_WIND', 7000),
+      featherFall: getConfigValue('PICKUP_DURATION_FEATHER_FALL', 6500),
+      dashFuel: getConfigValue('PICKUP_DURATION_DASH_FUEL', 8000),
+      goldenTouch: getConfigValue('PICKUP_DURATION_GOLDEN_TOUCH', 9000),
+      stickyBoots: getConfigValue('PICKUP_DURATION_STICKY_BOOTS', 6000),
+      heavyCore: getConfigValue('PICKUP_DURATION_HEAVY_CORE', 5500),
+      slowField: getConfigValue('PICKUP_DURATION_SLOW_FIELD', 7000),
+      shortFuse: getConfigValue('PICKUP_DURATION_SHORT_FUSE', 6000)
+    },
+    effects: {
+      swiftWind: {
+        playerSpeedMultiplier: getConfigValue('PICKUP_SWIFT_WIND_PLAYER_SPEED_MULTIPLIER', 1.2)
+      },
+      featherFall: {
+        maxFallSpeedMultiplier: getConfigValue('PICKUP_FEATHER_FALL_MAX_FALL_SPEED_MULTIPLIER', 0.82)
+      },
+      dashFuel: {
+        chargeDashSegmentBonus: getConfigValue('PICKUP_DASH_FUEL_SEGMENT_BONUS', 1)
+      },
+      goldenTouch: {
+        playerCoinPickupRadius: getConfigValue('PICKUP_GOLDEN_TOUCH_RADIUS_BONUS', 26)
+      },
+      stickyBoots: {
+        playerSpeedMultiplier: getConfigValue('PICKUP_STICKY_BOOTS_PLAYER_SPEED_MULTIPLIER', 0.82)
+      },
+      heavyCore: {
+        maxFallSpeedMultiplier: getConfigValue('PICKUP_HEAVY_CORE_MAX_FALL_SPEED_MULTIPLIER', 1.22)
+      },
+      slowField: {
+        movingPlatformSpeedScale: getConfigValue('PICKUP_SLOW_FIELD_MOVING_PLATFORM_SPEED_SCALE', 1.35)
+      },
+      shortFuse: {
+        chargeDashSegmentBonus: getConfigValue('PICKUP_SHORT_FUSE_SEGMENT_BONUS', -1)
+      }
+    }
   };
 }
 
@@ -156,4 +303,10 @@ module.exports = {
 
   // Boss出现配置
   get bossConfig() { return getBossConfig(); },
+
+  // 单局事件配置
+  get runEventConfig() { return getRunEventConfig(); },
+
+  // 单局拾取道具配置
+  get pickupConfig() { return getPickupConfig(); },
 };

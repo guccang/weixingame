@@ -52,6 +52,7 @@ const player = require('./player/player');
 const { GameMode } = require('./game/index');
 const DifficultyManager = require('./game/difficultyManager');
 const gameConstants = require('./game/constants');
+const RunDirector = require('./game/runDirector');
 
 // 绘制系统
 const drawer = require('./drawer/drawer');
@@ -108,6 +109,7 @@ class Game {
     this.lastMilestone = 0;
     this.shakeTimer = 0;
     this.bossSpawnHeight = 500;
+    this.nextBossSpawnPlan = null;
     this.bossSpawnHintShown = false;
     this.controlLockedUntil = 0;
     this.bossKnockbackUntil = 0;
@@ -147,8 +149,11 @@ class Game {
     this.runRewardSummary = null;
     this.sessionBossCoins = 0;
     this.sessionPickupCoins = 0;
+    this.sessionEventCoins = 0;
     this.runItemEffects = {};
     this.pendingRunItemEffects = {};
+    this.runBuffEffects = {};
+    this.runPickupEffects = {};
     this.growthExpiresAt = 0;
     this.playerCoinPickupBonus = 0;
     this.petCoinPickupBonus = 0;
@@ -178,6 +183,7 @@ class Game {
     this.skillSystem = new SkillSystem(this); // 技能系统
     this.gameOps = new GameOperations(this); // 游戏操作（分享等）
     this.bossSystem = new BossSystem(this); // Boss系统
+    this.runDirector = new RunDirector(this); // 单局事件管理
     this.animationId = null; // 动画帧ID，用于取消动画循环
 
     // 初始化布局系统
@@ -186,6 +192,7 @@ class Game {
     this.layout = null; // 当前解析的布局缓存
 
     this.levelGenerator.setDifficultyManager(this.difficultyManager);
+    this.levelGenerator.setRunDirector(this.runDirector);
     progressionSystem.applyUpgradesToGame(this, this.progression);
     this.syncDifficulty(true);
     this.syncCharacterSelection();
@@ -258,7 +265,11 @@ class Game {
     this.runRewardSummary = null;
     this.sessionBossCoins = 0;
     this.sessionPickupCoins = 0;
+    this.sessionEventCoins = 0;
+    this.runBuffEffects = {};
+    this.runPickupEffects = {};
     this.bossSpawnHeight = this.rollBossSpawnHeight();
+    this.nextBossSpawnPlan = this.createBossSpawnPlan(this.bossSpawnHeight);
     this.controls.reset(); // 重置控制系统状态
 
     // 初始化游戏模式特定状态
@@ -270,10 +281,13 @@ class Game {
     // 重置Boss系统
     this.bossSystem.reset();
 
+    this.runDirector.reset();
+
     // 使用关卡生成器初始化
     this.platforms = this.levelGenerator.initLevel(this.W, this.H, characterConfig);
     this.coins = this.levelGenerator.getCoins();
     this.pet = progressionSystem.getSelectedPetId(this.progression) ? petSystem.createPet(this.player) : null;
+    this.refreshPlatformRuntimeEffects();
   }
 
   spawnParticles(x, y, color, count) {
@@ -318,13 +332,83 @@ class Game {
       this.difficultyManager.update(this.score);
     }
 
-    return this.difficultyManager.applyToGame(this);
+    const profile = this.difficultyManager.applyToGame(this);
+    this.applyRuntimeEffectModifiers();
+    return profile;
   }
 
   updateDifficulty() {
     if (!this.difficultyManager) return null;
     this.difficultyManager.update(this.score);
-    return this.difficultyManager.applyToGame(this);
+    const profile = this.difficultyManager.applyToGame(this);
+    this.applyRuntimeEffectModifiers();
+    return profile;
+  }
+
+  applyRuntimeEffectModifiers() {
+    const difficultyProfile = this.currentDifficulty || { playerSpeedMultiplier: 1, maxFallSpeedMultiplier: 1 };
+    const difficultyBase = this.difficultyManager && this.difficultyManager.basePhysics
+      ? this.difficultyManager.basePhysics
+      : this.baseStats;
+    const pickupConfig = gameConstants.pickupConfig;
+    const playerSpeedScale = Math.max(
+      pickupConfig.playerSpeedMultiplier.min,
+      Math.min(pickupConfig.playerSpeedMultiplier.max, this.getRunEffectValue('playerSpeedMultiplier'))
+    );
+    const maxFallSpeedScale = Math.max(
+      pickupConfig.maxFallSpeedMultiplier.min,
+      Math.min(pickupConfig.maxFallSpeedMultiplier.max, this.getRunEffectValue('maxFallSpeedMultiplier'))
+    );
+    const roundTo = function(value) {
+      return Math.round(value * 1000) / 1000;
+    };
+    const basePlayerSpeed = (difficultyBase.PLAYER_SPEED || this.baseStats.PLAYER_SPEED || physics.constants.PLAYER_SPEED) *
+      (difficultyProfile.playerSpeedMultiplier || 1);
+    const baseMaxFallSpeed = (difficultyBase.MAX_FALL_SPEED || this.baseStats.MAX_FALL_SPEED || physics.constants.MAX_FALL_SPEED) *
+      (difficultyProfile.maxFallSpeedMultiplier || 1);
+
+    physics.constants.PLAYER_SPEED = roundTo(basePlayerSpeed * playerSpeedScale);
+    physics.constants.MAX_FALL_SPEED = roundTo(baseMaxFallSpeed * maxFallSpeedScale);
+    this.PLAYER_SPEED = physics.constants.PLAYER_SPEED;
+    this.MAX_FALL_SPEED = physics.constants.MAX_FALL_SPEED;
+    if (this.player && this.player.vy > this.MAX_FALL_SPEED) {
+      this.player.vy = this.MAX_FALL_SPEED;
+    }
+  }
+
+  getRunEffectValue(key) {
+    const isScaleKey = key.indexOf('Scale') !== -1 || key.indexOf('Multiplier') !== -1;
+    const itemValue = this.runItemEffects && typeof this.runItemEffects[key] === 'number'
+      ? this.runItemEffects[key]
+      : null;
+    const buffValue = this.runBuffEffects && typeof this.runBuffEffects[key] === 'number'
+      ? this.runBuffEffects[key]
+      : null;
+    const pickupValue = this.runPickupEffects && typeof this.runPickupEffects[key] === 'number'
+      ? this.runPickupEffects[key]
+      : null;
+
+    if (isScaleKey) {
+      let value = 1;
+      if (itemValue !== null) value *= itemValue;
+      if (buffValue !== null) value *= buffValue;
+      if (pickupValue !== null) value *= pickupValue;
+      return value;
+    }
+
+    return (itemValue || 0) + (buffValue || 0) + (pickupValue || 0);
+  }
+
+  getDisplayedRunCoins() {
+    return (this.sessionPickupCoins || 0) + (this.sessionBossCoins || 0) + (this.sessionEventCoins || 0);
+  }
+
+  refreshPlatformRuntimeEffects() {
+    if (!this.platforms || this.platforms.length === 0) return;
+    const movingScale = this.runDirector ? this.runDirector.getMovingPlatformSpeedScale() : this.getRunEffectValue('movingPlatformSpeedScale');
+    for (let i = 0; i < this.platforms.length; i++) {
+      this.platforms[i].runtimeMoveSpeedScale = movingScale;
+    }
   }
 
   syncCharacterSelection() {
@@ -422,8 +506,12 @@ class Game {
         this.progression = progressionSystem.resetProgress();
         this.runItemEffects = {};
         this.pendingRunItemEffects = {};
+        this.runBuffEffects = {};
+        this.runPickupEffects = {};
         this.growthActive = false;
         this.growthExpiresAt = 0;
+        this.runDirector.reset();
+        this.nextBossSpawnPlan = null;
         this.refreshProgressionEffects();
         if (this.pet && !progressionSystem.getSelectedPetId(this.progression)) {
           this.pet = null;
@@ -446,7 +534,7 @@ class Game {
     return result;
   }
 
-  onBossDefeated(monster) {
+  onBossDefeated(monster, context = {}) {
     if (!monster || monster.rewardGranted) return;
 
     const reward = progressionSystem.awardBossDrop(this.progression, monster.dropReward);
@@ -461,6 +549,10 @@ class Game {
         'Boss掉落 +' + reward.coins + ' 金币',
         '#ffd166'
       );
+    }
+
+    if (this.runDirector) {
+      this.runDirector.onBossDefeated(monster, context);
     }
   }
 
@@ -515,6 +607,45 @@ class Game {
     return bossConfig.spawnHeights.length > 0 ? bossConfig.spawnHeights[0] : 500;
   }
 
+  pickWeightedBossEntry(entries) {
+    if (!entries || entries.length === 0) {
+      return {
+        monsterId: gameConstants.bossConfig.monsterId,
+        behaviorType: 'leaper',
+        warningText: '前方检测到Boss动静！'
+      };
+    }
+
+    let totalWeight = 0;
+    for (let i = 0; i < entries.length; i++) {
+      totalWeight += Math.max(0, entries[i].weight || 0);
+    }
+
+    if (totalWeight <= 0) {
+      return entries[0];
+    }
+
+    let roll = Math.random() * totalWeight;
+    for (let i = 0; i < entries.length; i++) {
+      roll -= Math.max(0, entries[i].weight || 0);
+      if (roll <= 0) {
+        return entries[i];
+      }
+    }
+
+    return entries[entries.length - 1];
+  }
+
+  createBossSpawnPlan(height) {
+    const picked = this.pickWeightedBossEntry(gameConstants.bossConfig.pool);
+    return {
+      height: height,
+      monsterId: picked.monsterId,
+      behaviorType: picked.behaviorType || 'leaper',
+      warningText: picked.warningText || '前方检测到Boss动静！'
+    };
+  }
+
   getNextBossSpawnHeight(currentHeight) {
     const bossConfig = gameConstants.bossConfig;
     const spawnHeights = bossConfig.spawnHeights;
@@ -541,20 +672,93 @@ class Game {
     this.coins = this.levelGenerator.getCoins();
   }
 
+  grantRunCoins(amount, options = {}) {
+    const reward = progressionSystem.grantCoins(this.progression, amount);
+    if (reward.coins <= 0) return reward;
+
+    this.progression = reward.progress;
+    const bucket = options.bucket || 'event';
+    if (bucket === 'boss') {
+      this.sessionBossCoins += reward.coins;
+    } else if (bucket === 'pickup') {
+      this.sessionPickupCoins += reward.coins;
+    } else {
+      this.sessionEventCoins += reward.coins;
+    }
+
+    if (options.emitStats) {
+      this.progression = progressionSystem.addCoinsCollected(this.progression, reward.coins);
+    }
+
+    if (options.x !== undefined && options.y !== undefined) {
+      this.spawnParticles(options.x, options.y, options.color || '#ffd166', 10);
+    }
+
+    if (this.barrage && this.player && options.text) {
+      this.barrage.show(
+        (options.x !== undefined ? options.x : this.player.x) - 20,
+        (options.y !== undefined ? options.y : this.player.y) - this.cameraY - 60,
+        options.text,
+        options.color || '#ffd166'
+      );
+    }
+
+    return reward;
+  }
+
+  addCharge(amount, sourceLabel) {
+    const chargeGain = Math.max(0, Math.round(amount || 0));
+    if (chargeGain <= 0) return;
+
+    this.chargeCount = Math.min(this.chargeMax, this.chargeCount + chargeGain);
+    this.chargeFull = this.chargeCount >= this.chargeMax;
+
+    if (this.barrage && this.player) {
+      this.barrage.show(
+        this.player.x - 20,
+        this.player.y - this.cameraY - 70,
+        (sourceLabel || '蓄力') + ' +' + chargeGain,
+        '#55efc4'
+      );
+    }
+  }
+
+  handleRunOfferTouch(touchX, touchY) {
+    if (!this.runDirector) return false;
+    return this.runDirector.handleOfferTouch(touchX, touchY);
+  }
+
+  onPlatformLanded(platform) {
+    if (!this.runDirector) return;
+    this.runDirector.onPlatformLanded(platform);
+  }
+
+  onChargeDashTriggered() {
+    if (!this.runDirector) return;
+    this.runDirector.onChargeDashTriggered();
+  }
+
+  onBossInterrupted(monster) {
+    if (!this.runDirector) return;
+    this.runDirector.onBossInterrupted(monster);
+  }
+
   collectSceneCoin(coin, collector) {
     if (!coin || coin.collected) return;
 
-    const reward = progressionSystem.grantCoins(this.progression, coin.value || 1);
+    const reward = this.grantRunCoins(coin.value || 1, {
+      bucket: 'pickup',
+      emitStats: true
+    });
     coin.collected = true;
-    this.progression = reward.progress;
-    this.sessionPickupCoins += reward.coins;
-
-    // 成就统计：累计拾取金币
-    progressionSystem.addCoinsCollected(this.progression, reward.coins);
 
     const now = Date.now();
     const pos = this.levelGenerator.getCoinPosition(coin, now);
     this.spawnParticles(pos.x, pos.y, '#ffd166', 8);
+
+    if (this.runDirector) {
+      this.runDirector.onCoinCollected(reward.coins);
+    }
 
     if (this.barrage && this.player) {
       const hintX = collector && collector.x !== undefined ? collector.x : this.player.x;
@@ -575,7 +779,7 @@ class Game {
     const playerCenterY = this.player.y + this.player.h / 2;
     const playerPickupRadiusBonus = progressionSystem.getEconomyValue('PLAYER_COIN_PICKUP_RADIUS', 18) +
       (this.playerCoinPickupBonus || 0) +
-      (this.runItemEffects.playerCoinPickupRadius || 0);
+      this.getRunEffectValue('playerCoinPickupRadius');
     const petPickupRadiusBonus = progressionSystem.getEconomyValue('PET_COIN_PICKUP_RADIUS', 26) +
       (this.petCoinPickupBonus || 0);
 
@@ -639,6 +843,14 @@ class Game {
   update() {
     if (this.state !== 'playing' || !this.player) return;
 
+    if (this.runDirector && this.runDirector.isBuffOfferOpen()) {
+      this.runDirector.update(Date.now());
+      this.controls.keys['ArrowLeft'] = false;
+      this.controls.keys['ArrowRight'] = false;
+      this.barrage.update();
+      return;
+    }
+
     // 竞速模式计时器
     if (this.gameMode.update(this, 16.67)) {
       return; // 游戏结束
@@ -658,20 +870,26 @@ class Game {
     if (this.player.x > this.W) this.player.x = -this.player.w;
     if (this.player.x + this.player.w < 0) this.player.x = this.W;
 
+    const now = Date.now();
+
     // 更新玩家动画状态
     this.updatePlayerState();
-
-    const now = Date.now();
 
     if (this.growthActive && this.growthExpiresAt > 0 && now >= this.growthExpiresAt) {
       this.consumeGrowthMushroom();
     }
 
     player.handlePlatformCollisions(this.player, this.platforms, this, now);
+    if (this.runDirector) {
+      this.runDirector.handlePickupCollisions(now);
+    }
 
     player.updateCamera(this.player, this);
 
     player.updateScore(this.player, this);
+    if (this.runDirector) {
+      this.runDirector.update(now);
+    }
     this.updateDifficulty();
 
     this.generatePlatforms();
@@ -689,15 +907,22 @@ class Game {
     this.bossSystem.update(16.67);
 
     const bossConfig = gameConstants.bossConfig;
+    const bossWarningText = this.nextBossSpawnPlan && this.nextBossSpawnPlan.warningText
+      ? this.nextBossSpawnPlan.warningText
+      : '前方检测到Boss动静！';
 
     if (!this.bossSpawnHintShown && this.score >= Math.max(0, this.bossSpawnHeight - bossConfig.warningLeadHeight)) {
       this.bossSpawnHintShown = true;
-      this.barrage.show(this.W / 2 - 90, 120, '前方检测到Boss动静！', '#ff6b6b');
+      this.barrage.show(this.W / 2 - 90, 120, bossWarningText, '#ff6b6b');
     }
 
     if (this.score >= this.bossSpawnHeight && !this.bossSystem.hasActiveBoss()) {
-      this.bossSystem.spawn(bossConfig.monsterId);
+      this.bossSystem.spawn(this.nextBossSpawnPlan || {
+        monsterId: bossConfig.monsterId,
+        behaviorType: 'leaper'
+      });
       this.bossSpawnHeight = this.getNextBossSpawnHeight(this.bossSpawnHeight);
+      this.nextBossSpawnPlan = this.createBossSpawnPlan(this.bossSpawnHeight);
       this.bossSpawnHintShown = false;
     }
 
@@ -850,6 +1075,8 @@ class Game {
     this.initGame();
     this.runItemEffects = Object.assign({}, this.pendingRunItemEffects);
     this.pendingRunItemEffects = {};
+    this.updateDifficulty();
+    this.refreshPlatformRuntimeEffects();
     this.state = 'playing';
     this.audio.playBGM();
     const _this = this;
@@ -908,13 +1135,15 @@ class Game {
       modeMultiplier: rewardResult.modeMultiplier,
       bossCoins: this.sessionBossCoins,
       pickupCoins: this.sessionPickupCoins,
-      totalCoins: rewardResult.totalCoins + this.sessionBossCoins + this.sessionPickupCoins,
+      eventCoins: this.sessionEventCoins,
+      totalCoins: rewardResult.totalCoins + this.sessionBossCoins + this.sessionPickupCoins + this.sessionEventCoins,
       balance: rewardResult.progress.coins
     };
 
     this.state = 'gameover';
     this.growthActive = false;
     this.growthExpiresAt = 0;
+    this.runPickupEffects = {};
     this.setPlayerScale(1);
     this.trailEffects = [];
     this.pet = null;
@@ -986,17 +1215,23 @@ class Game {
     this.bossKnockbackUntil = 0;
     this.pendingBossLaunch = null;
     this.gameOverBtnArea = null;
+    this.nextBossSpawnPlan = null;
     this.showCharacterPanel = false;
     this.showShopPanel = false;
     this.showLeaderboardPanel = false;
     this.runRewardSummary = null;
     this.sessionBossCoins = 0;
     this.sessionPickupCoins = 0;
+    this.sessionEventCoins = 0;
     this.runItemEffects = {};
     this.pendingRunItemEffects = {};
+    this.runBuffEffects = {};
+    this.runPickupEffects = {};
     this.growthExpiresAt = 0;
     this.gameMode.reset();
     this.skillSystem.reset();
+    this.bossSystem.reset();
+    this.runDirector.reset();
     this.refreshProgressionEffects();
     this.audio.stopBGM();
   }

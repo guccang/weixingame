@@ -20,7 +20,7 @@ const BG_SCROLL_SPEED = 0.2;
  * @param {Array} bgStars - 背景星星数组（兼容旧参数）
  * @param {Object} images - 图片资源对象
  */
-function drawBackground(ctx, W, H, cameraY, score, bgStars, images) {
+function drawBackground(ctx, W, H, cameraY, score, bgStars, images, activeTheme) {
   // 如果有 Bg01 图片，使用滚屏背景
   if (images && images.bg0101 && images.bg0102 &&
       images.bg0101.width > 0 && images.bg0102.width > 0) {
@@ -29,6 +29,8 @@ function drawBackground(ctx, W, H, cameraY, score, bgStars, images) {
     // 备用：绘制渐变背景
     drawGradientBackground(ctx, W, H, cameraY, score, bgStars);
   }
+
+  drawThemeOverlay(ctx, W, H, activeTheme);
 }
 
 /**
@@ -121,6 +123,33 @@ function drawGradientBackground(ctx, W, H, cameraY, score, bgStars) {
       }
     }
   }
+}
+
+function drawThemeOverlay(ctx, W, H, activeTheme) {
+  if (!activeTheme || !activeTheme.theme || !activeTheme.theme.bgGradient) return;
+
+  const gradient = ctx.createLinearGradient(0, 0, W, H);
+  gradient.addColorStop(0, withAlpha(activeTheme.theme.bgGradient[0], 0.22));
+  gradient.addColorStop(1, withAlpha(activeTheme.theme.bgGradient[1], 0.08));
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, W, H);
+
+  const accent = activeTheme.theme.accentColor || '#ffffff';
+  ctx.fillStyle = withAlpha(accent, 0.1);
+  ctx.beginPath();
+  ctx.arc(W * 0.78, H * 0.22, Math.min(W, H) * 0.24, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function withAlpha(hexColor, alpha) {
+  const normalized = (hexColor || '').replace('#', '');
+  if (normalized.length !== 6) {
+    return `rgba(255,255,255,${alpha})`;
+  }
+  const r = parseInt(normalized.slice(0, 2), 16);
+  const g = parseInt(normalized.slice(2, 4), 16);
+  const b = parseInt(normalized.slice(4, 6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
 }
 
 /**

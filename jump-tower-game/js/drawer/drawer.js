@@ -5,6 +5,7 @@
 const { roundRect } = require('./helper');
 const { drawBackground, drawStartBackground, drawGameOverBackground } = require('./background');
 const { drawPlatforms } = require('./platform');
+const { drawPickups } = require('./pickup');
 const { drawCoins } = require('./coin');
 const { drawPlayer } = require('./player');
 const { drawParticles } = require('./particle');
@@ -36,8 +37,18 @@ function render(game, images, characterConfig, jobConfig) {
   if (game.state === 'start') {
     drawStartScreen(ctx, game, images, characterConfig, jobConfig);
   } else if (game.state === 'playing') {
-    drawBackground(ctx, W, H, game.cameraY, game.score, game.bgStars, images);
+    drawBackground(
+      ctx,
+      W,
+      H,
+      game.cameraY,
+      game.score,
+      game.bgStars,
+      images,
+      game.runDirector ? game.runDirector.getActiveTheme() : null
+    );
     drawPlatforms(ctx, game.platforms, game.cameraY);
+    drawPickups(ctx, game, Date.now());
     drawCoins(ctx, game.coins, game.cameraY, game.levelGenerator, Date.now());
     drawTrails(ctx, game.trailEffects, game.cameraY);
     drawPet(ctx, game.pet, game.cameraY);
@@ -45,7 +56,7 @@ function render(game, images, characterConfig, jobConfig) {
     drawParticles(ctx, game.particles, game.cameraY);
     game.bossSystem.render(ctx); // 渲染Boss
     game.barrage.draw(ctx, W);
-    drawUI(ctx, W, H, game.score, game.combo, game.state, game.gameMode, game.chargeCount, game.chargeFull, game.chargeDashing, game.chargeMax, game.sessionPickupCoins || 0);
+    drawUI(ctx, game);
   } else if (game.state === 'gameover') {
     drawGameOverScreen(ctx, game, images);
   }
@@ -61,6 +72,7 @@ module.exports = {
   drawStartBackground,
   drawGameOverBackground,
   drawPlatforms,
+  drawPickups,
   drawCoins,
   drawTrails,
   drawPet,

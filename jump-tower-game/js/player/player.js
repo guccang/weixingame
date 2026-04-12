@@ -148,6 +148,10 @@ function handlePlatformCollisions(player, platforms, game, now) {
             game.activateGrowthMushroom();
           }
         }
+
+        if (typeof game.onPlatformLanded === 'function') {
+          game.onPlatformLanded(p);
+        }
       }
     }
   }

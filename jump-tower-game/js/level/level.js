@@ -5,6 +5,9 @@
 
 const { platform: platformPhysics } = require('../physics/physics');
 const progressionSystem = require('../progression/progression');
+const gameConstants = require('../game/constants');
+
+const RESONANCE_COLORS = ['#55efc4', '#ffd166', '#74b9ff'];
 
 class LevelGenerator {
   constructor() {
@@ -12,10 +15,15 @@ class LevelGenerator {
     this.coins = [];
     this.nextDynamicCoinY = 0;
     this.difficultyManager = null;
+    this.runDirector = null;
   }
 
   setDifficultyManager(difficultyManager) {
     this.difficultyManager = difficultyManager || null;
+  }
+
+  setRunDirector(runDirector) {
+    this.runDirector = runDirector || null;
   }
 
   getDifficultyProfile(scoreHeight) {
@@ -34,6 +42,79 @@ class LevelGenerator {
   applyPlatformDifficulty(platform, scoreHeight) {
     if (!platform || !this.difficultyManager) return platform;
     return this.difficultyManager.applyPlatformModifiers(platform, scoreHeight);
+  }
+
+  getThemeSpawnProfile(scoreHeight) {
+    if (!this.runDirector) return null;
+    return this.runDirector.getSpawnProfile(scoreHeight);
+  }
+
+  pickPlatformType(scoreHeight) {
+    const themeProfile = this.getThemeSpawnProfile(scoreHeight);
+    const themePlatformConfig = themeProfile ? themeProfile.platformConfig : null;
+    const boostChance = themePlatformConfig ? Math.min(0.45, themePlatformConfig.boostChance || 0) : (scoreHeight > 30 ? 0.15 : 0);
+    const movingChance = themePlatformConfig ? Math.min(0.45, themePlatformConfig.movingChance || 0) : (scoreHeight > 20 ? 0.15 : 0);
+    const crumbleChance = themePlatformConfig ? Math.min(0.35, themePlatformConfig.crumbleChance || 0) : (scoreHeight > 80 ? 0.1 : 0);
+    const roll = Math.random();
+
+    if (roll < boostChance) return 'boost';
+    if (roll < boostChance + movingChance) return 'moving';
+    if (roll < boostChance + movingChance + crumbleChance) return 'crumble';
+    return 'normal';
+  }
+
+  applyPlatformSpecial(platform, W, scoreHeight, themeProfile) {
+    if (!platform || platform.type === 'ground') return platform;
+
+    const config = gameConstants.runEventConfig.platformSpecial;
+    const themePlatformConfig = themeProfile ? themeProfile.platformConfig : null;
+    const boostBias = themePlatformConfig ? (themePlatformConfig.boostChance || 0) * 0.08 : 0;
+    const movingBias = themePlatformConfig ? (themePlatformConfig.movingChance || 0) * 0.08 : 0;
+    const crumbleBias = themePlatformConfig ? (themePlatformConfig.crumbleChance || 0) * 0.12 : 0;
+    const chargeChance = Math.max(0, config.chargeChance + boostBias);
+    const resonanceChance = Math.max(0, config.resonanceChance + movingBias);
+    const riskChance = Math.max(0, config.riskChance + crumbleBias);
+    const roll = Math.random();
+
+    if (roll < chargeChance && platform.type !== 'crumble') {
+      platform.specialType = 'charge';
+      platform.specialColor = '#55efc4';
+      platform.specialConsumed = false;
+      return platform;
+    }
+
+    if (roll < chargeChance + resonanceChance && platform.type !== 'crumble') {
+      platform.specialType = 'resonance';
+      platform.specialConsumed = false;
+      platform.resonanceColor = RESONANCE_COLORS[Math.floor(Math.random() * RESONANCE_COLORS.length)];
+      return platform;
+    }
+
+    if (roll < chargeChance + resonanceChance + riskChance && platform.type !== 'crumble' && platform.type !== 'ground') {
+      platform.specialType = 'risk';
+      platform.specialColor = '#ff7675';
+      platform.specialConsumed = false;
+      platform.riskRewardCoins = Math.max(1, Math.round(config.riskRewardCoins));
+      platform.w = Math.max(54, platform.w * Math.max(0.45, config.riskWidthScale));
+      platform.x = Math.max(8, Math.min(W - platform.w - 8, platform.x));
+      return platform;
+    }
+
+    return platform;
+  }
+
+  decorateGeneratedPlatform(platform, W, scoreHeight) {
+    if (!platform) return platform;
+    const themeProfile = this.getThemeSpawnProfile(scoreHeight);
+    platform.runtimeMoveSpeedScale = this.runDirector ? this.runDirector.getMovingPlatformSpeedScale() : 1;
+    if (themeProfile && themeProfile.theme && themeProfile.theme.accentColor) {
+      platform.themeColor = themeProfile.theme.accentColor;
+    }
+    platform = this.applyPlatformSpecial(platform, W, scoreHeight, themeProfile);
+    if (this.runDirector && typeof this.runDirector.onPlatformGenerated === 'function') {
+      this.runDirector.onPlatformGenerated(platform, scoreHeight, W);
+    }
+    return platform;
   }
 
   attachRandomMushroom(platform, height) {
@@ -320,15 +401,13 @@ class LevelGenerator {
     for (let i = 0; i < 12; i++) {
       let px = Math.random() * (W - 100) + 10;
       let py = H - 100 - i * 70;
-      let type = 'normal';
-      if (i > 4 && Math.random() < 0.15) type = 'boost';
-      if (i > 6 && Math.random() < 0.15) type = 'moving';
-      if (i > 8 && Math.random() < 0.1) type = 'crumble';
       const heightScore = Math.max(0, -py / 10);
+      let type = i < 3 ? 'normal' : this.pickPlatformType(heightScore);
       const platform = this.applyPlatformDifficulty(
         platformPhysics.createPlatformWithSkin(px, py, type),
         heightScore
       );
+      this.decorateGeneratedPlatform(platform, W, heightScore);
       const prevPlatform = platforms.length > 0 ? platforms[platforms.length - 1] : null;
       this.attachRandomCoin(platform, -py);
       platforms.push(this.attachRandomMushroom(platform, -py));
@@ -353,23 +432,15 @@ class LevelGenerator {
       const lastHeightScore = Math.max(0, -lastP.y / 10);
       let ny = lastP.y - this.getPlatformGap(lastHeightScore);
       let nx = Math.random() * (W - 100) + 10;
-      let type = 'normal';
       const h = -ny;
       const heightScore = Math.max(0, h / 10);
-
-      // 平台类型生成概率
-      // normal：普通台子和冰块台子随机出现（表格配置）
-      // boost：弹跳台子（暂时用moving资源）
-      // moving：移动的台子
-      // crumble：岩石台子，踩中消失
-      if (h > 300 && Math.random() < 0.15) type = 'boost';
-      if (h > 200 && Math.random() < 0.15) type = 'moving';
-      if (h > 800 && Math.random() < 0.1) type = 'crumble';
+      const type = this.pickPlatformType(heightScore);
 
       const platform = this.applyPlatformDifficulty(
         platformPhysics.createPlatformWithSkin(nx, ny, type),
         heightScore
       );
+      this.decorateGeneratedPlatform(platform, W, heightScore);
       const prevPlatform = lastP;
       this.attachRandomCoin(platform, h);
       this.platforms.push(this.attachRandomMushroom(platform, h));

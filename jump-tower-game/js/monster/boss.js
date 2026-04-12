@@ -1,10 +1,19 @@
 /**
  * Boss/怪物系统
- * 单次Boss事件：出现、追近、预警、跳扑、退场
+ * 支持跳扑型和上方投掷型Boss
  */
 
 const { getById, find } = require('../tables/tableManager');
 const assetManager = require('../resource/assetManager');
+const gameConstants = require('../game/constants');
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function randomBetween(min, max) {
+  return min + Math.random() * (max - min);
+}
 
 class Boss {
   constructor(game) {
@@ -14,6 +23,7 @@ class Boss {
     this.imageCache = {};
     this.renderSize = 320;
     this.warningRenderSize = 340;
+    this.throwerRenderSize = 168;
     this.warningDuration = 900;
     this.attackRange = 120;
     this.contactRadius = 70;
@@ -46,21 +56,56 @@ class Boss {
     return this.monsters.length > 0 ? this.monsters[0] : null;
   }
 
-  spawn(monsterId) {
-    const config = this.getMonsterConfig(monsterId);
+  resolveBehaviorType(monsterId, behaviorType) {
+    if (behaviorType) return behaviorType;
+    return monsterId === gameConstants.bossConfig.throwerMonsterId ? 'thrower' : 'leaper';
+  }
+
+  buildSpawnDescriptor(spawnArg) {
+    if (typeof spawnArg === 'number') {
+      return {
+        monsterId: spawnArg,
+        behaviorType: this.resolveBehaviorType(spawnArg)
+      };
+    }
+
+    const descriptor = Object.assign({}, spawnArg || {});
+    descriptor.monsterId = descriptor.monsterId || descriptor.id || gameConstants.bossConfig.monsterId;
+    descriptor.behaviorType = this.resolveBehaviorType(descriptor.monsterId, descriptor.behaviorType);
+    return descriptor;
+  }
+
+  spawn(spawnArg) {
+    const descriptor = this.buildSpawnDescriptor(spawnArg);
+    const config = this.getMonsterConfig(descriptor.monsterId);
     if (!config) {
-      console.warn('[Boss] 未找到怪物配置:', monsterId);
+      console.warn('[Boss] 未找到怪物配置:', descriptor.monsterId);
       return null;
     }
 
     this.clear();
 
-    const player = this.game.player;
-    const playerCenterX = player ? player.x + player.w / 2 : this.game.W / 2;
-    const spawnOffsetX = playerCenterX < this.game.W / 2 ? 180 : -180;
-    const spawnX = Math.max(140, Math.min(this.game.W - 140, playerCenterX + spawnOffsetX));
-    const monster = {
-      id: monsterId,
+    const monster = descriptor.behaviorType === 'thrower'
+      ? this.createThrowerMonster(config, descriptor)
+      : this.createLeaperMonster(config, descriptor);
+
+    this._loadFrames(monster);
+    this.monsters.push(monster);
+    console.log('[Boss] 生成怪物:', monster.name, monster.behaviorType);
+    if (this.game.barrage) {
+      this.game.barrage.show(
+        this.game.W / 2 - 70,
+        150,
+        monster.name + '出现了！',
+        monster.behaviorType === 'thrower' ? '#ffb36b' : '#ff0066'
+      );
+    }
+    return monster;
+  }
+
+  createBaseMonster(config, descriptor, spawnX, spawnY) {
+    return {
+      id: descriptor.monsterId,
       name: config.Name,
       hp: config.Hp,
       attack: config.Attack,
@@ -68,12 +113,36 @@ class Boss {
       dropReward: config.DropReward,
       isBoss: config.IsBoss === true || config.IsBoss === 'true',
       chasePath: config.ChasePath,
+      behaviorType: descriptor.behaviorType,
       x: spawnX,
-      y: this.game.cameraY + this.game.H - 80,
+      y: spawnY,
       targetX: 0,
       targetY: 0,
       animFrame: 0,
       animTimer: 0,
+      frames: [],
+      framesLoaded: false,
+      vx: 0,
+      vy: 0,
+      rotation: 0,
+      rotationSpeed: 0,
+      rewardGranted: false
+    };
+  }
+
+  createLeaperMonster(config, descriptor) {
+    const player = this.game.player;
+    const playerCenterX = player ? player.x + player.w / 2 : this.game.W / 2;
+    const spawnOffsetX = playerCenterX < this.game.W / 2 ? 180 : -180;
+    const spawnX = Math.max(140, Math.min(this.game.W - 140, playerCenterX + spawnOffsetX));
+    const monster = this.createBaseMonster(
+      config,
+      descriptor,
+      spawnX,
+      this.game.cameraY + this.game.H - 80
+    );
+
+    return Object.assign(monster, {
       state: 'spawning',
       stateTimer: 0,
       approachDelay: 600,
@@ -88,34 +157,47 @@ class Boss {
       leapStartX: 0,
       leapStartY: 0,
       leapTargetX: 0,
-      leapTargetY: 0,
-      frames: [],
-      framesLoaded: false,
-      vx: 0,
-      vy: 0,
-      rotation: 0,
-      rotationSpeed: 0,
-      rewardGranted: false
-    };
+      leapTargetY: 0
+    });
+  }
 
-    this._loadFrames(monster);
-    this.monsters.push(monster);
-    console.log('[Boss] 生成怪物:', monster.name);
-    if (this.game.barrage) {
-      this.game.barrage.show(
-        this.game.W / 2 - 70,
-        150,
-        monster.name + '出现了！',
-        '#ff0066'
-      );
-    }
-    return monster;
+  createThrowerMonster(config, descriptor) {
+    const throwerConfig = gameConstants.bossConfig.thrower;
+    const player = this.game.player;
+    const padding = Math.max(56, throwerConfig.horizontalPadding || 92);
+    const playerCenterX = player ? player.x + player.w / 2 : this.game.W / 2;
+    const spawnX = clamp(
+      playerCenterX + randomBetween(-120, 120),
+      padding,
+      this.game.W - padding
+    );
+    const now = Date.now();
+    const monster = this.createBaseMonster(
+      config,
+      descriptor,
+      spawnX,
+      this.game.cameraY - 140
+    );
+
+    return Object.assign(monster, {
+      state: 'spawning',
+      stateTimer: 0,
+      hitCooldownUntil: 0,
+      throwCount: 0,
+      maxThrowCount: Math.max(1, Math.round(throwerConfig.maxThrows || 6)),
+      nextThrowAt: now + 850,
+      eventEndsAt: now + Math.max(3000, throwerConfig.eventDurationMs || 12000),
+      targetPatrolX: spawnX,
+      driftDirection: Math.random() < 0.5 ? -1 : 1,
+      hoverPhase: Math.random() * Math.PI * 2,
+      throwPrepared: false,
+      exitAnnounced: false
+    });
   }
 
   _loadFrames(monster) {
     const chasePath = monster.chasePath;
     if (!chasePath) {
-      console.warn('[Boss] 未配置追击动作路径:', monster.name);
       return;
     }
 
@@ -129,25 +211,24 @@ class Boss {
     }
 
     if (framePaths.length === 0) {
-      // fallback: 最多尝试16帧
       for (let i = 0; i < 16; i++) {
         framePaths.push(`${chasePath}/frame_${String(i).padStart(4, '0')}.png`);
       }
     }
 
     monster.frames = framePaths;
-    monster.framesLoaded = true;
+    monster.framesLoaded = framePaths.length > 0;
 
-    for (const path of framePaths) {
-      this._getImage(path);
+    for (let i = 0; i < framePaths.length; i++) {
+      this._getImage(framePaths[i]);
     }
   }
 
   spawnByCondition(condition) {
     const configs = this.getAllBossConfigs();
-    for (const config of configs) {
-      if (config.SpawnCond === condition) {
-        return this.spawn(config.Id);
+    for (let i = 0; i < configs.length; i++) {
+      if (configs[i].SpawnCond === condition) {
+        return this.spawn(configs[i].Id);
       }
     }
     return null;
@@ -163,10 +244,34 @@ class Boss {
   }
 
   _updateMonster(monster, player, dt) {
-    if (this._tryResolveGrowthCollision(monster, player)) {
-      return;
+    if (monster.behaviorType === 'leaper') {
+      if (this._tryResolveChargeDashCollision(monster, player)) {
+        return;
+      }
+
+      if (this._tryResolveGrowthCollision(monster, player)) {
+        return;
+      }
+
+      this._updateLeaperMonster(monster, player, dt);
+    } else {
+      this._updateThrowerMonster(monster, player, dt);
     }
 
+    if (monster.frames.length > 0) {
+      monster.animTimer += dt;
+      if (monster.animTimer > 120) {
+        monster.animFrame = (monster.animFrame + 1) % monster.frames.length;
+        monster.animTimer = 0;
+      }
+    }
+
+    if (this._shouldDespawn(monster)) {
+      this.remove(monster);
+    }
+  }
+
+  _updateLeaperMonster(monster, player, dt) {
     monster.targetX = player.x;
     monster.targetY = player.y;
 
@@ -220,19 +325,173 @@ class Boss {
         monster.rotation += monster.rotationSpeed * (dt / 1000) * 60;
         break;
     }
+  }
 
-    monster.animTimer += dt;
-    if (monster.animTimer > 120) {
-      monster.animFrame = (monster.animFrame + 1) % monster.frames.length;
-      monster.animTimer = 0;
-    }
+  _updateThrowerMonster(monster, player, dt) {
+    const now = Date.now();
+    const config = gameConstants.bossConfig.thrower;
+    const bandY = this.game.cameraY + (config.topOffset || 118);
 
-    if (this._shouldDespawn(monster)) {
-      this.remove(monster);
+    switch (monster.state) {
+      case 'spawning':
+        this._moveTowards(monster, monster.targetPatrolX, bandY, Math.max(monster.speed * 1.8, config.repositionSpeed || 6.4), dt);
+        if (Math.abs(monster.y - bandY) < 10) {
+          monster.state = 'patrolling';
+          monster.nextThrowAt = now + 900;
+        }
+        break;
+
+      case 'patrolling':
+        if (now >= monster.eventEndsAt || monster.throwCount >= monster.maxThrowCount) {
+          this._enterThrowerExit(monster);
+          break;
+        }
+        if (!monster.targetPatrolX || Math.abs(monster.x - monster.targetPatrolX) < 18) {
+          monster.targetPatrolX = this._resolveThrowerPatrolX(player, false);
+        }
+        this._moveTowards(monster, monster.targetPatrolX, bandY, Math.max(monster.speed, config.patrolSpeed || 4.8), dt);
+        if (now >= monster.nextThrowAt) {
+          monster.state = 'throwing';
+          monster.stateTimer = Math.max(120, config.throwPauseMs || 260);
+          monster.throwPrepared = false;
+          if (this.game.barrage) {
+            this.game.barrage.show(monster.x - 44, bandY - this.game.cameraY + 36, '小心空投！', '#ffb36b');
+          }
+        }
+        break;
+
+      case 'throwing':
+        monster.stateTimer -= dt;
+        this._moveTowards(monster, monster.x, bandY, Math.max(monster.speed * 0.75, (config.patrolSpeed || 4.8) * 0.7), dt);
+        if (!monster.throwPrepared && monster.stateTimer <= Math.max(50, (config.throwPauseMs || 260) * 0.45)) {
+          monster.throwPrepared = true;
+          this._throwProjectiles(monster, now);
+        }
+        if (monster.stateTimer <= 0) {
+          if (now >= monster.eventEndsAt || monster.throwCount >= monster.maxThrowCount) {
+            this._enterThrowerExit(monster);
+          } else {
+            monster.state = 'reposition';
+            monster.stateTimer = 700;
+            monster.targetPatrolX = this._resolveThrowerPatrolX(player, true);
+          }
+        }
+        break;
+
+      case 'reposition':
+        monster.stateTimer -= dt;
+        if (now >= monster.eventEndsAt || monster.throwCount >= monster.maxThrowCount) {
+          this._enterThrowerExit(monster);
+          break;
+        }
+        this._moveTowards(monster, monster.targetPatrolX, bandY, Math.max(monster.speed * 1.4, config.repositionSpeed || 6.4), dt);
+        if (Math.abs(monster.x - monster.targetPatrolX) < 20 || monster.stateTimer <= 0) {
+          monster.state = 'patrolling';
+          monster.nextThrowAt = now + this._getThrowInterval();
+        }
+        break;
+
+      case 'exit':
+        monster.y -= Math.max(monster.speed * 2.1, config.repositionSpeed || 6.4) * (dt / 1000) * 60;
+        monster.x += monster.driftDirection * Math.max(monster.speed * 0.7, (config.patrolSpeed || 4.8) * 0.55) * (dt / 1000) * 60;
+        break;
     }
   }
 
+  _resolveThrowerPatrolX(player, biasToPlayer) {
+    const config = gameConstants.bossConfig.thrower;
+    const padding = Math.max(56, config.horizontalPadding || 92);
+    const minX = padding;
+    const maxX = this.game.W - padding;
+    const playerCenterX = player ? player.x + player.w / 2 : this.game.W / 2;
+    const focusRange = biasToPlayer ? 90 : 160;
+    const biasedTarget = clamp(playerCenterX + randomBetween(-focusRange, focusRange), minX, maxX);
+
+    if (biasToPlayer || Math.random() < 0.58) {
+      return biasedTarget;
+    }
+
+    return randomBetween(minX, maxX);
+  }
+
+  _getThrowInterval() {
+    const config = gameConstants.bossConfig.thrower;
+    const minInterval = Math.max(300, config.throwIntervalMin || 1350);
+    const maxInterval = Math.max(minInterval, config.throwIntervalMax || minInterval);
+    return randomBetween(minInterval, maxInterval);
+  }
+
+  _throwProjectiles(monster, now) {
+    if (!this.game.runDirector || typeof this.game.runDirector.spawnBossProjectilePickup !== 'function') {
+      return;
+    }
+
+    const config = gameConstants.bossConfig.thrower;
+    const multiThrow = Math.random() < (config.multiThrowChance || 0);
+    const count = multiThrow ? Math.max(2, Math.round(config.multiThrowCount || 2)) : 1;
+    const centerIndex = (count - 1) / 2;
+
+    for (let i = 0; i < count; i++) {
+      const offsetX = (i - centerIndex) * 26;
+      this.game.runDirector.spawnBossProjectilePickup(monster.x + offsetX, monster.y + 36, {
+        now: now,
+        driftDirection: offsetX === 0 ? monster.driftDirection : (offsetX < 0 ? -1 : 1),
+        driftScale: 0.75 + Math.abs(i - centerIndex) * 0.18
+      });
+    }
+
+    monster.throwCount += 1;
+    monster.nextThrowAt = now + this._getThrowInterval();
+  }
+
+  _enterThrowerExit(monster) {
+    if (monster.state === 'exit') return;
+    monster.state = 'exit';
+    if (!monster.exitAnnounced && this.game.barrage) {
+      this.game.barrage.show(monster.x - 56, monster.y - this.game.cameraY - 70, '上方空投结束', '#74b9ff');
+    }
+    monster.exitAnnounced = true;
+  }
+
+  _tryResolveChargeDashCollision(monster, player) {
+    if (monster.behaviorType !== 'leaper') return false;
+    if (!this.game.chargeDashing || !player) return false;
+    if (monster.state !== 'warning' && monster.state !== 'leaping' && monster.state !== 'approaching') {
+      return false;
+    }
+
+    const playerCenterX = player.x + player.w / 2;
+    const playerCenterY = player.y + player.h / 2;
+    const interruptRadius = Math.max(40, gameConstants.runEventConfig.bossChargeDash.interruptRadius || 125);
+    if (this._distance(playerCenterX, playerCenterY, monster.x, monster.y) > interruptRadius) {
+      return false;
+    }
+
+    monster.state = 'launched';
+    monster.attackResolved = true;
+    monster.hitCooldownUntil = Date.now() + 1200;
+    monster.vx = monster.x < playerCenterX ? -13 : 13;
+    monster.vy = -14;
+    monster.rotation = 0;
+    monster.rotationSpeed = monster.vx < 0 ? -0.16 : 0.16;
+
+    if (typeof this.game.onBossInterrupted === 'function') {
+      this.game.onBossInterrupted(monster);
+    }
+    if (typeof this.game.onBossDefeated === 'function') {
+      this.game.onBossDefeated(monster, { viaChargeDash: true });
+    }
+
+    this.game.shakeTimer = Math.max(this.game.shakeTimer, 14);
+    this.game.spawnParticles(playerCenterX, playerCenterY, '#ff9f1a', 22);
+    if (this.game.barrage) {
+      this.game.barrage.show(player.x - 40, player.y - this.game.cameraY - 90, '蓄力冲刺打断Boss！', '#ff9f1a');
+    }
+    return true;
+  }
+
   _tryResolveGrowthCollision(monster, player) {
+    if (monster.behaviorType !== 'leaper') return false;
     if (!this.game.growthActive) return false;
 
     const playerCenterX = player.x + player.w / 2;
@@ -335,7 +594,6 @@ class Boss {
       this.game.barrage.show(player.x - 40, player.y - this.game.cameraY - 80, hitText, '#ff0066');
     }
 
-    // Boss击飞时偷取玩家100金币（从当前对局金币扣除）
     const stolenCoins = Math.min(100, this.game.sessionPickupCoins || 0);
     if (stolenCoins > 0) {
       this.game.sessionPickupCoins -= stolenCoins;
@@ -346,17 +604,20 @@ class Boss {
   }
 
   render(ctx) {
-    for (const monster of this.monsters) {
-      this._renderMonster(ctx, monster);
+    for (let i = 0; i < this.monsters.length; i++) {
+      this._renderMonster(ctx, this.monsters[i]);
     }
   }
 
   _renderMonster(ctx, monster) {
+    if (monster.behaviorType === 'thrower') {
+      this._renderThrowerMonster(ctx, monster);
+      return;
+    }
+
     const drawX = monster.x;
     const drawY = monster.y - this.game.cameraY;
     const size = monster.state === 'warning' ? this.warningRenderSize : this.renderSize;
-
-    if (!monster.framesLoaded) return;
 
     if (monster.state === 'warning') {
       ctx.save();
@@ -368,19 +629,21 @@ class Boss {
       ctx.restore();
     }
 
-    const framePath = monster.frames[monster.animFrame];
-    const img = this._getImage(framePath);
-    if (img && img.width > 0) {
-      if (monster.state === 'launched') {
-        ctx.save();
-        ctx.translate(drawX, drawY);
-        ctx.rotate(monster.rotation || 0);
-        ctx.drawImage(img, -size / 2, -size / 2, size, size);
-        ctx.restore();
-      } else {
-        ctx.drawImage(img, drawX - size / 2, drawY - size / 2, size, size);
+    if (monster.framesLoaded && monster.frames.length > 0) {
+      const framePath = monster.frames[monster.animFrame % monster.frames.length];
+      const img = this._getImage(framePath);
+      if (img && img.width > 0) {
+        if (monster.state === 'launched') {
+          ctx.save();
+          ctx.translate(drawX, drawY);
+          ctx.rotate(monster.rotation || 0);
+          ctx.drawImage(img, -size / 2, -size / 2, size, size);
+          ctx.restore();
+        } else {
+          ctx.drawImage(img, drawX - size / 2, drawY - size / 2, size, size);
+        }
+        return;
       }
-      return;
     }
 
     ctx.fillStyle = monster.isBoss ? '#ff0066' : '#ff6600';
@@ -393,6 +656,68 @@ class Boss {
       return;
     }
     ctx.fillRect(drawX - 32, drawY - 32, 64, 64);
+  }
+
+  _renderThrowerMonster(ctx, monster) {
+    const drawX = monster.x;
+    const drawY = monster.y - this.game.cameraY + Math.sin(Date.now() * 0.004 + monster.hoverPhase) * 3;
+    const bodyW = this.throwerRenderSize * 0.7;
+    const bodyH = this.throwerRenderSize * 0.22;
+    const canopyW = bodyW * 0.42;
+    const canopyH = bodyH * 0.72;
+
+    ctx.save();
+
+    if (monster.state === 'throwing') {
+      ctx.strokeStyle = 'rgba(255, 179, 107, 0.42)';
+      ctx.lineWidth = 2;
+      if (ctx.setLineDash) {
+        ctx.setLineDash([8, 6]);
+      }
+      ctx.beginPath();
+      ctx.moveTo(drawX, drawY + 10);
+      ctx.lineTo(drawX, drawY + 170);
+      ctx.stroke();
+      if (ctx.setLineDash) {
+        ctx.setLineDash([]);
+      }
+    }
+
+    ctx.shadowColor = 'rgba(255, 120, 64, 0.45)';
+    ctx.shadowBlur = monster.state === 'throwing' ? 18 : 12;
+
+    const hull = ctx.createLinearGradient(drawX - bodyW / 2, drawY, drawX + bodyW / 2, drawY);
+    hull.addColorStop(0, '#ff6b57');
+    hull.addColorStop(0.55, '#ff9f43');
+    hull.addColorStop(1, '#ffd166');
+    ctx.fillStyle = hull;
+    ctx.beginPath();
+    ctx.ellipse(drawX, drawY + 4, bodyW / 2, bodyH / 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = 'rgba(255, 232, 196, 0.82)';
+    ctx.beginPath();
+    ctx.ellipse(drawX, drawY - 8, canopyW / 2, canopyH / 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#5ad1ff';
+    ctx.beginPath();
+    ctx.arc(drawX, drawY + 4, 8, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#fff4d6';
+    ctx.beginPath();
+    ctx.arc(drawX - bodyW * 0.25, drawY + 5, 4.5, 0, Math.PI * 2);
+    ctx.arc(drawX + bodyW * 0.25, drawY + 5, 4.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffb36b';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('DROP', drawX, drawY + 38);
+
+    ctx.restore();
   }
 
   _getImage(path) {
@@ -418,8 +743,9 @@ class Boss {
   }
 
   checkCollision(player) {
-    for (const monster of this.monsters) {
-      if (monster.state !== 'leaping') continue;
+    for (let i = 0; i < this.monsters.length; i++) {
+      const monster = this.monsters[i];
+      if (monster.behaviorType !== 'leaper' || monster.state !== 'leaping') continue;
       if (this._distance(player.x, player.y, monster.x, monster.y) < this.contactRadius) {
         return monster;
       }

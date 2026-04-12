@@ -1,0 +1,17 @@
+# Runtime uses cloud assets on device builds, so exclude local asset sources from upload.
+images/
+audio/
+
+# Non-runtime project content
+cloudfunctions/
+scripts/
+docs/
+.codex/
+
+# Local/dev metadata
+.git/
+.gitignore
+.DS_Store
+project.private.config.json
+README.md
+JS_COMPATIBILITY.md

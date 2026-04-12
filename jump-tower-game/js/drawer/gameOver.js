@@ -135,6 +135,9 @@ function getRewardItems(reward) {
   if (reward.bossCoins > 0) {
     items.push({ label: 'Boss', value: reward.bossCoins });
   }
+  if (reward.eventCoins > 0) {
+    items.push({ label: '事件', value: reward.eventCoins });
+  }
 
   if (reward.modeMultiplier && reward.modeMultiplier > 1) {
     items.push({ label: '倍率', value: 'x' + reward.modeMultiplier.toFixed(1) });

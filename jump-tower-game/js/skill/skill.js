@@ -370,6 +370,10 @@ class SkillSystem {
       player.state = 'rise';
     }
 
+    if (typeof this.game.onChargeDashTriggered === 'function') {
+      this.game.onChargeDashTriggered();
+    }
+
     // 重置蓄力
     this.game.chargeCount = 0;
     this.game.chargeFull = false;
@@ -383,7 +387,10 @@ class SkillSystem {
     if (normalizedBaseForce === 0) return normalizedBaseForce;
 
     const gravity = Math.max(0.0001, this.game.GRAVITY || 0.45);
-    const chargeSegments = Math.max(0, this.game.chargeCount || 0);
+    const chargeSegments = Math.max(
+      0,
+      (this.game.chargeCount || 0) + (this.game.getRunEffectValue ? this.game.getRunEffectValue('chargeDashSegmentBonus') : 0)
+    );
     const currentHeight = Math.max(0, this.game.score || 0);
     const growthRatio = Math.max(
       0,

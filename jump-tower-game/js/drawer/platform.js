@@ -65,6 +65,8 @@ function drawPlatforms(ctx, platforms, cameraY) {
     ctx.shadowBlur = 0;
     ctx.globalAlpha = 1;
 
+    drawPlatformDecorators(ctx, p, px, sy);
+
     if (p.falling && p.va) {
       ctx.restore();
     }
@@ -72,6 +74,50 @@ function drawPlatforms(ctx, platforms, cameraY) {
     if (p.mushroom && !p.mushroom.collected && !p.dead) {
       drawMushroom(ctx, p, px, sy);
     }
+  }
+}
+
+function drawPlatformDecorators(ctx, platform, px, sy) {
+  if (platform.themeColor) {
+    ctx.fillStyle = withAlpha(platform.themeColor, 0.18);
+    ctx.fillRect(px, sy + platform.h - 4, platform.w, 4);
+  }
+
+  if (platform.specialType === 'charge') {
+    ctx.save();
+    ctx.shadowColor = '#55efc4';
+    ctx.shadowBlur = 12;
+    ctx.fillStyle = '#55efc4';
+    ctx.beginPath();
+    ctx.arc(px + platform.w / 2, sy + platform.h * 0.38, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    return;
+  }
+
+  if (platform.specialType === 'resonance') {
+    const color = platform.resonanceColor || '#ffd166';
+    ctx.save();
+    ctx.fillStyle = color;
+    for (let i = 0; i < 3; i++) {
+      ctx.beginPath();
+      ctx.arc(px + platform.w / 2 - 14 + i * 14, sy + 7, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+    return;
+  }
+
+  if (platform.specialType === 'risk') {
+    ctx.save();
+    ctx.fillStyle = '#ff7675';
+    ctx.beginPath();
+    ctx.moveTo(px + 10, sy + 4);
+    ctx.lineTo(px + 18, sy + 16);
+    ctx.lineTo(px + 2, sy + 16);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
   }
 }
 
@@ -156,6 +202,17 @@ function drawWithGradient(ctx, p, px, sy) {
     ctx.shadowBlur = 8;
     roundRect(ctx, px, sy, p.w, p.h, 4);
   }
+}
+
+function withAlpha(hexColor, alpha) {
+  const normalized = (hexColor || '').replace('#', '');
+  if (normalized.length !== 6) {
+    return `rgba(255,255,255,${alpha})`;
+  }
+  const r = parseInt(normalized.slice(0, 2), 16);
+  const g = parseInt(normalized.slice(2, 4), 16);
+  const b = parseInt(normalized.slice(4, 6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
 }
 
 module.exports = {

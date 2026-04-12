@@ -14,6 +14,7 @@ class Controls {
     this.lastTapTime = 0;
     this.isSlidingDown = false;
     this.lastSlideTime = 0;
+    this.skipTouchEndSkill = false;
 
     this.initInput();
   }
@@ -29,6 +30,12 @@ class Controls {
         _this.touchStartY = touches[0].clientY;
         var touchX = touches[0].clientX;
         var touchY = touches[0].clientY;
+
+        if (_this.game.state === 'playing' && _this.game.runDirector && _this.game.runDirector.isBuffOfferOpen()) {
+          _this.skipTouchEndSkill = true;
+          _this.game.handleRunOfferTouch(touchX, touchY);
+          return;
+        }
 
         // 蓄力冲刺期间只记录触摸位置，不处理其他逻辑
         if (_this.game.chargeDashing) return;
@@ -70,7 +77,13 @@ class Controls {
     // 触摸移动
     wx.onTouchMove(function(e) {
       var touches = e.touches;
-      if (touches && touches.length > 0 && _this.touchStartX !== null) {
+        if (touches && touches.length > 0 && _this.touchStartX !== null) {
+        if (_this.game.state === 'playing' && _this.game.runDirector && _this.game.runDirector.isBuffOfferOpen()) {
+          _this.keys['ArrowLeft'] = false;
+          _this.keys['ArrowRight'] = false;
+          return;
+        }
+
         if (_this.game.isControlLocked()) {
           _this.keys['ArrowLeft'] = false;
           _this.keys['ArrowRight'] = false;
@@ -161,6 +174,18 @@ class Controls {
 
     // 触摸结束
     wx.onTouchEnd(function(e) {
+      if (_this.game.state === 'playing' && _this.game.runDirector && _this.game.runDirector.isBuffOfferOpen()) {
+        _this.keys['ArrowLeft'] = false;
+        _this.keys['ArrowRight'] = false;
+        _this.touchStartX = null;
+        _this.touchStartY = null;
+        _this.lastDeltaX = 0;
+        _this.lastDeltaY = 0;
+        _this.isSlidingDown = false;
+        _this.skipTouchEndSkill = false;
+        return;
+      }
+
       // 角色面板：如果没有拖动，视为点击
       if (_this.game.panelManager.isOpen('showCharacterPanel') && !_this.game.isDraggingCharacterList) {
         // 使用touchStart坐标处理点击
@@ -176,7 +201,7 @@ class Controls {
       // 处理手势结束时的技能触发（蓄力冲刺期间不处理滑动）
       if (_this.touchStartX !== null && _this.touchStartY !== null && _this.game.state === 'playing' && !_this.game.chargeDashing) {
         // 计算最终滑动方向并触发技能
-        if (!_this.isSlidingDown && !_this.game.isControlLocked()) {
+        if (!_this.skipTouchEndSkill && !_this.isSlidingDown && !_this.game.isControlLocked()) {
           _this.game.skillSystem.onGesture(_this.lastDeltaX, _this.lastDeltaY);
         }
       }
@@ -187,6 +212,7 @@ class Controls {
       _this.lastDeltaX = 0;
       _this.lastDeltaY = 0;
       _this.isSlidingDown = false;
+      _this.skipTouchEndSkill = false;
     });
   }
 

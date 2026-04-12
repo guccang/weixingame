@@ -60,7 +60,7 @@ function createPlatform(x, y, type, skinConfig) {
 function getMovingPlatformX(platform, time) {
   if (platform.type === 'moving' && !platform.falling && platform.moveRange > 0) {
     // 使用表格配置的移动速度和范围
-    const speed = platform.moveSpeed || 3.0;
+    const speed = (platform.moveSpeed || 3.0) * (platform.runtimeMoveSpeedScale || 1);
     const range = platform.moveRange || 60;
     return platform.x + Math.sin(time * 0.001 * speed + platform.y) * range;
   }
