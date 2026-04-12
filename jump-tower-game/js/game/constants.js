@@ -44,9 +44,55 @@ function getMilestones() {
   }));
 }
 
+function getDifficultyConfig() {
+  return {
+    scoreRampStart: getConfigValue('DIFFICULTY_SCORE_RAMP_START', 0),
+    scoreRampEnd: getConfigValue('DIFFICULTY_SCORE_RAMP_END', 5000),
+    stageHeight: getConfigValue('DIFFICULTY_STAGE_HEIGHT', 200),
+    platformGapMin: {
+      base: getConfigValue('DIFFICULTY_PLATFORM_GAP_MIN_BASE', 80),
+      maxMultiplier: getConfigValue('DIFFICULTY_PLATFORM_GAP_MIN_MAX_MULTIPLIER', 2.5)
+    },
+    platformGapMax: {
+      base: getConfigValue('DIFFICULTY_PLATFORM_GAP_MAX_BASE', 140),
+      maxMultiplier: getConfigValue('DIFFICULTY_PLATFORM_GAP_MAX_MAX_MULTIPLIER', 2.5)
+    },
+    playerSpeedMultiplier: {
+      base: getConfigValue('DIFFICULTY_PLAYER_SPEED_MULTIPLIER_BASE', 1),
+      max: getConfigValue('DIFFICULTY_PLAYER_SPEED_MULTIPLIER_MAX', 1.35)
+    },
+    maxFallSpeedMultiplier: {
+      base: getConfigValue('DIFFICULTY_MAX_FALL_SPEED_MULTIPLIER_BASE', 1),
+      max: getConfigValue('DIFFICULTY_MAX_FALL_SPEED_MULTIPLIER_MAX', 1.6)
+    },
+    movingPlatformSpeedMultiplier: {
+      base: getConfigValue('DIFFICULTY_MOVING_PLATFORM_SPEED_MULTIPLIER_BASE', 1),
+      max: getConfigValue('DIFFICULTY_MOVING_PLATFORM_SPEED_MULTIPLIER_MAX', 2.2)
+    }
+  };
+}
+
+function getBossConfig() {
+  return {
+    monsterId: getConfigValue('BOSS_MONSTER_ID', 2),
+    warningLeadHeight: getConfigValue('BOSS_WARNING_LEAD_HEIGHT', 50),
+    spawnHeights: [
+      getConfigValue('BOSS_SPAWN_HEIGHT_1', 500),
+      getConfigValue('BOSS_SPAWN_HEIGHT_2', 1000),
+      getConfigValue('BOSS_SPAWN_HEIGHT_3', 2000)
+    ].filter(function(height) {
+      return typeof height === 'number' && height > 0;
+    }).sort(function(a, b) {
+      return a - b;
+    }),
+    repeatInterval: getConfigValue('BOSS_SPAWN_REPEAT_INTERVAL', 2000)
+  };
+}
+
 module.exports = {
   GAME_MODES,
   TIME_ATTACK_OPTIONS,
+  getConfigValue,
 
   // 物理常量（从表格读取，带默认值）
   get GRAVITY() { return getConfigValue('GRAVITY', 0.45); },
@@ -99,7 +145,15 @@ module.exports = {
 
   // 蓄力最大值
   get CHARGE_MAX() { return getConfigValue('CHARGE_MAX', 6); },
+  get CHARGE_DASH_DISTANCE_PER_SEGMENT() { return getConfigValue('CHARGE_DASH_DISTANCE_PER_SEGMENT', 50); },
+  get CHARGE_DASH_HEIGHT_RATIO_MAX() { return getConfigValue('CHARGE_DASH_HEIGHT_RATIO_MAX', 0.5); },
 
   // UI顶部安全区
   get UI_SAFE_TOP() { return getConfigValue('UI_SAFE_TOP', 60); },
+
+  // 动态难度配置
+  get difficultyConfig() { return getDifficultyConfig(); },
+
+  // Boss出现配置
+  get bossConfig() { return getBossConfig(); },
 };

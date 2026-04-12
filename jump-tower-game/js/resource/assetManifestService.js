@@ -3,6 +3,7 @@
  */
 
 const { localManifest } = require('./assetCatalog');
+const TEMP_FILE_URL_BATCH_SIZE = 50;
 
 function mergeManifest(baseManifest, overrideManifest) {
   const merged = {
@@ -102,6 +103,20 @@ function getTempUrls(fileIdList) {
   });
 }
 
+async function getTempUrlsInBatches(fileIdList) {
+  const results = [];
+
+  for (let i = 0; i < fileIdList.length; i += TEMP_FILE_URL_BATCH_SIZE) {
+    const batch = fileIdList.slice(i, i + TEMP_FILE_URL_BATCH_SIZE);
+    const batchResults = await getTempUrls(batch);
+    for (let j = 0; j < batchResults.length; j++) {
+      results.push(batchResults[j]);
+    }
+  }
+
+  return results;
+}
+
 class AssetManifestService {
   constructor(config) {
     this.config = config;
@@ -179,7 +194,7 @@ class AssetManifestService {
       return;
     }
 
-    const urlList = await getTempUrls(pendingFileIds);
+    const urlList = await getTempUrlsInBatches(pendingFileIds);
     for (let i = 0; i < urlList.length; i++) {
       const item = urlList[i];
       if (!item || !item.fileID || !pendingMap[item.fileID]) continue;

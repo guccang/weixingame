@@ -324,7 +324,12 @@ class LayoutEngine {
    * @returns {Object|null} bounds对象
    */
   getBounds(resolvedLayout, elementId) {
-    return resolvedLayout.elements[elementId]?.bounds || null;
+    if (!resolvedLayout || !resolvedLayout.elements) {
+      return null;
+    }
+
+    const element = resolvedLayout.elements[elementId];
+    return element ? element.bounds : null;
   }
 
   /**

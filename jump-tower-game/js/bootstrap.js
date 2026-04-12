@@ -50,7 +50,7 @@ function renderFatalError(title, message) {
   ctx.fillStyle = '#9db0c7';
   ctx.font = '16px sans-serif';
   ctx.fillText(message, width / 2, height / 2 + 20);
-  ctx.fillText('正式版走云资源，调试版走本地资源', width / 2, height / 2 + 48);
+  ctx.fillText('当前默认走云资源，请确认云函数与资源清单可用', width / 2, height / 2 + 48);
 }
 
 bootstrap();

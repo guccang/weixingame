@@ -50,6 +50,8 @@ const player = require('./player/player');
 
 // 游戏模式系统
 const { GameMode } = require('./game/index');
+const DifficultyManager = require('./game/difficultyManager');
+const gameConstants = require('./game/constants');
 
 // 绘制系统
 const drawer = require('./drawer/drawer');
@@ -89,6 +91,7 @@ class Game {
     this.JUMP_FORCE = physics.constants.JUMP_FORCE;
     this.BOOST_JUMP_FORCE = physics.constants.BOOST_JUMP_FORCE;
     this.DOUBLE_JUMP_FORCE = physics.constants.DOUBLE_JUMP_FORCE;
+    this.MAX_FALL_SPEED = physics.constants.MAX_FALL_SPEED;
     this.SLIDE_FALL_FORCE = physics.constants.SLIDE_FALL_FORCE;
 
     this.score = 0;
@@ -112,11 +115,14 @@ class Game {
     this.growthActive = false;
     this.growthScale = 1.55;
     this.growthLaunchScale = 1;
+    this.chargeDashGrowthRatio = 0;
     this.baseStats = {
+      GRAVITY: physics.constants.GRAVITY,
       PLAYER_SPEED: physics.constants.PLAYER_SPEED,
       JUMP_FORCE: physics.constants.JUMP_FORCE,
       BOOST_JUMP_FORCE: physics.constants.BOOST_JUMP_FORCE,
       DOUBLE_JUMP_FORCE: physics.constants.DOUBLE_JUMP_FORCE,
+      MAX_FALL_SPEED: physics.constants.MAX_FALL_SPEED,
       CHARGE_MAX: 6,
       growthScale: 1.55
     };
@@ -165,6 +171,7 @@ class Game {
     this.mainUI = new MainUI(this); // 主界面UI
     this.audio = new Audio(); // 音效管理
     this.levelGenerator = new LevelGenerator(); // 关卡生成器
+    this.difficultyManager = new DifficultyManager(); // 动态难度管理
     this.gameMode = new GameMode(); // 游戏模式管理
     this.panelManager = new UIPanelManager(this); // UI面板管理器
     this.scrollHandler = new ScrollHandler(this); // 滚动处理器
@@ -178,7 +185,9 @@ class Game {
     this.layoutLoader.loadLayoutFile('startScreen', 'startScreen.json');
     this.layout = null; // 当前解析的布局缓存
 
+    this.levelGenerator.setDifficultyManager(this.difficultyManager);
     progressionSystem.applyUpgradesToGame(this, this.progression);
+    this.syncDifficulty(true);
     this.syncCharacterSelection();
     this.initStars();
     this.initWxLogin(); // 微信登录获取用户信息
@@ -218,6 +227,7 @@ class Game {
 
   initGame() {
     progressionSystem.applyUpgradesToGame(this, this.progression);
+    this.syncDifficulty(true);
     this.syncCharacterSelection();
     this.player = player.createPlayer(this.W, this.H);
     this.player.character = progressionSystem.getSelectedCharacterId(this.progression);
@@ -276,7 +286,7 @@ class Game {
   }
 
   isImpactDashing() {
-    return this.chargeDashing || Date.now() < this.bossKnockbackUntil;
+    return Date.now() < this.bossKnockbackUntil;
   }
 
   updatePendingBossLaunch() {
@@ -294,7 +304,27 @@ class Game {
 
   refreshProgressionEffects() {
     progressionSystem.applyUpgradesToGame(this, this.progression);
+    this.syncDifficulty(this.state !== 'playing');
     this.syncCharacterSelection();
+  }
+
+  syncDifficulty(resetToStart) {
+    if (!this.difficultyManager) return null;
+
+    this.difficultyManager.syncBasePhysics(this);
+    if (resetToStart) {
+      this.difficultyManager.reset();
+    } else {
+      this.difficultyManager.update(this.score);
+    }
+
+    return this.difficultyManager.applyToGame(this);
+  }
+
+  updateDifficulty() {
+    if (!this.difficultyManager) return null;
+    this.difficultyManager.update(this.score);
+    return this.difficultyManager.applyToGame(this);
   }
 
   syncCharacterSelection() {
@@ -481,14 +511,23 @@ class Game {
   }
 
   rollBossSpawnHeight() {
-    return 500;
+    const bossConfig = gameConstants.bossConfig;
+    return bossConfig.spawnHeights.length > 0 ? bossConfig.spawnHeights[0] : 500;
   }
 
   getNextBossSpawnHeight(currentHeight) {
-    if (currentHeight < 500) return 500;
-    if (currentHeight < 1000) return 1000;
-    if (currentHeight < 2000) return 2000;
-    return currentHeight + 2000;
+    const bossConfig = gameConstants.bossConfig;
+    const spawnHeights = bossConfig.spawnHeights;
+
+    for (let i = 0; i < spawnHeights.length; i++) {
+      if (currentHeight < spawnHeights[i]) {
+        return spawnHeights[i];
+      }
+    }
+
+    const fallbackBase = spawnHeights.length > 0 ? spawnHeights[spawnHeights.length - 1] : 2000;
+    const repeatInterval = Math.max(1, bossConfig.repeatInterval || 2000);
+    return Math.max(fallbackBase, currentHeight) + repeatInterval;
   }
 
   // 更新玩家动画状态
@@ -633,6 +672,7 @@ class Game {
     player.updateCamera(this.player, this);
 
     player.updateScore(this.player, this);
+    this.updateDifficulty();
 
     this.generatePlatforms();
     this.updateSceneCoins(now);
@@ -648,13 +688,15 @@ class Game {
     // 更新Boss系统
     this.bossSystem.update(16.67);
 
-    if (!this.bossSpawnHintShown && this.score >= Math.max(0, this.bossSpawnHeight - 50)) {
+    const bossConfig = gameConstants.bossConfig;
+
+    if (!this.bossSpawnHintShown && this.score >= Math.max(0, this.bossSpawnHeight - bossConfig.warningLeadHeight)) {
       this.bossSpawnHintShown = true;
       this.barrage.show(this.W / 2 - 90, 120, '前方检测到Boss动静！', '#ff6b6b');
     }
 
     if (this.score >= this.bossSpawnHeight && !this.bossSystem.hasActiveBoss()) {
-      this.bossSystem.spawn(2);
+      this.bossSystem.spawn(bossConfig.monsterId);
       this.bossSpawnHeight = this.getNextBossSpawnHeight(this.bossSpawnHeight);
       this.bossSpawnHintShown = false;
     }

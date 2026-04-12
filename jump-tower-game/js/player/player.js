@@ -84,7 +84,7 @@ function isFalling(player) {
  * @param {number} now - 当前时间戳
  */
 function handlePlatformCollisions(player, platforms, game, now) {
-  // 蓄力冲刺中：直接撞飞碰到的平台
+  // 只有Boss撞飞玩家时，才会把碰到的平台撞飞
   if (game.isImpactDashing && game.isImpactDashing()) {
     for (let p of platforms) {
       if (!p.dead && platformPhysics.checkCollision(player, p, now, true)) {
@@ -94,7 +94,7 @@ function handlePlatformCollisions(player, platforms, game, now) {
         p.falling = true;
       }
     }
-    return; // 冲刺期间不处理普通跳跃
+    return; // Boss击飞期间不处理普通跳跃
   }
 
   if (!isFalling(player)) return;

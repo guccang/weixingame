@@ -72,7 +72,7 @@ class TableManager {
       // 解析数据行（从第4行开始）
       const rows = [];
       for (let i = 3; i < lines.length; i++) {
-        const values = lines[i].split("\t");
+        const values = this._splitRowValues(lines[i], fields, types, tableName);
         const obj = {};
 
         for (let j = 0; j < fields.length; j++) {
@@ -92,6 +92,40 @@ class TableManager {
       this.tables[tableName] = [];
       this.maps[tableName] = {};
     }
+  }
+
+  _splitRowValues(line, fields, types, tableName) {
+    const tabValues = line.split("\t");
+    if (tabValues.length >= fields.length) {
+      return this._normalizeValuesLength(tabValues, fields.length);
+    }
+
+    if (tableName === 'GameConfig' || tableName === 'EconomyConfig') {
+      const whitespaceValues = line.trim().split(/\s+/);
+      if (whitespaceValues.length >= fields.length) {
+        return this._normalizeValuesLength(whitespaceValues, fields.length);
+      }
+    }
+
+    return tabValues;
+  }
+
+  _normalizeValuesLength(values, fieldLength) {
+    if (values.length === fieldLength) {
+      return values;
+    }
+
+    if (values.length < fieldLength) {
+      const padded = values.slice();
+      while (padded.length < fieldLength) {
+        padded.push("");
+      }
+      return padded;
+    }
+
+    const normalized = values.slice(0, fieldLength - 1);
+    normalized.push(values.slice(fieldLength - 1).join(" "));
+    return normalized;
   }
 
   _getRowClass(tableName) {

@@ -17,10 +17,6 @@ function getEnvVersion() {
   return '';
 }
 
-function isDebugLikeEnv(envVersion) {
-  return envVersion === 'develop';
-}
-
 function normalizeMode(mode) {
   if (mode === 'cloud' || mode === 'local' || mode === 'auto') {
     return mode;
@@ -33,15 +29,10 @@ function resolveMode() {
   const storageMode = typeof wx !== 'undefined' && typeof wx.getStorageSync === 'function'
     ? wx.getStorageSync('asset_source_mode')
     : '';
-  const mode = normalizeMode(globalMode || storageMode || 'auto');
+  const mode = normalizeMode(globalMode || storageMode || '');
 
   if (mode !== 'auto') {
     return mode;
-  }
-
-  const envVersion = getEnvVersion();
-  if (isDebugLikeEnv(envVersion)) {
-    return 'local';
   }
 
   return 'cloud';
@@ -56,7 +47,7 @@ function getConfig() {
     manifestFunctionName: DEFAULT_MANIFEST_FUNCTION,
     mode: mode,
     envVersion: envVersion,
-    allowCloudFallbackToLocal: isDebugLikeEnv(envVersion) || mode === 'local'
+    allowCloudFallbackToLocal: mode === 'local'
   };
 }
 

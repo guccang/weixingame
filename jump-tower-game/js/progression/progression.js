@@ -1383,6 +1383,7 @@ function applyUpgradesToGame(game, progress) {
   game.chargeMax = game.baseStats.CHARGE_MAX + bonuses.chargeMax + (character.bonuses.chargeMax || 0);
   game.growthScale = game.baseStats.growthScale + bonuses.growthScale;
   game.growthLaunchScale = bonuses.growthLaunchScale;
+  game.chargeDashGrowthRatio = bonuses.chargeDashGrowthRatio;
   game.playerCoinPickupBonus = bonuses.playerCoinPickup + (character.bonuses.playerCoinPickup || 0);
   game.petCoinPickupBonus = bonuses.petCoinPickup + (pet && pet.bonuses ? pet.bonuses.pickupRadius : 0);
   game.petSeekRadiusBonus = pet && pet.bonuses ? pet.bonuses.seekRadius : 0;
@@ -1412,6 +1413,7 @@ function getAppliedBonuses(progress) {
     chargeMax: Math.round(getUpgradeEffectById(normalized, 'charge_max')),
     growthScale: getUpgradeEffectById(normalized, 'growth_scale'),
     growthLaunchScale: getUpgradeEffectById(normalized, 'growth_launch'),
+    chargeDashGrowthRatio: getUpgradeEffectById(normalized, 'charge_dash_growth'),
     playerCoinPickup: Math.round(getUpgradeEffectById(normalized, 'player_coin_radius')),
     petCoinPickup: Math.round(getUpgradeEffectById(normalized, 'pet_coin_radius')),
     growthDuration: Math.round(getUpgradeEffectById(normalized, 'mushroom_duration'))
@@ -1435,6 +1437,8 @@ function formatUpgradeEffect(upgradeId, effectValue) {
       return '变大倍率 +' + effectValue.toFixed(2);
     case 'growth_launch':
       return '撞飞倍率 x' + effectValue.toFixed(2);
+    case 'charge_dash_growth':
+      return '冲刺加成 +' + Math.round(effectValue * 100) + '%';
     case 'player_coin_radius':
       return '人物吸币 +' + Math.round(effectValue);
     case 'pet_coin_radius':

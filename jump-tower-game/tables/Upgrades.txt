@@ -7,3 +7,4 @@ INT	STRING	STRING	STRING	INT	INT	FLOAT	FLOAT	FLOAT	STRING
 4	growth_launch	eject强化	effect	6	38	1.5	1	0.1	提升变大后撞飞Boss效果
 5	pet_coin_radius	宠物拾币	range	6	28	1.38	0	5	扩大宠物拾币范围
 6	mushroom_duration	蘑菇时长	time	5	32	1.48	0	900	提升蘑菇变大持续时间(毫秒)
+7	charge_dash_growth	冲刺成长	effect	9	42	1.45	0.05	0.05	蓄力冲刺高度系数，基础5%，每级+5%，最高50%

@@ -11,6 +11,29 @@ class LevelGenerator {
     this.platforms = [];
     this.coins = [];
     this.nextDynamicCoinY = 0;
+    this.difficultyManager = null;
+  }
+
+  setDifficultyManager(difficultyManager) {
+    this.difficultyManager = difficultyManager || null;
+  }
+
+  getDifficultyProfile(scoreHeight) {
+    if (!this.difficultyManager) return null;
+    return this.difficultyManager.getProfile(scoreHeight);
+  }
+
+  getPlatformGap(scoreHeight) {
+    const profile = this.getDifficultyProfile(scoreHeight);
+    if (!profile) {
+      return 80 + Math.random() * 60;
+    }
+    return profile.platformGapMin + Math.random() * (profile.platformGapMax - profile.platformGapMin);
+  }
+
+  applyPlatformDifficulty(platform, scoreHeight) {
+    if (!platform || !this.difficultyManager) return platform;
+    return this.difficultyManager.applyPlatformModifiers(platform, scoreHeight);
   }
 
   attachRandomMushroom(platform, height) {
@@ -301,7 +324,11 @@ class LevelGenerator {
       if (i > 4 && Math.random() < 0.15) type = 'boost';
       if (i > 6 && Math.random() < 0.15) type = 'moving';
       if (i > 8 && Math.random() < 0.1) type = 'crumble';
-      const platform = platformPhysics.createPlatformWithSkin(px, py, type);
+      const heightScore = Math.max(0, -py / 10);
+      const platform = this.applyPlatformDifficulty(
+        platformPhysics.createPlatformWithSkin(px, py, type),
+        heightScore
+      );
       const prevPlatform = platforms.length > 0 ? platforms[platforms.length - 1] : null;
       this.attachRandomCoin(platform, -py);
       platforms.push(this.attachRandomMushroom(platform, -py));
@@ -323,10 +350,12 @@ class LevelGenerator {
       this.platforms[this.platforms.length - 1].y > topScreen - H
     ) {
       const lastP = this.platforms[this.platforms.length - 1];
-      let ny = lastP.y - (80 + Math.random() * 60);
+      const lastHeightScore = Math.max(0, -lastP.y / 10);
+      let ny = lastP.y - this.getPlatformGap(lastHeightScore);
       let nx = Math.random() * (W - 100) + 10;
       let type = 'normal';
       const h = -ny;
+      const heightScore = Math.max(0, h / 10);
 
       // 平台类型生成概率
       // normal：普通台子和冰块台子随机出现（表格配置）
@@ -337,7 +366,10 @@ class LevelGenerator {
       if (h > 200 && Math.random() < 0.15) type = 'moving';
       if (h > 800 && Math.random() < 0.1) type = 'crumble';
 
-      const platform = platformPhysics.createPlatformWithSkin(nx, ny, type);
+      const platform = this.applyPlatformDifficulty(
+        platformPhysics.createPlatformWithSkin(nx, ny, type),
+        heightScore
+      );
       const prevPlatform = lastP;
       this.attachRandomCoin(platform, h);
       this.platforms.push(this.attachRandomMushroom(platform, h));

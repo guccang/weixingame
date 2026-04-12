@@ -6,6 +6,7 @@
 const skillData = require('./skillData');
 const { characterConfig, STATE_TO_FRAME_INDEX } = require('../character/character');
 const assetManager = require('../resource/assetManager');
+const gameConstants = require('../game/constants');
 const progressionSystem = require('../progression/progression');
 
 /**
@@ -365,7 +366,7 @@ class SkillSystem {
 
     // 应用物理
     if (config.physics) {
-      player.vy = config.physics.force;
+      player.vy = this.getChargeDashLaunchForce(config.physics.force);
       player.state = 'rise';
     }
 
@@ -375,6 +376,29 @@ class SkillSystem {
 
     this.activeSkills.set(skill.id, skill);
     return skill;
+  }
+
+  getChargeDashLaunchForce(baseForce) {
+    const normalizedBaseForce = -Math.abs(baseForce || 0);
+    if (normalizedBaseForce === 0) return normalizedBaseForce;
+
+    const gravity = Math.max(0.0001, this.game.GRAVITY || 0.45);
+    const chargeSegments = Math.max(0, this.game.chargeCount || 0);
+    const currentHeight = Math.max(0, this.game.score || 0);
+    const growthRatio = Math.max(
+      0,
+      Math.min(
+        gameConstants.CHARGE_DASH_HEIGHT_RATIO_MAX || 0.5,
+        this.game.chargeDashGrowthRatio || 0
+      )
+    );
+    const distancePerSegment = Math.max(0, gameConstants.CHARGE_DASH_DISTANCE_PER_SEGMENT || 50);
+    const baseHeight = (normalizedBaseForce * normalizedBaseForce) / (2 * gravity);
+    const segmentBonusHeight = chargeSegments * distancePerSegment;
+    const heightBonus = currentHeight * growthRatio;
+    const targetHeight = Math.max(0, baseHeight + segmentBonusHeight + heightBonus);
+
+    return -Math.sqrt(targetHeight * 2 * gravity);
   }
 
   /**
