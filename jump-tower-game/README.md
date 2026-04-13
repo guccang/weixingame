@@ -29,3 +29,29 @@
 ├── project.config.json                        // 项目配置
 └── project.private.config.json                // 项目个人配置
 ```
+
+## 命令行上传体验版
+
+先准备微信 CI 私钥，并通过环境变量或参数传入：
+
+```bash
+export WECHAT_CI_PRIVATE_KEY_PATH=/abs/path/to/private.key
+```
+
+上传体验版时可以直接输入版本号，也可以命令行传参：
+
+```bash
+node scripts/uploadExperience.js --version 1.3.0
+```
+
+或：
+
+```bash
+npm --prefix scripts run upload-experience -- --version 1.3.0
+```
+
+可选参数：
+
+- `--desc` 自定义备注
+- `--robot` 指定 CI 机器人编号，默认 `1`
+- `--upload-source-map` 开启 sourceMap 上传；默认关闭，避免 4MB 限制
