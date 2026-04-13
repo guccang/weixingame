@@ -1,4 +1,5 @@
 const gameConstants = require('../constants');
+const debugRuntime = require('../debugRuntime');
 const { platform: platformPhysics } = require('../../physics/physics');
 
 function clamp(value, min, max) {
@@ -26,6 +27,10 @@ class PickupSystem {
 
   getThrowerConfig() {
     return gameConstants.bossConfig.thrower || {};
+  }
+
+  getDebugProfile() {
+    return this.game ? this.game.debugProfile : null;
   }
 
   reset() {
@@ -151,6 +156,10 @@ class PickupSystem {
 
   decoratePlatform(platform, scoreHeight) {
     if (!platform || platform.type === 'ground' || platform.dead) return platform;
+    if (!debugRuntime.allowsPickupSource(this.getDebugProfile(), 'platform')) {
+      platform.pickup = null;
+      return platform;
+    }
 
     platform.pickup = null;
 
@@ -165,6 +174,7 @@ class PickupSystem {
 
   resolveSpawnDefinition(platform, scoreHeight) {
     const config = this.getConfig();
+    const debugProfile = this.getDebugProfile();
     const score = Math.max(0, scoreHeight || 0);
 
     if (score < Math.max(0, config.spawnStartHeight || 0)) {
@@ -201,13 +211,24 @@ class PickupSystem {
     }
 
     const negativeWeight = negativeChance > 0 ? negativeChance / Math.max(totalChance, 0.0001) : 0;
-    const useNegative = negativeWeight > 0 && Math.random() < negativeWeight;
+    let useNegative = negativeWeight > 0 && Math.random() < negativeWeight;
+    if (!debugRuntime.allowsPickupPolarity(debugProfile, useNegative)) {
+      if (debugRuntime.allowsPickupPolarity(debugProfile, !useNegative)) {
+        useNegative = !useNegative;
+      } else {
+        return null;
+      }
+    }
     return pickRandom(this.getDefinitionPool(useNegative));
   }
 
   resolveBossProjectileDefinition() {
     const throwerConfig = this.getThrowerConfig();
     const pickupConfig = this.getConfig();
+    const debugProfile = this.getDebugProfile();
+    if (!debugRuntime.allowsPickupSource(debugProfile, 'bossProjectile')) {
+      return null;
+    }
     const score = Math.max(0, this.game && this.game.score || 0);
     const positiveWeight = Math.max(0, throwerConfig.positiveWeight || 0);
     const negativeWeight = score >= pickupConfig.negativeStartHeight
@@ -219,7 +240,14 @@ class PickupSystem {
       return pickRandom(this.getDefinitionPool(false));
     }
 
-    const useNegative = negativeWeight > 0 && Math.random() < negativeWeight / totalWeight;
+    let useNegative = negativeWeight > 0 && Math.random() < negativeWeight / totalWeight;
+    if (!debugRuntime.allowsPickupPolarity(debugProfile, useNegative)) {
+      if (debugRuntime.allowsPickupPolarity(debugProfile, !useNegative)) {
+        useNegative = !useNegative;
+      } else {
+        return null;
+      }
+    }
     return pickRandom(this.getDefinitionPool(useNegative));
   }
 
@@ -256,6 +284,7 @@ class PickupSystem {
 
   createProjectilePickup(definition, spawnX, spawnY, options) {
     const throwerConfig = this.getThrowerConfig();
+    const radiusScale = Math.max(1, throwerConfig.projectileRadiusScale || 1.55);
     const driftBase = throwerConfig.projectileDriftX || 0.18;
     const driftDirection = options && typeof options.driftDirection === 'number'
       ? options.driftDirection
@@ -265,16 +294,16 @@ class PickupSystem {
       : (0.65 + Math.random() * 0.5);
     const fallSpeed = options && typeof options.fallSpeed === 'number'
       ? options.fallSpeed
-      : (throwerConfig.projectileFallSpeed || 1.15);
+      : (throwerConfig.projectileFallSpeed || 0.98);
     const swayAmplitude = options && typeof options.swayAmplitude === 'number'
       ? options.swayAmplitude
-      : (throwerConfig.projectileSwayAmplitude || 12);
+      : (throwerConfig.projectileSwayAmplitude || 14);
     const swaySpeed = options && typeof options.swaySpeed === 'number'
       ? options.swaySpeed
       : (throwerConfig.projectileSwaySpeed || 0.0045);
     const now = options && typeof options.now === 'number' ? options.now : Date.now();
 
-    return Object.assign(this.createBasePickup(definition), {
+    const pickup = Object.assign(this.createBasePickup(definition), {
       sourceType: 'bossProjectile',
       x: spawnX,
       y: spawnY,
@@ -284,15 +313,23 @@ class PickupSystem {
       swayAmplitude: swayAmplitude * (0.75 + Math.random() * 0.45),
       swaySpeed: swaySpeed * (0.85 + Math.random() * 0.3),
       spawnTime: now,
-      maxLifetimeMs: 12000
+      maxLifetimeMs: 16000
     });
+
+    pickup.radius = Math.round(pickup.radius * radiusScale * 10) / 10;
+    return pickup;
   }
 
   spawnBossProjectilePickup(spawnX, spawnY, options = {}) {
+    if (!debugRuntime.allowsPickupSource(this.getDebugProfile(), 'bossProjectile')) {
+      return null;
+    }
     const definition = options.definitionId
       ? this.getDefinitionById(options.definitionId)
       : this.resolveBossProjectileDefinition();
-    if (!definition) return null;
+    if (!definition || !debugRuntime.allowsPickupPolarity(this.getDebugProfile(), !!definition.negative)) {
+      return null;
+    }
 
     const pickup = this.createProjectilePickup(definition, spawnX, spawnY, options);
     this.floatingPickups.push(pickup);

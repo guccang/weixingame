@@ -144,6 +144,47 @@ class EconomyConfigRow extends BaseTableRow {
 }
 
 /**
+ * DebugConfig 表数据行
+ * @property {number} Id - 序号
+ * @property {string} PresetId - 预设键
+ * @property {string} Name - 预设名
+ * @property {string} Description - 说明
+ * @property {string} BossMode - Boss模式
+ * @property {string} PickupMode - 道具模式
+ * @property {string} RunDirectorMode - RunDirector模式
+ * @property {string} PlatformMode - 平台模式
+ * @property {string} DifficultyMode - 难度模式
+ * @property {number} StartHeight - 起始高度
+ * @property {string} InitialChargeMode - 初始蓄力
+ * @property {string} BossSpawnMode - Boss刷新方式
+ * @property {string} Notes - 备注
+ */
+class DebugConfigRow extends BaseTableRow {
+  constructor() {
+    super();
+    this.Id = 0;
+    this.PresetId = '';
+    this.Name = '';
+    this.Description = '';
+    this.BossMode = '';
+    this.PickupMode = '';
+    this.RunDirectorMode = '';
+    this.PlatformMode = '';
+    this.DifficultyMode = '';
+    this.StartHeight = 0;
+    this.InitialChargeMode = '';
+    this.BossSpawnMode = '';
+    this.Notes = '';
+  }
+
+  static create(obj, fields, types) {
+    const row = new DebugConfigRow();
+    row.initFromObject(obj, fields, types);
+    return row;
+  }
+}
+
+/**
  * GameConfig 表数据行
  * @property {number} Id - 序号
  * @property {string} Key - 配置键
@@ -361,6 +402,7 @@ module.exports = {
   AudioRow,
   CharacterRow,
   EconomyConfigRow,
+  DebugConfigRow,
   GameConfigRow,
   MilestonesRow,
   MonstersRow,

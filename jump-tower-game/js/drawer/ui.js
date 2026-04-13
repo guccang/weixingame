@@ -120,6 +120,7 @@ function drawUI(ctx, game) {
   }
 
   ctx.shadowBlur = 0;
+  drawDebugBadge(ctx, game, safeTop);
   drawGoalPanel(ctx, game, safeTop);
   drawBuffChips(ctx, game, safeTop);
   drawPickupChips(ctx, game, safeTop);
@@ -131,6 +132,22 @@ function drawUI(ctx, game) {
     drawBuffOfferOverlay(ctx, game);
   }
 
+}
+
+function drawDebugBadge(ctx, game, safeTop) {
+  if (!game || typeof game.isDebugRun !== 'function' || !game.isDebugRun()) return;
+  const text = typeof game.getDebugRunLabel === 'function' ? game.getDebugRunLabel() : 'DEBUG';
+  const w = Math.max(120, text.length * 10 + 28);
+  const x = (game.W - w) / 2;
+  const y = safeTop + 2;
+  ctx.save();
+  ctx.fillStyle = 'rgba(255, 170, 76, 0.18)';
+  roundRect(ctx, x, y, w, 22, 11);
+  ctx.fillStyle = '#ffd37b';
+  ctx.font = 'bold 11px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(text, x + w / 2, y + 15);
+  ctx.restore();
 }
 
 function drawGoalPanel(ctx, game, safeTop) {

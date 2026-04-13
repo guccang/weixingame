@@ -12,6 +12,7 @@ class UIPanelManager {
     // 内部面板状态（单一数据源）
     this.panels = {
       showCharacterPanel: false,
+      showDebugPanel: false,
       showShopPanel: false,
       showAchievementPanel: false,
       showLeaderboardPanel: false,
@@ -83,6 +84,7 @@ class UIPanelManager {
   _syncFromExternal() {
     const g = this.game;
     this.panels.showCharacterPanel = !!g.showCharacterPanel;
+    this.panels.showDebugPanel = !!g.showDebugPanel;
     this.panels.showShopPanel = !!g.showShopPanel;
     this.panels.showAchievementPanel = !!g.showAchievementPanel;
     this.panels.showLeaderboardPanel = !!g.showLeaderboardPanel;

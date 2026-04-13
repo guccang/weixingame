@@ -10,6 +10,7 @@ const { AchievementsRow } = require('./tableStruct');
 const { AudioRow } = require('./tableStruct');
 const { CharacterRow } = require('./tableStruct');
 const { EconomyConfigRow } = require('./tableStruct');
+const { DebugConfigRow } = require('./tableStruct');
 const { GameConfigRow } = require('./tableStruct');
 const { MilestonesRow } = require('./tableStruct');
 const { MonstersRow } = require('./tableStruct');
@@ -134,6 +135,7 @@ class TableManager {
       Audio: AudioRow,
       Character: CharacterRow,
       EconomyConfig: EconomyConfigRow,
+      DebugConfig: DebugConfigRow,
       GameConfig: GameConfigRow,
       Milestones: MilestonesRow,
       Monsters: MonstersRow,

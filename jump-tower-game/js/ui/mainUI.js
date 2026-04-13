@@ -63,9 +63,39 @@ class MainUI {
     var pm = this.game.panelManager;
 
     // Debug 金币徽章
-    if (this._hitBtn(this.game.coinBadgeArea, touchX, touchY)) {
+    if (!pm.isAnyOpen() && this._hitBtn(this.game.coinBadgeArea, touchX, touchY)) {
       this.game.audio.playClick();
       this.game.grantDebugCoins();
+      return true;
+    }
+
+    // Debug 面板
+    if (this.game.panelManager.isOpen('showDebugPanel')) {
+      if (this._hitBtn(this.game.closeDebugPanel, touchX, touchY)) {
+        this.game.audio.playClick();
+        this.game.panelManager.close('showDebugPanel');
+        return true;
+      }
+      if (this._handleButtonArray('debugPresetAreas', (btn) => {
+        this.game.selectDebugPreset(btn.presetId);
+      }, touchX, touchY)) {
+        return true;
+      }
+      if (this._handleButtonArray('debugOptionAreas', (btn) => {
+        this.game.cycleDebugOption(btn.key);
+      }, touchX, touchY)) {
+        return true;
+      }
+      if (this._hitBtn(this.game.debugResetBtnArea, touchX, touchY)) {
+        this.game.audio.playClick();
+        this.game.resetDebugDraft();
+        return true;
+      }
+      if (this._hitBtn(this.game.debugLaunchBtnArea, touchX, touchY)) {
+        this.game.audio.playClick();
+        this.game.startDebugGame();
+        return true;
+      }
       return true;
     }
 
@@ -245,6 +275,14 @@ class MainUI {
         pm.open('showCharacterPanel');
         return true;
       }
+      if (this._hitBtn(this.game.debugEntryArea, touchX, touchY)) {
+        this.game.audio.playClick();
+        if (typeof this.game.resetDebugPanelScroll === 'function') {
+          this.game.resetDebugPanelScroll();
+        }
+        pm.open('showDebugPanel');
+        return true;
+      }
       // 点击开始按钮
       if (this._hitBtn(this.game.startBtnArea, touchX, touchY)) {
         this.game.audio.playClick();
@@ -266,7 +304,11 @@ class MainUI {
     if (touchX >= btn.restartX && touchX <= btn.restartX + btn.restartW &&
         touchY >= btn.restartY && touchY <= btn.restartY + btn.restartH) {
       this.game.audio.playClick();
-      this.game.startGame();
+      if (typeof this.game.restartCurrentRun === 'function') {
+        this.game.restartCurrentRun();
+      } else {
+        this.game.startGame();
+      }
       return true;
     }
     if (touchX >= btn.shareX && touchX <= btn.shareX + btn.shareW &&

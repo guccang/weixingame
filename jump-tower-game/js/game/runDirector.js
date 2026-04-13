@@ -1,4 +1,5 @@
 const gameConstants = require('./constants');
+const debugRuntime = require('./debugRuntime');
 const { landmarks } = require('./landmarks');
 const PickupSystem = require('./run/pickupSystem');
 
@@ -30,6 +31,14 @@ class RunDirector {
     return gameConstants.runEventConfig;
   }
 
+  getDebugProfile() {
+    return this.game ? this.game.debugProfile : null;
+  }
+
+  isFeatureEnabled(feature) {
+    return debugRuntime.allowsRunDirectorFeature(this.getDebugProfile(), feature);
+  }
+
   reset() {
     this.buffOffer = null;
     this.activeBuffs = [];
@@ -45,15 +54,22 @@ class RunDirector {
     this.lastResonanceColor = '';
     this.comboRewardTier = 0;
     this.pickupSystem.reset();
-    this.pickNextGoal();
+    if (this.isFeatureEnabled('goals')) {
+      this.pickNextGoal();
+    }
   }
 
   update(now) {
     const score = Math.max(0, this.game.score || 0);
     this.pickupSystem.update(now || Date.now());
-    this.updateThemeEvent(score);
+    if (this.isFeatureEnabled('themes')) {
+      this.updateThemeEvent(score);
+    } else {
+      this.activeThemeEvent = null;
+    }
 
-    if (!this.buffOffer &&
+    if (this.isFeatureEnabled('buffs') &&
+        !this.buffOffer &&
         this.getAvailableBuffDefinitions().length >= 3 &&
         score >= Math.max(0, this.nextBuffHeight || 0)) {
       this.openBuffOffer(score);
@@ -70,10 +86,11 @@ class RunDirector {
   }
 
   getCurrentGoal() {
-    return this.goal;
+    return this.isFeatureEnabled('goals') ? this.goal : null;
   }
 
   getActiveTheme() {
+    if (!this.isFeatureEnabled('themes')) return null;
     if (!this.activeThemeEvent) return null;
     const score = Math.max(0, this.game.score || 0);
     if (score > this.activeThemeEvent.endHeight) {
@@ -162,10 +179,12 @@ class RunDirector {
   }
 
   onCoinCollected(amount) {
+    if (!this.isFeatureEnabled('goals')) return;
     this.advanceGoal('coinsCollected', amount || 1);
   }
 
   onChargeDashTriggered() {
+    if (!this.isFeatureEnabled('goals')) return;
     this.advanceGoal('chargeDashes', 1);
   }
 
@@ -276,6 +295,7 @@ class RunDirector {
   }
 
   getAvailableBuffDefinitions() {
+    if (!this.isFeatureEnabled('buffs')) return [];
     const owned = {};
     for (let i = 0; i < this.activeBuffs.length; i++) {
       owned[this.activeBuffs[i].id] = true;
@@ -286,6 +306,7 @@ class RunDirector {
   }
 
   openBuffOffer(score) {
+    if (!this.isFeatureEnabled('buffs')) return;
     const options = shuffle(this.getAvailableBuffDefinitions()).slice(0, 3);
     if (options.length < 3) return;
 
@@ -300,6 +321,7 @@ class RunDirector {
   }
 
   selectBuff(index) {
+    if (!this.isFeatureEnabled('buffs')) return false;
     if (!this.buffOffer || !this.buffOffer.options[index]) return false;
     const buff = this.buffOffer.options[index];
     this.activeBuffs.push(buff);
@@ -338,6 +360,10 @@ class RunDirector {
   }
 
   pickNextGoal() {
+    if (!this.isFeatureEnabled('goals')) {
+      this.goal = null;
+      return;
+    }
     const config = this.getConfig();
     const options = [
       {
@@ -385,6 +411,7 @@ class RunDirector {
   }
 
   advanceGoal(metric, amount) {
+    if (!this.isFeatureEnabled('goals')) return;
     if (!this.goal || this.goal.metric !== metric) return;
 
     this.goal.progress = Math.min(
@@ -397,6 +424,7 @@ class RunDirector {
   }
 
   completeGoal() {
+    if (!this.isFeatureEnabled('goals')) return;
     if (!this.goal) return;
     const rewardCoins = Math.max(1, Math.round(this.goal.rewardCoins || 0));
     this.game.grantRunCoins(rewardCoins, {

@@ -39,7 +39,13 @@ class DifficultyManager {
       DOUBLE_JUMP_FORCE: physics.DOUBLE_JUMP_FORCE,
       MAX_FALL_SPEED: physics.MAX_FALL_SPEED
     };
+    this.frozenScore = null;
     this.currentProfile = this.getProfile(0);
+  }
+
+  setDebugProfile(profile) {
+    this.frozenScore = profile && profile.enabled && profile.difficultyMode === 'frozen' ? 0 : null;
+    this.currentProfile = this.getProfile(this.currentProfile ? this.currentProfile.score : 0);
   }
 
   syncBasePhysics(game) {
@@ -67,7 +73,8 @@ class DifficultyManager {
   }
 
   getProfile(score) {
-    const safeScore = Math.max(0, Math.floor(score || 0));
+    const resolvedScore = typeof this.frozenScore === 'number' ? this.frozenScore : score;
+    const safeScore = Math.max(0, Math.floor(resolvedScore || 0));
     const difficultyConfig = gameConstants.difficultyConfig;
     const progress = resolveDifficultyProgress(safeScore);
 

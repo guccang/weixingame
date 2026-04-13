@@ -2,6 +2,7 @@
 // 数据从表格加载：GameConfig.txt, Praises.txt, Milestones.txt
 
 const tableManager = require('../tables/tableManager');
+const debugRuntime = require('./debugRuntime');
 
 const GAME_MODES = {
   ENDLESS: 'endless',
@@ -72,6 +73,10 @@ function getDifficultyConfig() {
   };
 }
 
+function getDebugConfig() {
+  return debugRuntime.normalizeDebugConfig(tableManager.getAll('DebugConfig'));
+}
+
 function getBossConfig() {
   const leaperMonsterId = getConfigValue('BOSS_MONSTER_ID', 2);
   const throwerMonsterId = getConfigValue('BOSS_THROWER_MONSTER_ID', 3);
@@ -109,23 +114,25 @@ function getBossConfig() {
     repeatInterval: getConfigValue('BOSS_SPAWN_REPEAT_INTERVAL', 2000),
     pool,
     thrower: {
-      topOffset: getConfigValue('BOSS_THROWER_TOP_OFFSET', 118),
+      topOffset: getConfigValue('BOSS_THROWER_TOP_OFFSET', 96),
       horizontalPadding: getConfigValue('BOSS_THROWER_HORIZONTAL_PADDING', 92),
-      patrolSpeed: getConfigValue('BOSS_THROWER_PATROL_SPEED', 4.8),
-      repositionSpeed: getConfigValue('BOSS_THROWER_REPOSITION_SPEED', 6.4),
-      eventDurationMs: getConfigValue('BOSS_THROWER_EVENT_DURATION_MS', 12000),
-      maxThrows: getConfigValue('BOSS_THROWER_MAX_THROWS', 6),
-      throwIntervalMin: getConfigValue('BOSS_THROWER_THROW_INTERVAL_MIN', 1350),
-      throwIntervalMax: getConfigValue('BOSS_THROWER_THROW_INTERVAL_MAX', 2200),
-      throwPauseMs: getConfigValue('BOSS_THROWER_THROW_PAUSE_MS', 260),
-      projectileFallSpeed: getConfigValue('BOSS_THROWER_PROJECTILE_FALL_SPEED', 1.15),
+      patrolSpeed: getConfigValue('BOSS_THROWER_PATROL_SPEED', 5.8),
+      repositionSpeed: getConfigValue('BOSS_THROWER_REPOSITION_SPEED', 8),
+      eventDurationMs: getConfigValue('BOSS_THROWER_EVENT_DURATION_MS', 18000),
+      maxThrows: getConfigValue('BOSS_THROWER_MAX_THROWS', 11),
+      throwIntervalMin: getConfigValue('BOSS_THROWER_THROW_INTERVAL_MIN', 850),
+      throwIntervalMax: getConfigValue('BOSS_THROWER_THROW_INTERVAL_MAX', 1350),
+      throwPauseMs: getConfigValue('BOSS_THROWER_THROW_PAUSE_MS', 210),
+      projectileFallSpeed: getConfigValue('BOSS_THROWER_PROJECTILE_FALL_SPEED', 0.98),
       projectileDriftX: getConfigValue('BOSS_THROWER_PROJECTILE_DRIFT_X', 0.18),
-      projectileSwayAmplitude: getConfigValue('BOSS_THROWER_PROJECTILE_SWAY_AMPLITUDE', 12),
+      projectileSwayAmplitude: getConfigValue('BOSS_THROWER_PROJECTILE_SWAY_AMPLITUDE', 14),
       projectileSwaySpeed: getConfigValue('BOSS_THROWER_PROJECTILE_SWAY_SPEED', 0.0045),
-      positiveWeight: getConfigValue('BOSS_THROWER_POSITIVE_WEIGHT', 0.72),
-      negativeWeight: getConfigValue('BOSS_THROWER_NEGATIVE_WEIGHT', 0.28),
-      multiThrowChance: getConfigValue('BOSS_THROWER_MULTI_THROW_CHANCE', 0.35),
-      multiThrowCount: getConfigValue('BOSS_THROWER_MULTI_THROW_COUNT', 2)
+      positiveWeight: getConfigValue('BOSS_THROWER_POSITIVE_WEIGHT', 0.65),
+      negativeWeight: getConfigValue('BOSS_THROWER_NEGATIVE_WEIGHT', 0.35),
+      multiThrowChance: getConfigValue('BOSS_THROWER_MULTI_THROW_CHANCE', 0.62),
+      multiThrowCount: getConfigValue('BOSS_THROWER_MULTI_THROW_COUNT', 3),
+      projectileRadiusScale: getConfigValue('BOSS_THROWER_PROJECTILE_RADIUS_SCALE', 1.55),
+      renderSize: getConfigValue('BOSS_THROWER_RENDER_SIZE', 196)
     }
   };
 }
@@ -300,6 +307,9 @@ module.exports = {
 
   // 动态难度配置
   get difficultyConfig() { return getDifficultyConfig(); },
+
+  // Debug预设配置
+  get debugConfig() { return getDebugConfig(); },
 
   // Boss出现配置
   get bossConfig() { return getBossConfig(); },

@@ -6,6 +6,7 @@
 const { platform: platformPhysics } = require('../physics/physics');
 const progressionSystem = require('../progression/progression');
 const gameConstants = require('../game/constants');
+const debugRuntime = require('../game/debugRuntime');
 
 const RESONANCE_COLORS = ['#55efc4', '#ffd166', '#74b9ff'];
 
@@ -49,6 +50,10 @@ class LevelGenerator {
     return this.runDirector.getSpawnProfile(scoreHeight);
   }
 
+  getDebugProfile() {
+    return this.runDirector && this.runDirector.game ? this.runDirector.game.debugProfile : null;
+  }
+
   pickPlatformType(scoreHeight) {
     const themeProfile = this.getThemeSpawnProfile(scoreHeight);
     const themePlatformConfig = themeProfile ? themeProfile.platformConfig : null;
@@ -57,14 +62,27 @@ class LevelGenerator {
     const crumbleChance = themePlatformConfig ? Math.min(0.35, themePlatformConfig.crumbleChance || 0) : (scoreHeight > 80 ? 0.1 : 0);
     const roll = Math.random();
 
-    if (roll < boostChance) return 'boost';
-    if (roll < boostChance + movingChance) return 'moving';
-    if (roll < boostChance + movingChance + crumbleChance) return 'crumble';
-    return 'normal';
+    let pickedType = 'normal';
+    if (roll < boostChance) {
+      pickedType = 'boost';
+    } else if (roll < boostChance + movingChance) {
+      pickedType = 'moving';
+    } else if (roll < boostChance + movingChance + crumbleChance) {
+      pickedType = 'crumble';
+    }
+
+    return debugRuntime.resolvePlatformBaseType(this.getDebugProfile(), pickedType);
   }
 
   applyPlatformSpecial(platform, W, scoreHeight, themeProfile) {
     if (!platform || platform.type === 'ground') return platform;
+
+    const debugProfile = this.getDebugProfile();
+    if (!debugRuntime.allowsPlatformSpecial(debugProfile, 'charge') &&
+        !debugRuntime.allowsPlatformSpecial(debugProfile, 'resonance') &&
+        !debugRuntime.allowsPlatformSpecial(debugProfile, 'risk')) {
+      return platform;
+    }
 
     const config = gameConstants.runEventConfig.platformSpecial;
     const themePlatformConfig = themeProfile ? themeProfile.platformConfig : null;
@@ -76,21 +94,30 @@ class LevelGenerator {
     const riskChance = Math.max(0, config.riskChance + crumbleBias);
     const roll = Math.random();
 
-    if (roll < chargeChance && platform.type !== 'crumble') {
+    const forcedMode = debugProfile ? debugProfile.platformMode : 'normal';
+
+    if ((forcedMode === 'charge_only' || (roll < chargeChance && platform.type !== 'crumble')) &&
+        platform.type !== 'crumble' &&
+        debugRuntime.allowsPlatformSpecial(debugProfile, 'charge')) {
       platform.specialType = 'charge';
       platform.specialColor = '#55efc4';
       platform.specialConsumed = false;
       return platform;
     }
 
-    if (roll < chargeChance + resonanceChance && platform.type !== 'crumble') {
+    if ((forcedMode === 'resonance_only' || (roll < chargeChance + resonanceChance && platform.type !== 'crumble')) &&
+        platform.type !== 'crumble' &&
+        debugRuntime.allowsPlatformSpecial(debugProfile, 'resonance')) {
       platform.specialType = 'resonance';
       platform.specialConsumed = false;
       platform.resonanceColor = RESONANCE_COLORS[Math.floor(Math.random() * RESONANCE_COLORS.length)];
       return platform;
     }
 
-    if (roll < chargeChance + resonanceChance + riskChance && platform.type !== 'crumble' && platform.type !== 'ground') {
+    if ((forcedMode === 'risk_only' || (roll < chargeChance + resonanceChance + riskChance && platform.type !== 'crumble' && platform.type !== 'ground')) &&
+        platform.type !== 'crumble' &&
+        platform.type !== 'ground' &&
+        debugRuntime.allowsPlatformSpecial(debugProfile, 'risk')) {
       platform.specialType = 'risk';
       platform.specialColor = '#ff7675';
       platform.specialConsumed = false;

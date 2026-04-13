@@ -57,6 +57,17 @@ function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight, maxLines) {
 }
 
 function getResultMeta(game) {
+  if (game && typeof game.isDebugRun === 'function' && game.isDebugRun()) {
+    return {
+      title: 'Debug 结束',
+      accent: '#ffd37b',
+      modeLabel: 'Debug Run',
+      summaryText: '本局高度 ' + (game.score || 0) + ' m',
+      sideLabel: '结算',
+      sideValue: '不计入'
+    };
+  }
+
   const score = game.score || 0;
   const gameMode = game.gameMode;
 
@@ -356,10 +367,12 @@ function drawGameOverScreen(ctx, game, images) {
   } else {
     ctx.fillStyle = '#ffffff';
     ctx.font = font(17, '700');
-    ctx.fillText('结算信息准备中', layout.contentX + 16, rewardY + 38);
+    ctx.fillText(game.isDebugRun && game.isDebugRun() ? 'Debug 局不结算奖励' : '结算信息准备中', layout.contentX + 16, rewardY + 38);
     ctx.fillStyle = 'rgba(199, 214, 235, 0.68)';
     ctx.font = font(12, '500');
-    ctx.fillText('可以直接重新开始，或回到主页调整配置。', layout.contentX + 16, rewardY + 68);
+    ctx.fillText(game.isDebugRun && game.isDebugRun()
+      ? '不会写入金币、纪录、任务或排行榜。'
+      : '可以直接重新开始，或回到主页调整配置。', layout.contentX + 16, rewardY + 68);
   }
   ctx.restore();
 

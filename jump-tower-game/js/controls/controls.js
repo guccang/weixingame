@@ -43,6 +43,9 @@ class Controls {
 
         // 在主界面检测按钮和角色选择点击
         if (_this.game.state === 'start') {
+          if (_this.game.panelManager && _this.game.panelManager.isOpen('showDebugPanel')) {
+            return;
+          }
           if (_this.game.mainUI.handleTouch(touchX, touchY)) {
             return;
           }
@@ -102,6 +105,22 @@ class Controls {
           // 更新delta
           _this.lastDeltaX = touchDx;
           _this.lastDeltaY = touchDy;
+
+          if (_this.game.panelManager.isOpen('showDebugPanel')) {
+            var debugVerticalDrag = Math.abs(touchDy) > 10;
+
+            if (_this.game.isDraggingDebugPanel) {
+              _this.game.handleDebugPanelScroll(touchY);
+              return;
+            }
+
+            if (debugVerticalDrag && _this.game.startDebugPanelDrag && _this.game.startDebugPanelDrag(touchX, touchY)) {
+              _this.game.handleDebugPanelScroll(touchY);
+              return;
+            }
+
+            return;
+          }
 
           // 使用 ScrollHandler 处理面板滚动
           if (_this.game.scrollHandler && _this.game.scrollHandler.handleMove(touchX, touchY, _this.touchStartX, _this.touchStartY)) {
@@ -177,6 +196,21 @@ class Controls {
       if (_this.game.state === 'playing' && _this.game.runDirector && _this.game.runDirector.isBuffOfferOpen()) {
         _this.keys['ArrowLeft'] = false;
         _this.keys['ArrowRight'] = false;
+        _this.touchStartX = null;
+        _this.touchStartY = null;
+        _this.lastDeltaX = 0;
+        _this.lastDeltaY = 0;
+        _this.isSlidingDown = false;
+        _this.skipTouchEndSkill = false;
+        return;
+      }
+
+      if (_this.game.state === 'start' && _this.game.panelManager.isOpen('showDebugPanel')) {
+        if (_this.game.isDraggingDebugPanel) {
+          _this.game.stopDebugPanelDrag();
+        } else if (_this.touchStartX !== null && _this.touchStartY !== null) {
+          _this.game.mainUI.handleTouch(_this.touchStartX, _this.touchStartY);
+        }
         _this.touchStartX = null;
         _this.touchStartY = null;
         _this.lastDeltaX = 0;

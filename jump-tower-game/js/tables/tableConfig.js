@@ -63,6 +63,26 @@ const EconomyConfigConfig = {
   ],
 };
 
+const DebugConfigConfig = {
+  name: 'DebugConfig',
+  file: 'DebugConfig.txt',
+  fields: [
+    { name: 'Id', type: 'INT', comment: '序号' },
+    { name: 'PresetId', type: 'STRING', comment: '预设键' },
+    { name: 'Name', type: 'STRING', comment: '预设名' },
+    { name: 'Description', type: 'STRING', comment: '说明' },
+    { name: 'BossMode', type: 'STRING', comment: 'Boss模式' },
+    { name: 'PickupMode', type: 'STRING', comment: '道具模式' },
+    { name: 'RunDirectorMode', type: 'STRING', comment: 'RunDirector模式' },
+    { name: 'PlatformMode', type: 'STRING', comment: '平台模式' },
+    { name: 'DifficultyMode', type: 'STRING', comment: '难度模式' },
+    { name: 'StartHeight', type: 'INT', comment: '起始高度' },
+    { name: 'InitialChargeMode', type: 'STRING', comment: '初始蓄力' },
+    { name: 'BossSpawnMode', type: 'STRING', comment: 'Boss刷新方式' },
+    { name: 'Notes', type: 'STRING', comment: '备注' },
+  ],
+};
+
 const GameConfigConfig = {
   name: 'GameConfig',
   file: 'GameConfig.txt',
@@ -170,6 +190,7 @@ const TableConfigs = {
   Audio: AudioConfig,
   Character: CharacterConfig,
   EconomyConfig: EconomyConfigConfig,
+  DebugConfig: DebugConfigConfig,
   GameConfig: GameConfigConfig,
   Milestones: MilestonesConfig,
   Monsters: MonstersConfig,

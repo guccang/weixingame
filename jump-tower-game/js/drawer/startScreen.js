@@ -6,8 +6,10 @@
 const { roundRect } = require('./helper');
 const { drawStartBackground } = require('./background');
 const { drawCharacterSelect } = require('./characterSelect');
+const { drawDebugPanel } = require('./debugPanel');
 const { drawModeSelect, drawTimeSelect, drawLandmarkSelect } = require('./modeSelect');
 const { drawLeaderboardPanel } = require('./leaderboard');
+const { drawActionButton } = require('./menuTheme');
 const progressionSystem = require('../progression/progression');
 
 /**
@@ -78,9 +80,26 @@ function drawStartScreen(ctx, game, images, characterConfig, jobConfig) {
 
       game.startBtnArea = { x: btn.x, y: btn.y, w: btn.width, h: btn.height };
     }
+
+    const debugBtnW = 108;
+    const debugBtnH = 34;
+    const debugBtnX = W - debugBtnW - 22;
+    const debugBtnY = 90;
+    drawActionButton(ctx, debugBtnX, debugBtnY, debugBtnW, debugBtnH, 'Debug', {
+      font: "700 14px 'PingFang SC', 'Microsoft YaHei', sans-serif",
+      textColor: '#03121f',
+      shadowColor: 'rgba(255, 188, 92, 0.22)',
+      stops: [
+        [0, '#ffd97a'],
+        [0.55, '#ffb86a'],
+        [1, '#ff8e6b']
+      ]
+    });
+    game.debugEntryArea = { x: debugBtnX, y: debugBtnY, w: debugBtnW, h: debugBtnH };
   } else {
     // 有面板显示时，清空开始按钮区域
     game.startBtnArea = null;
+    game.debugEntryArea = null;
   }
 
   drawCoinBadge(ctx, game, images);
@@ -132,6 +151,8 @@ function drawStartScreen(ctx, game, images, characterConfig, jobConfig) {
   // 根据状态显示面板
   if (game.showCharacterPanel) {
     drawCharacterSelect(ctx, game, characterConfig);
+  } else if (game.showDebugPanel) {
+    drawDebugPanel(ctx, game, W, H);
   } else if (game.showShopPanel) {
     drawShopPanel(ctx, game, images, W, H);
   } else if (game.showAchievementPanel) {

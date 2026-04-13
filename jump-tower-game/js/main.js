@@ -52,6 +52,7 @@ const player = require('./player/player');
 const { GameMode } = require('./game/index');
 const DifficultyManager = require('./game/difficultyManager');
 const gameConstants = require('./game/constants');
+const debugRuntime = require('./game/debugRuntime');
 const RunDirector = require('./game/runDirector');
 
 // 绘制系统
@@ -139,6 +140,7 @@ class Game {
     this.platforms = [];
     this.player = null;
     this.showCharacterPanel = false; // 是否显示角色选择面板
+    this.showDebugPanel = false; // 是否显示Debug面板
     this.showShopPanel = false; // 是否显示强化面板
     this.showLeaderboardPanel = false; // 是否显示排行榜面板
     this.rankList = []; // 排行榜数据
@@ -170,7 +172,24 @@ class Game {
     this.shopMessageUntil = 0;
     this.shopTab = 'upgrades';
     this.coinBadgeArea = null;
+    this.debugEntryArea = null;
     this.debugCoinGrantAmount = 1000;
+    this.debugProfile = null;
+    this.debugDraft = {
+      presetId: '',
+      overrides: {}
+    };
+    this.debugPresetAreas = [];
+    this.debugOptionAreas = [];
+    this.debugResetBtnArea = null;
+    this.debugLaunchBtnArea = null;
+    this.closeDebugPanel = null;
+    this.debugPanelScrollArea = null;
+    this.debugPanelScrollY = 0;
+    this.debugPanelMaxScroll = 0;
+    this.isDraggingDebugPanel = false;
+    this.debugPanelDragStartY = 0;
+    this.debugPanelDragStartScrollY = 0;
 
     this.controls = new Controls(this); // 控制系统
     this.mainUI = new MainUI(this); // 主界面UI
@@ -193,6 +212,7 @@ class Game {
 
     this.levelGenerator.setDifficultyManager(this.difficultyManager);
     this.levelGenerator.setRunDirector(this.runDirector);
+    this.initializeDebugDraft();
     progressionSystem.applyUpgradesToGame(this, this.progression);
     this.syncDifficulty(true);
     this.syncCharacterSelection();
@@ -232,10 +252,206 @@ class Game {
     this.praiseSystem.generate(this.playerName, this.playerJob, jobPraiseMap);
   }
 
+  getDebugConfig() {
+    return gameConstants.debugConfig;
+  }
+
+  initializeDebugDraft() {
+    const debugConfig = this.getDebugConfig();
+    this.debugDraft = {
+      presetId: debugConfig.defaultPresetId || '',
+      overrides: {}
+    };
+  }
+
+  getDebugDraftProfile() {
+    const draft = this.debugDraft || { presetId: '', overrides: {} };
+    return debugRuntime.buildDebugProfile(
+      this.getDebugConfig(),
+      draft.presetId,
+      draft.overrides
+    );
+  }
+
+  selectDebugPreset(presetId) {
+    const preset = debugRuntime.getPresetById(this.getDebugConfig(), presetId);
+    if (!preset) return null;
+    this.debugDraft = {
+      presetId: preset.id,
+      overrides: {}
+    };
+    return this.getDebugDraftProfile();
+  }
+
+  cycleDebugOption(key) {
+    const definition = debugRuntime.getOptionDefinition(key);
+    if (!definition) return null;
+
+    const draftProfile = this.getDebugDraftProfile();
+    const currentValue = draftProfile ? draftProfile[key] : definition.values[0];
+    const currentIndex = Math.max(0, definition.values.indexOf(currentValue));
+    const nextValue = definition.values[(currentIndex + 1) % definition.values.length];
+    const preset = debugRuntime.getPresetById(this.getDebugConfig(), this.debugDraft.presetId);
+    const nextOverrides = Object.assign({}, this.debugDraft.overrides || {});
+
+    if (preset && preset[key] === nextValue) {
+      delete nextOverrides[key];
+    } else {
+      nextOverrides[key] = nextValue;
+    }
+
+    this.debugDraft = {
+      presetId: this.debugDraft.presetId,
+      overrides: nextOverrides
+    };
+    return this.getDebugDraftProfile();
+  }
+
+  resetDebugDraft() {
+    this.initializeDebugDraft();
+    return this.getDebugDraftProfile();
+  }
+
+  resetDebugPanelScroll() {
+    this.debugPanelScrollY = 0;
+    this.debugPanelMaxScroll = 0;
+    this.debugPanelScrollArea = null;
+    this.isDraggingDebugPanel = false;
+    this.debugPanelDragStartY = 0;
+    this.debugPanelDragStartScrollY = 0;
+  }
+
+  startDebugPanelDrag(touchX, touchY) {
+    const area = this.debugPanelScrollArea;
+    if (!area) return false;
+    if (touchX < area.x || touchX > area.x + area.w || touchY < area.y || touchY > area.y + area.h) {
+      return false;
+    }
+    if (this.debugPanelMaxScroll <= 0) {
+      return false;
+    }
+
+    this.isDraggingDebugPanel = true;
+    this.debugPanelDragStartY = touchY;
+    this.debugPanelDragStartScrollY = this.debugPanelScrollY || 0;
+    return true;
+  }
+
+  handleDebugPanelScroll(touchY) {
+    if (!this.isDraggingDebugPanel) return false;
+    const deltaY = touchY - this.debugPanelDragStartY;
+    const nextScroll = this.debugPanelDragStartScrollY - deltaY;
+    this.debugPanelScrollY = Math.max(0, Math.min(this.debugPanelMaxScroll || 0, nextScroll));
+    return true;
+  }
+
+  stopDebugPanelDrag() {
+    this.isDraggingDebugPanel = false;
+    this.debugPanelDragStartY = 0;
+    this.debugPanelDragStartScrollY = 0;
+  }
+
+  setDebugProfile(profile) {
+    this.debugProfile = profile ? debugRuntime.cloneProfile(profile) : null;
+    if (this.difficultyManager && typeof this.difficultyManager.setDebugProfile === 'function') {
+      this.difficultyManager.setDebugProfile(this.debugProfile);
+    }
+  }
+
+  isDebugRun() {
+    return debugRuntime.isDebugProfileEnabled(this.debugProfile);
+  }
+
+  getDebugRunLabel() {
+    if (!this.isDebugRun()) return '';
+    const name = this.debugProfile && this.debugProfile.presetName ? this.debugProfile.presetName : '自定义';
+    return 'DEBUG · ' + name;
+  }
+
+  applyDebugStartProfile() {
+    if (!this.isDebugRun() || !this.player) return;
+
+    const profile = this.debugProfile || {};
+    const startHeight = Math.max(0, Math.round(profile.startHeight || 0));
+    const initialCharge = debugRuntime.resolveInitialChargeCount(profile, this.chargeMax);
+    const bossMode = profile.bossSpawnMode || 'normal';
+
+    this.chargeCount = Math.max(0, Math.min(this.chargeMax, initialCharge));
+    this.chargeFull = this.chargeCount >= this.chargeMax;
+
+    if (startHeight > 0) {
+      const targetY = this.H - 100 - startHeight * 10;
+      const anchorX = Math.max(16, Math.min(this.W - 136, this.W / 2 - 60));
+      const anchorY = targetY + this.player.h + 8;
+      const anchorPlatform = platformPhysics.createPlatformWithSkin(anchorX, anchorY, 'normal');
+      anchorPlatform.debugAnchor = true;
+      anchorPlatform.pickup = null;
+      anchorPlatform.mushroom = null;
+      anchorPlatform.coin = null;
+      anchorPlatform.runtimeMoveSpeedScale = 1;
+
+      this.player.x = this.W / 2 - this.player.w / 2;
+      this.player.y = targetY;
+      this.player.vx = 0;
+      this.player.vy = 0;
+      this.player.state = 'idle';
+
+      this.cameraY = targetY - this.H * 0.4;
+      this.score = startHeight;
+      this.maxHeight = startHeight;
+      this.lastMilestone = startHeight;
+
+      if (this.levelGenerator && Array.isArray(this.levelGenerator.platforms)) {
+        this.levelGenerator.platforms.push(anchorPlatform);
+      }
+      if (this.platforms) {
+        this.platforms.push(anchorPlatform);
+      }
+
+      this.generatePlatforms();
+      this.refreshPlatformRuntimeEffects();
+    }
+
+    if (profile.bossMode === 'off') {
+      this.bossSpawnHeight = Infinity;
+      this.nextBossSpawnPlan = null;
+      this.bossSpawnHintShown = true;
+      return;
+    }
+
+    if (bossMode === 'immediate') {
+      this.bossSpawnHeight = Math.max(0, this.score);
+      this.nextBossSpawnPlan = this.createBossSpawnPlan(this.bossSpawnHeight);
+      this.bossSpawnHintShown = true;
+      return;
+    }
+
+    this.bossSpawnHeight = this.getNextBossSpawnHeight(this.score);
+    this.nextBossSpawnPlan = this.createBossSpawnPlan(this.bossSpawnHeight);
+    this.bossSpawnHintShown = false;
+  }
+
+  startDebugGame() {
+    const profile = this.getDebugDraftProfile();
+    if (!profile) return;
+    this.gameMode.selectMode('endless');
+    this.panelManager.close('showDebugPanel');
+    this.startGame({ debugProfile: profile });
+  }
+
+  restartCurrentRun() {
+    if (this.isDebugRun()) {
+      this.startGame({ debugProfile: this.debugProfile });
+      return;
+    }
+    this.startGame();
+  }
+
   initGame() {
     progressionSystem.applyUpgradesToGame(this, this.progression);
     this.syncDifficulty(true);
     this.syncCharacterSelection();
+    this.resetDebugPanelScroll();
     this.player = player.createPlayer(this.W, this.H);
     this.player.character = progressionSystem.getSelectedCharacterId(this.progression);
     this.particles = [];
@@ -328,6 +544,8 @@ class Game {
     this.difficultyManager.syncBasePhysics(this);
     if (resetToStart) {
       this.difficultyManager.reset();
+    } else if (this.isDebugRun() && debugRuntime.isDifficultyFrozen(this.debugProfile)) {
+      this.difficultyManager.applyToGame(this);
     } else {
       this.difficultyManager.update(this.score);
     }
@@ -339,7 +557,11 @@ class Game {
 
   updateDifficulty() {
     if (!this.difficultyManager) return null;
-    this.difficultyManager.update(this.score);
+    if (this.isDebugRun() && debugRuntime.isDifficultyFrozen(this.debugProfile)) {
+      this.difficultyManager.applyToGame(this);
+    } else {
+      this.difficultyManager.update(this.score);
+    }
     const profile = this.difficultyManager.applyToGame(this);
     this.applyRuntimeEffectModifiers();
     return profile;
@@ -537,9 +759,19 @@ class Game {
   onBossDefeated(monster, context = {}) {
     if (!monster || monster.rewardGranted) return;
 
-    const reward = progressionSystem.awardBossDrop(this.progression, monster.dropReward);
+    let reward;
+    if (this.isDebugRun()) {
+      const rewardText = monster.dropReward || '';
+      const match = String(rewardText).match(/coin_(\d+)/i);
+      reward = {
+        progress: this.progression,
+        coins: match ? (parseInt(match[1], 10) || 0) : 10
+      };
+    } else {
+      reward = progressionSystem.awardBossDrop(this.progression, monster.dropReward);
+      this.progression = reward.progress;
+    }
     monster.rewardGranted = true;
-    this.progression = reward.progress;
     this.sessionBossCoins += reward.coins;
 
     if (this.barrage && this.player) {
@@ -603,6 +835,9 @@ class Game {
   }
 
   rollBossSpawnHeight() {
+    if (this.isDebugRun() && this.debugProfile.bossMode === 'off') {
+      return Infinity;
+    }
     const bossConfig = gameConstants.bossConfig;
     return bossConfig.spawnHeights.length > 0 ? bossConfig.spawnHeights[0] : 500;
   }
@@ -637,7 +872,12 @@ class Game {
   }
 
   createBossSpawnPlan(height) {
-    const picked = this.pickWeightedBossEntry(gameConstants.bossConfig.pool);
+    const pool = debugRuntime.filterBossPool(gameConstants.bossConfig.pool, this.debugProfile);
+    if (!pool || pool.length === 0) {
+      return null;
+    }
+
+    const picked = this.pickWeightedBossEntry(pool);
     return {
       height: height,
       monsterId: picked.monsterId,
@@ -673,10 +913,15 @@ class Game {
   }
 
   grantRunCoins(amount, options = {}) {
-    const reward = progressionSystem.grantCoins(this.progression, amount);
+    const safeCoins = Math.max(0, Math.floor(amount || 0));
+    const reward = this.isDebugRun()
+      ? { progress: this.progression, coins: safeCoins }
+      : progressionSystem.grantCoins(this.progression, safeCoins);
     if (reward.coins <= 0) return reward;
 
-    this.progression = reward.progress;
+    if (!this.isDebugRun()) {
+      this.progression = reward.progress;
+    }
     const bucket = options.bucket || 'event';
     if (bucket === 'boss') {
       this.sessionBossCoins += reward.coins;
@@ -687,7 +932,9 @@ class Game {
     }
 
     if (options.emitStats) {
-      this.progression = progressionSystem.addCoinsCollected(this.progression, reward.coins);
+      if (!this.isDebugRun()) {
+        this.progression = progressionSystem.addCoinsCollected(this.progression, reward.coins);
+      }
     }
 
     if (options.x !== undefined && options.y !== undefined) {
@@ -911,12 +1158,16 @@ class Game {
       ? this.nextBossSpawnPlan.warningText
       : '前方检测到Boss动静！';
 
-    if (!this.bossSpawnHintShown && this.score >= Math.max(0, this.bossSpawnHeight - bossConfig.warningLeadHeight)) {
+    if (this.nextBossSpawnPlan &&
+        !this.bossSpawnHintShown &&
+        this.score >= Math.max(0, this.bossSpawnHeight - bossConfig.warningLeadHeight)) {
       this.bossSpawnHintShown = true;
       this.barrage.show(this.W / 2 - 90, 120, bossWarningText, '#ff6b6b');
     }
 
-    if (this.score >= this.bossSpawnHeight && !this.bossSystem.hasActiveBoss()) {
+    if (this.nextBossSpawnPlan &&
+        this.score >= this.bossSpawnHeight &&
+        !this.bossSystem.hasActiveBoss()) {
       this.bossSystem.spawn(this.nextBossSpawnPlan || {
         monsterId: bossConfig.monsterId,
         behaviorType: 'leaper'
@@ -1066,13 +1317,23 @@ class Game {
     return false;
   }
 
-  startGame() {
+  startGame(options = {}) {
     this.generatePraises();
     this.showShopPanel = false;
-    const itemResult = progressionSystem.consumeEquippedItem(this.progression);
-    this.progression = itemResult.progress;
+    const debugProfile = options && options.debugProfile
+      ? debugRuntime.cloneProfile(options.debugProfile)
+      : null;
+    this.setDebugProfile(debugProfile);
+
+    const itemResult = this.isDebugRun()
+      ? { progress: this.progression, itemName: '', effects: {} }
+      : progressionSystem.consumeEquippedItem(this.progression);
+    if (!this.isDebugRun()) {
+      this.progression = itemResult.progress;
+    }
     this.pendingRunItemEffects = itemResult.effects || {};
     this.initGame();
+    this.applyDebugStartProfile();
     this.runItemEffects = Object.assign({}, this.pendingRunItemEffects);
     this.pendingRunItemEffects = {};
     this.updateDifficulty();
@@ -1095,50 +1356,52 @@ class Game {
 
   gameOver() {
     this.gameMode.onGameOver(this);
-    const rewardResult = progressionSystem.awardRunCoins(this.progression, {
-      mode: this.gameMode.gameMode,
-      score: this.score,
-      combo: this.maxCombo,
-      time: this.finalElapsedTime || 0,
-      challengeCompleted: this.gameMode.gameMode === 'challenge' &&
-        !!this.gameMode.selectedLandmark &&
-        this.score >= this.gameMode.selectedLandmark.targetHeight
-    });
-    this.progression = rewardResult.progress;
+    if (this.isDebugRun()) {
+      this.runRewardSummary = null;
+    } else {
+      const rewardResult = progressionSystem.awardRunCoins(this.progression, {
+        mode: this.gameMode.gameMode,
+        score: this.score,
+        combo: this.maxCombo,
+        time: this.finalElapsedTime || 0,
+        challengeCompleted: this.gameMode.gameMode === 'challenge' &&
+          !!this.gameMode.selectedLandmark &&
+          this.score >= this.gameMode.selectedLandmark.targetHeight
+      });
+      this.progression = rewardResult.progress;
 
-    // 成就统计：更新游戏统计并检查成就
-    const achievementResult = progressionSystem.updateRunStats(this.progression, {
-      score: this.score,
-      combo: this.maxCombo,
-      coinsCollected: this.sessionPickupCoins
-    });
-    this.progression = achievementResult.progress;
+      const achievementResult = progressionSystem.updateRunStats(this.progression, {
+        score: this.score,
+        combo: this.maxCombo,
+        coinsCollected: this.sessionPickupCoins
+      });
+      this.progression = achievementResult.progress;
 
-    // 显示成就解锁通知
-    if (achievementResult.unlocks && achievementResult.unlocks.length > 0 && this.barrage) {
-      let delay = 2000;
-      for (const unlock of achievementResult.unlocks) {
-        setTimeout(() => {
-          if (this.barrage) {
-            this.barrage.show(this.W / 2 - 100, this.H / 2 - 80, unlock.message, '#ffd700');
-          }
-        }, delay);
-        delay += 1200;
+      if (achievementResult.unlocks && achievementResult.unlocks.length > 0 && this.barrage) {
+        let delay = 2000;
+        for (const unlock of achievementResult.unlocks) {
+          setTimeout(() => {
+            if (this.barrage) {
+              this.barrage.show(this.W / 2 - 100, this.H / 2 - 80, unlock.message, '#ffd700');
+            }
+          }, delay);
+          delay += 1200;
+        }
       }
-    }
 
-    this.runRewardSummary = {
-      baseCoins: rewardResult.baseCoins,
-      heightCoins: rewardResult.heightCoins,
-      comboCoins: rewardResult.comboCoins,
-      challengeBonus: rewardResult.challengeBonus,
-      modeMultiplier: rewardResult.modeMultiplier,
-      bossCoins: this.sessionBossCoins,
-      pickupCoins: this.sessionPickupCoins,
-      eventCoins: this.sessionEventCoins,
-      totalCoins: rewardResult.totalCoins + this.sessionBossCoins + this.sessionPickupCoins + this.sessionEventCoins,
-      balance: rewardResult.progress.coins
-    };
+      this.runRewardSummary = {
+        baseCoins: rewardResult.baseCoins,
+        heightCoins: rewardResult.heightCoins,
+        comboCoins: rewardResult.comboCoins,
+        challengeBonus: rewardResult.challengeBonus,
+        modeMultiplier: rewardResult.modeMultiplier,
+        bossCoins: this.sessionBossCoins,
+        pickupCoins: this.sessionPickupCoins,
+        eventCoins: this.sessionEventCoins,
+        totalCoins: rewardResult.totalCoins + this.sessionBossCoins + this.sessionPickupCoins + this.sessionEventCoins,
+        balance: rewardResult.progress.coins
+      };
+    }
 
     this.state = 'gameover';
     this.growthActive = false;
@@ -1152,8 +1415,9 @@ class Game {
     // 初始化游戏结束按钮区域，确保在渲染前就存在
     this.gameOverBtnArea = getGameOverButtonLayout(this);
 
-    // 保存游戏数据到微信云存储
-    this.saveToCloudStorage();
+    if (!this.isDebugRun()) {
+      this.saveToCloudStorage();
+    }
   }
 
   // 保存游戏数据到云数据库
@@ -1217,6 +1481,7 @@ class Game {
     this.gameOverBtnArea = null;
     this.nextBossSpawnPlan = null;
     this.showCharacterPanel = false;
+    this.showDebugPanel = false;
     this.showShopPanel = false;
     this.showLeaderboardPanel = false;
     this.runRewardSummary = null;
@@ -1228,6 +1493,11 @@ class Game {
     this.runBuffEffects = {};
     this.runPickupEffects = {};
     this.growthExpiresAt = 0;
+    this.setDebugProfile(null);
+    this.resetDebugPanelScroll();
+    if (this.panelManager) {
+      this.panelManager.closeAll();
+    }
     this.gameMode.reset();
     this.skillSystem.reset();
     this.bossSystem.reset();

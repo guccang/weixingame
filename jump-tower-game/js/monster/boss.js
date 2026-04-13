@@ -6,6 +6,7 @@
 const { getById, find } = require('../tables/tableManager');
 const assetManager = require('../resource/assetManager');
 const gameConstants = require('../game/constants');
+const debugRuntime = require('../game/debugRuntime');
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
@@ -77,6 +78,9 @@ class Boss {
 
   spawn(spawnArg) {
     const descriptor = this.buildSpawnDescriptor(spawnArg);
+    if (!debugRuntime.allowsBossBehavior(this.game ? this.game.debugProfile : null, descriptor.behaviorType)) {
+      return null;
+    }
     const config = this.getMonsterConfig(descriptor.monsterId);
     if (!config) {
       console.warn('[Boss] 未找到怪物配置:', descriptor.monsterId);
@@ -186,7 +190,7 @@ class Boss {
       throwCount: 0,
       maxThrowCount: Math.max(1, Math.round(throwerConfig.maxThrows || 6)),
       nextThrowAt: now + 850,
-      eventEndsAt: now + Math.max(3000, throwerConfig.eventDurationMs || 12000),
+      eventEndsAt: now + Math.max(3000, throwerConfig.eventDurationMs || 18000),
       targetPatrolX: spawnX,
       driftDirection: Math.random() < 0.5 ? -1 : 1,
       hoverPhase: Math.random() * Math.PI * 2,
@@ -330,11 +334,11 @@ class Boss {
   _updateThrowerMonster(monster, player, dt) {
     const now = Date.now();
     const config = gameConstants.bossConfig.thrower;
-    const bandY = this.game.cameraY + (config.topOffset || 118);
+    const bandY = this.game.cameraY + (config.topOffset || 96);
 
     switch (monster.state) {
       case 'spawning':
-        this._moveTowards(monster, monster.targetPatrolX, bandY, Math.max(monster.speed * 1.8, config.repositionSpeed || 6.4), dt);
+        this._moveTowards(monster, monster.targetPatrolX, bandY, Math.max(monster.speed * 1.8, config.repositionSpeed || 8), dt);
         if (Math.abs(monster.y - bandY) < 10) {
           monster.state = 'patrolling';
           monster.nextThrowAt = now + 900;
@@ -349,7 +353,7 @@ class Boss {
         if (!monster.targetPatrolX || Math.abs(monster.x - monster.targetPatrolX) < 18) {
           monster.targetPatrolX = this._resolveThrowerPatrolX(player, false);
         }
-        this._moveTowards(monster, monster.targetPatrolX, bandY, Math.max(monster.speed, config.patrolSpeed || 4.8), dt);
+        this._moveTowards(monster, monster.targetPatrolX, bandY, Math.max(monster.speed, config.patrolSpeed || 5.8), dt);
         if (now >= monster.nextThrowAt) {
           monster.state = 'throwing';
           monster.stateTimer = Math.max(120, config.throwPauseMs || 260);
@@ -362,7 +366,7 @@ class Boss {
 
       case 'throwing':
         monster.stateTimer -= dt;
-        this._moveTowards(monster, monster.x, bandY, Math.max(monster.speed * 0.75, (config.patrolSpeed || 4.8) * 0.7), dt);
+        this._moveTowards(monster, monster.x, bandY, Math.max(monster.speed * 0.75, (config.patrolSpeed || 5.8) * 0.7), dt);
         if (!monster.throwPrepared && monster.stateTimer <= Math.max(50, (config.throwPauseMs || 260) * 0.45)) {
           monster.throwPrepared = true;
           this._throwProjectiles(monster, now);
@@ -384,7 +388,7 @@ class Boss {
           this._enterThrowerExit(monster);
           break;
         }
-        this._moveTowards(monster, monster.targetPatrolX, bandY, Math.max(monster.speed * 1.4, config.repositionSpeed || 6.4), dt);
+        this._moveTowards(monster, monster.targetPatrolX, bandY, Math.max(monster.speed * 1.4, config.repositionSpeed || 8), dt);
         if (Math.abs(monster.x - monster.targetPatrolX) < 20 || monster.stateTimer <= 0) {
           monster.state = 'patrolling';
           monster.nextThrowAt = now + this._getThrowInterval();
@@ -392,8 +396,8 @@ class Boss {
         break;
 
       case 'exit':
-        monster.y -= Math.max(monster.speed * 2.1, config.repositionSpeed || 6.4) * (dt / 1000) * 60;
-        monster.x += monster.driftDirection * Math.max(monster.speed * 0.7, (config.patrolSpeed || 4.8) * 0.55) * (dt / 1000) * 60;
+        monster.y -= Math.max(monster.speed * 2.1, config.repositionSpeed || 8) * (dt / 1000) * 60;
+        monster.x += monster.driftDirection * Math.max(monster.speed * 0.7, (config.patrolSpeed || 5.8) * 0.55) * (dt / 1000) * 60;
         break;
     }
   }
@@ -416,7 +420,7 @@ class Boss {
 
   _getThrowInterval() {
     const config = gameConstants.bossConfig.thrower;
-    const minInterval = Math.max(300, config.throwIntervalMin || 1350);
+    const minInterval = Math.max(300, config.throwIntervalMin || 850);
     const maxInterval = Math.max(minInterval, config.throwIntervalMax || minInterval);
     return randomBetween(minInterval, maxInterval);
   }
@@ -428,11 +432,12 @@ class Boss {
 
     const config = gameConstants.bossConfig.thrower;
     const multiThrow = Math.random() < (config.multiThrowChance || 0);
-    const count = multiThrow ? Math.max(2, Math.round(config.multiThrowCount || 2)) : 1;
+    const count = multiThrow ? Math.max(2, Math.round(config.multiThrowCount || 3)) : 1;
     const centerIndex = (count - 1) / 2;
+    const spread = 30 + Math.max(0, (config.projectileRadiusScale || 1.55) - 1) * 12;
 
     for (let i = 0; i < count; i++) {
-      const offsetX = (i - centerIndex) * 26;
+      const offsetX = (i - centerIndex) * spread;
       this.game.runDirector.spawnBossProjectilePickup(monster.x + offsetX, monster.y + 36, {
         now: now,
         driftDirection: offsetX === 0 ? monster.driftDirection : (offsetX < 0 ? -1 : 1),
@@ -661,8 +666,9 @@ class Boss {
   _renderThrowerMonster(ctx, monster) {
     const drawX = monster.x;
     const drawY = monster.y - this.game.cameraY + Math.sin(Date.now() * 0.004 + monster.hoverPhase) * 3;
-    const bodyW = this.throwerRenderSize * 0.7;
-    const bodyH = this.throwerRenderSize * 0.22;
+    const renderSize = Math.max(140, gameConstants.bossConfig.thrower.renderSize || this.throwerRenderSize);
+    const bodyW = renderSize * 0.7;
+    const bodyH = renderSize * 0.22;
     const canopyW = bodyW * 0.42;
     const canopyH = bodyH * 0.72;
 
