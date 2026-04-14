@@ -40,7 +40,7 @@ function drawDebugPanel(ctx, game, W, H) {
 
   game.debugPresetAreas = [];
   game.debugOptionAreas = [];
-  game.debugPanelPresetId = draft.presetId || '';
+  game.debugPanelPresetIds = Array.isArray(draft.presetIds) ? draft.presetIds.slice() : [];
   game.debugResetBtnArea = null;
   game.debugLaunchBtnArea = null;
   game.closeDebugPanel = null;
@@ -79,7 +79,7 @@ function drawDebugPanel(ctx, game, W, H) {
 
   ctx.fillStyle = 'rgba(214, 227, 245, 0.72)';
   ctx.font = font(13, '500');
-  ctx.fillText('选择预设后可继续细调，Debug 局不结算金币、纪录或任务。', contentX, panelY + 96);
+  ctx.fillText('预设场景支持多选，后选中的预设会覆盖前面的同项配置。', contentX, panelY + 96);
   ctx.restore();
 
   const presetCols = 3;
@@ -136,7 +136,7 @@ function drawDebugPanel(ctx, game, W, H) {
     const col = i % presetCols;
     const x = contentX + col * (presetCardW + presetGap);
     const y = scrollViewportY - game.debugPanelScrollY + presetStartY + row * (presetCardH + presetGap);
-    const active = preset.id === draft.presetId;
+    const active = Array.isArray(draft.presetIds) && draft.presetIds.indexOf(preset.id) !== -1;
 
     if (!isVisible(y, presetCardH, visibleTop, visibleBottom)) {
       continue;
@@ -249,10 +249,12 @@ function drawDebugPanel(ctx, game, W, H) {
     ctx.textBaseline = 'top';
     ctx.fillStyle = '#ffe4a3';
     ctx.font = font(11, '700');
-    ctx.fillText(profile && profile.isCustom ? '当前配置：预设基础上已自定义' : '当前配置：按预设运行', contentX + 14, summaryY + 8);
+    ctx.fillText(profile && profile.isCustom ? '当前配置：预设基础上已自定义' : '当前配置：按所选预设运行', contentX + 14, summaryY + 8);
     ctx.fillStyle = 'rgba(255, 244, 222, 0.72)';
     ctx.font = font(9, '500');
-    ctx.fillText((profile && profile.presetDescription) || '选择一个预设后开始 Debug 局。', contentX + 14, summaryY + 20);
+    ctx.fillText((profile && profile.presetNames && profile.presetNames.length > 0
+      ? fitText(ctx, profile.presetNames.join(' + '), contentW - 28)
+      : '选择一个或多个预设后开始 Debug 局。'), contentX + 14, summaryY + 20);
     ctx.restore();
   }
 

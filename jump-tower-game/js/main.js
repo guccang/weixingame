@@ -176,7 +176,7 @@ class Game {
     this.debugCoinGrantAmount = 1000;
     this.debugProfile = null;
     this.debugDraft = {
-      presetId: '',
+      presetIds: [],
       overrides: {}
     };
     this.debugPresetAreas = [];
@@ -259,16 +259,16 @@ class Game {
   initializeDebugDraft() {
     const debugConfig = this.getDebugConfig();
     this.debugDraft = {
-      presetId: debugConfig.defaultPresetId || '',
+      presetIds: debugConfig.defaultPresetId ? [debugConfig.defaultPresetId] : [],
       overrides: {}
     };
   }
 
   getDebugDraftProfile() {
-    const draft = this.debugDraft || { presetId: '', overrides: {} };
+    const draft = this.debugDraft || { presetIds: [], overrides: {} };
     return debugRuntime.buildDebugProfile(
       this.getDebugConfig(),
-      draft.presetId,
+      draft.presetIds,
       draft.overrides
     );
   }
@@ -276,8 +276,20 @@ class Game {
   selectDebugPreset(presetId) {
     const preset = debugRuntime.getPresetById(this.getDebugConfig(), presetId);
     if (!preset) return null;
+
+    const currentPresetIds = this.debugDraft && Array.isArray(this.debugDraft.presetIds)
+      ? this.debugDraft.presetIds.slice()
+      : [];
+    const existingIndex = currentPresetIds.indexOf(preset.id);
+
+    if (existingIndex >= 0) {
+      currentPresetIds.splice(existingIndex, 1);
+    } else {
+      currentPresetIds.push(preset.id);
+    }
+
     this.debugDraft = {
-      presetId: preset.id,
+      presetIds: currentPresetIds,
       overrides: {}
     };
     return this.getDebugDraftProfile();
@@ -291,17 +303,20 @@ class Game {
     const currentValue = draftProfile ? draftProfile[key] : definition.values[0];
     const currentIndex = Math.max(0, definition.values.indexOf(currentValue));
     const nextValue = definition.values[(currentIndex + 1) % definition.values.length];
-    const preset = debugRuntime.getPresetById(this.getDebugConfig(), this.debugDraft.presetId);
+    const presets = debugRuntime.getPresetList(this.getDebugConfig(), this.debugDraft.presetIds);
+    const baseValue = presets.length > 0
+      ? presets[presets.length - 1][key]
+      : definition.values[0];
     const nextOverrides = Object.assign({}, this.debugDraft.overrides || {});
 
-    if (preset && preset[key] === nextValue) {
+    if (baseValue === nextValue) {
       delete nextOverrides[key];
     } else {
       nextOverrides[key] = nextValue;
     }
 
     this.debugDraft = {
-      presetId: this.debugDraft.presetId,
+      presetIds: Array.isArray(this.debugDraft.presetIds) ? this.debugDraft.presetIds.slice() : [],
       overrides: nextOverrides
     };
     return this.getDebugDraftProfile();
@@ -364,7 +379,10 @@ class Game {
 
   getDebugRunLabel() {
     if (!this.isDebugRun()) return '';
-    const name = this.debugProfile && this.debugProfile.presetName ? this.debugProfile.presetName : '自定义';
+    const names = this.debugProfile && Array.isArray(this.debugProfile.presetNames)
+      ? this.debugProfile.presetNames.filter(function(name) { return !!name; })
+      : [];
+    const name = names.length > 0 ? names.join(' + ') : '自定义';
     return 'DEBUG · ' + name;
   }
 

@@ -138,24 +138,67 @@ function getPresetById(config, presetId) {
   return matched || config.presets[0];
 }
 
-function buildDebugProfile(config, presetId, overrides) {
-  const preset = getPresetById(config, presetId);
-  if (!preset) return null;
+function getPresetList(config, presetIds) {
+  if (!config || !Array.isArray(config.presets) || config.presets.length === 0) return [];
+
+  if (Array.isArray(presetIds)) {
+    const normalizedIds = presetIds.filter(function(presetId) { return !!presetId; });
+    if (normalizedIds.length === 0) {
+      return [];
+    }
+
+    const resolved = [];
+    for (let i = 0; i < normalizedIds.length; i++) {
+      const preset = getPresetById(config, normalizedIds[i]);
+      if (preset && resolved.indexOf(preset) === -1) {
+        resolved.push(preset);
+      }
+    }
+    return resolved;
+  }
+
+  const normalizedIds = presetIds ? [presetIds] : [];
+  const resolved = [];
+
+  for (let i = 0; i < normalizedIds.length; i++) {
+    const preset = getPresetById(config, normalizedIds[i]);
+    if (preset && resolved.indexOf(preset) === -1) {
+      resolved.push(preset);
+    }
+  }
+
+  if (resolved.length > 0) {
+    return resolved;
+  }
+
+  return config.presets[0] ? [config.presets[0]] : [];
+}
+
+function buildDebugProfile(config, presetIds, overrides) {
+  const presets = getPresetList(config, presetIds);
+  if (presets.length === 0) return null;
+  const basePreset = presets[presets.length - 1];
 
   const profile = {
     enabled: true,
-    presetId: preset.id,
-    presetName: preset.name,
-    presetDescription: preset.description,
+    presetId: basePreset.id,
+    presetIds: presets.map(function(preset) { return preset.id; }),
+    presetName: basePreset.name,
+    presetNames: presets.map(function(preset) { return preset.name; }),
+    presetDescription: basePreset.description,
+    presetDescriptions: presets.map(function(preset) { return preset.description; }).filter(function(text) {
+      return !!text;
+    }),
     overrides: {}
   };
 
   for (let i = 0; i < OPTION_KEYS.length; i++) {
     const key = OPTION_KEYS[i];
-    const overrideValue = overrides && overrides[key] !== undefined ? overrides[key] : preset[key];
+    const presetValue = basePreset[key];
+    const overrideValue = overrides && overrides[key] !== undefined ? overrides[key] : presetValue;
     const finalValue = sanitizeOptionValue(key, overrideValue);
     profile[key] = finalValue;
-    if (finalValue !== preset[key]) {
+    if (finalValue !== presetValue) {
       profile.overrides[key] = finalValue;
     }
   }
@@ -301,6 +344,7 @@ module.exports = {
   getOptionDefinition,
   getOptionLabel,
   getPresetById,
+  getPresetList,
   buildDebugProfile,
   cloneProfile,
   isDebugProfileEnabled,
