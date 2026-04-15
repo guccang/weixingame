@@ -35,7 +35,7 @@ function resolveMode() {
     return mode;
   }
 
-  return 'cloud';
+  return 'local';
 }
 
 function getConfig() {

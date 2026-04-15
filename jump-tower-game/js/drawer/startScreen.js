@@ -114,7 +114,9 @@ function drawStartScreen(ctx, game, images, characterConfig, jobConfig) {
       { key: 'character', color: '#74b9ff', text: '角色', img: images.iconCharacter },
       { key: 'mode', color: '#ffdd57', text: '玩法', img: images.iconMode, highlight: game.gameMode.showModeSelect },
       { key: 'achievement', color: '#fdcb6e', text: '成就', img: images.iconAchievement, highlight: game.showAchievementPanel },
-      { key: 'leaderboard', color: '#55efc4', text: '排行', img: images.iconLeaderboard }
+      { key: 'leaderboard', color: '#55efc4', text: '排行', img: images.iconLeaderboard },
+      { key: 'pet', color: '#a29bfe', text: '宠物', img: images.iconPet },
+      { key: 'backpack', color: '#ffeaa7', text: '背包', img: images.iconBackpack }
     ];
 
     game.bottomBtnArea = {};

@@ -97,7 +97,9 @@ class LayoutLoader {
             { id: "character", type: "iconButton", size: { width: 50, height: 50 } },
             { id: "mode", type: "iconButton", size: { width: 50, height: 50 } },
             { id: "achievement", type: "iconButton", size: { width: 50, height: 50 } },
-            { id: "leaderboard", type: "iconButton", size: { width: 50, height: 50 } }
+            { id: "leaderboard", type: "iconButton", size: { width: 50, height: 50 } },
+            { id: "pet", type: "iconButton", size: { width: 50, height: 50 } },
+            { id: "backpack", type: "iconButton", size: { width: 50, height: 50 } }
           ]
         }
       ]

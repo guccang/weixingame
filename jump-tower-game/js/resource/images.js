@@ -15,9 +15,11 @@ const images = {
   iconShop: null,
   iconMode: null,
   iconAchievement: null,
+  iconPet: null,
+  iconBackpack: null,
   loaded: false,
   loadCount: 0,
-  totalCount: 10
+  totalCount: 12
 };
 
 function loadImage(name, src) {
@@ -43,6 +45,8 @@ function loadAllImages() {
   loadImage('iconShop', assetManager.getImagePath('ui.iconShop'));
   loadImage('iconMode', assetManager.getImagePath('ui.iconMode'));
   loadImage('iconAchievement', assetManager.getImagePath('ui.iconAchievement'));
+  loadImage('iconPet', assetManager.getImagePath('ui.iconPet'));
+  loadImage('iconBackpack', assetManager.getImagePath('ui.iconBackpack'));
 }
 
 loadAllImages();
