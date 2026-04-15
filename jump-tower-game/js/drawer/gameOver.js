@@ -227,6 +227,7 @@ function drawRewardChip(ctx, x, y, w, h, label, value) {
  */
 function drawGameOverScreen(ctx, game, images) {
   const { W, H, score } = game;
+  const registry = game.uiRegistry;
   const meta = getResultMeta(game);
   const reward = game.runRewardSummary;
   const layout = getGameOverButtonLayout(game);
@@ -402,20 +403,38 @@ function drawGameOverScreen(ctx, game, images) {
     ]
   });
 
-  game.gameOverBtnArea = {
-    restartX: layout.restartX,
-    restartY: layout.restartY,
-    restartW: layout.restartW,
-    restartH: layout.restartH,
-    shareX: layout.shareX,
-    shareY: layout.shareY,
-    shareW: layout.shareW,
-    shareH: layout.shareH,
-    homeX: layout.homeX,
-    homeY: layout.homeY,
-    homeW: layout.homeW,
-    homeH: layout.homeH
-  };
+  registry.register('gameover.panel', {
+    x: layout.panelX,
+    y: layout.panelY,
+    w: layout.panelW,
+    h: layout.panelH
+  }, {
+    consume: true
+  });
+  registry.register('gameover.restart', {
+    x: layout.restartX,
+    y: layout.restartY,
+    w: layout.restartW,
+    h: layout.restartH
+  }, {
+    action: { type: 'game-restart' }
+  });
+  registry.register('gameover.share', {
+    x: layout.shareX,
+    y: layout.shareY,
+    w: layout.shareW,
+    h: layout.shareH
+  }, {
+    action: { type: 'game-share' }
+  });
+  registry.register('gameover.home', {
+    x: layout.homeX,
+    y: layout.homeY,
+    w: layout.homeW,
+    h: layout.homeH
+  }, {
+    action: { type: 'game-home' }
+  });
 }
 
 module.exports = {

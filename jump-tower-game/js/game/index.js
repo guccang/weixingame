@@ -12,37 +12,18 @@ class GameMode {
     this.selectedLandmark = null;
     this.timeRemaining = 0;
     this.challengeCompleted = false;
-
-    // UI状态
-    this.showModeSelect = false;
-    this.showTimeSelect = false;
-    this.showLandmarkSelect = false;
   }
 
   selectMode(mode) {
     this.gameMode = mode;
-    this.showModeSelect = false;
-
-    if (mode === GAME_MODES.TIME_ATTACK) {
-      this.showTimeSelect = true;
-      this.showLandmarkSelect = false;
-    } else if (mode === GAME_MODES.CHALLENGE) {
-      this.showLandmarkSelect = true;
-      this.showTimeSelect = false;
-    } else {
-      this.showTimeSelect = false;
-      this.showLandmarkSelect = false;
-    }
   }
 
   selectTimeLimit(ms) {
     this.selectedTimeLimit = ms;
-    this.showTimeSelect = false;
   }
 
   selectLandmark(landmark) {
     this.selectedLandmark = landmark;
-    this.showLandmarkSelect = false;
   }
 
   initForGame(game) {
@@ -97,9 +78,6 @@ class GameMode {
     this.selectedLandmark = null;
     this.timeRemaining = 0;
     this.challengeCompleted = false;
-    this.showModeSelect = false;
-    this.showTimeSelect = false;
-    this.showLandmarkSelect = false;
   }
 }
 

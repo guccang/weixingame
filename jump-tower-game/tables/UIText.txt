@@ -11,3 +11,14 @@ INT	STRING	STRING	STRING	STRING
 8	GAME_OVER	游戏结束	gameOver	游戏结束
 9	RESTART	重新开始	gameOver	重新开始
 10	BACK_HOME	返回首页	gameOver	返回首页
+11	GAME_TITLE	秀彬跳一跳	start	开始页标题
+12	SUBTITLE	健身大佬的极限跳跃	start	开始页副标题
+13	HINT	看谁跳得高！全程为你疯狂打call！	start	开始页提示
+14	START_BUTTON	开始游戏	start	开始按钮
+15	NAV_SHOP	强化	start	底部导航强化
+16	NAV_CHARACTER	角色	start	底部导航角色
+17	NAV_MODE	玩法	start	底部导航玩法
+18	NAV_ACHIEVEMENT	成就	start	底部导航成就
+19	NAV_LEADERBOARD	排行	start	底部导航排行榜
+20	NAV_PET	宠物	start	底部导航宠物
+21	NAV_BACKPACK	背包	start	底部导航背包

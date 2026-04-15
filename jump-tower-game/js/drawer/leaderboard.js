@@ -103,6 +103,7 @@ function drawRankAvatar(ctx, x, y, size, item, accent) {
  * 绘制排行榜面板
  */
 function drawLeaderboardPanel(ctx, game, W, H) {
+  const registry = game.uiRegistry;
   const rankList = game.rankList || [];
   const isLoading = game.rankLoading;
   const bestScore = rankList.length > 0 ? rankList[0].score || 0 : 0;
@@ -137,7 +138,12 @@ function drawLeaderboardPanel(ctx, game, W, H) {
   const closeX = panelX + panelW - closeSize - 16;
   const closeY = panelY + 18;
   drawCloseButton(ctx, closeX, closeY, closeSize);
-  game.closeLeaderboardBtn = { x: closeX, y: closeY, w: closeSize, h: closeSize };
+  registry.register('start.leaderboard.panel', { x: panelX, y: panelY, w: panelW, h: panelH }, {
+    consume: true
+  });
+  registry.register('start.leaderboard.close', { x: closeX, y: closeY, w: closeSize, h: closeSize }, {
+    action: { type: 'close-panel', panel: 'showLeaderboardPanel' }
+  });
 
   ctx.save();
   ctx.textAlign = 'left';

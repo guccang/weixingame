@@ -101,6 +101,7 @@ function drawBackButton(ctx, x, y, size) {
  * 绘制模式选择面板
  */
 function drawModeSelect(ctx, game, W, H) {
+  const registry = game.uiRegistry;
   const frame = drawPanelShell(ctx, W, H, 'MODE SELECT', '选择玩法', '不同规则会影响开局流程和挑战节奏。', {
     glow: 'rgba(124, 231, 255, 0.12)',
     badgeDot: '#7cf3c8'
@@ -110,7 +111,12 @@ function drawModeSelect(ctx, game, W, H) {
   const closeX = frame.panelX + frame.panelW - closeSize - 16;
   const closeY = frame.panelY + 18;
   drawCloseButton(ctx, closeX, closeY, closeSize);
-  game.closeModeSelect = { x: closeX, y: closeY, w: closeSize, h: closeSize };
+  registry.register('start.mode.panel', { x: frame.panelX, y: frame.panelY, w: frame.panelW, h: frame.panelH }, {
+    consume: true
+  });
+  registry.register('start.mode.close', { x: closeX, y: closeY, w: closeSize, h: closeSize }, {
+    action: { type: 'panel-back' }
+  });
 
   const modes = [
     {
@@ -139,8 +145,6 @@ function drawModeSelect(ctx, game, W, H) {
   const startY = frame.panelY + 134;
   const cardH = 78;
   const gap = 12;
-  game.modeBtnArea = {};
-
   for (let i = 0; i < modes.length; i++) {
     const mode = modes[i];
     const x = frame.contentX;
@@ -189,7 +193,9 @@ function drawModeSelect(ctx, game, W, H) {
     });
     ctx.restore();
 
-    game.modeBtnArea[mode.name] = { x: x, y: y, w: frame.contentW, h: cardH };
+    registry.register('start.mode.option.' + mode.name, { x: x, y: y, w: frame.contentW, h: cardH }, {
+      action: { type: 'mode-select', modeName: mode.name }
+    });
   }
 }
 
@@ -197,6 +203,7 @@ function drawModeSelect(ctx, game, W, H) {
  * 绘制时间选择面板
  */
 function drawTimeSelect(ctx, game, W, H) {
+  const registry = game.uiRegistry;
   const frame = drawPanelShell(ctx, W, H, 'TIME ATTACK', '选择时间', '更短更爆发，更长更适合稳定运营。', {
     glow: 'rgba(124, 231, 255, 0.12)',
     badgeDot: '#7ce7ff',
@@ -207,7 +214,12 @@ function drawTimeSelect(ctx, game, W, H) {
   const backX = frame.panelX + frame.panelW - backSize - 16;
   const backY = frame.panelY + 18;
   drawBackButton(ctx, backX, backY, backSize);
-  game.backToModeSelect = { x: backX, y: backY, w: backSize, h: backSize };
+  registry.register('start.time.panel', { x: frame.panelX, y: frame.panelY, w: frame.panelW, h: frame.panelH }, {
+    consume: true
+  });
+  registry.register('start.time.back', { x: backX, y: backY, w: backSize, h: backSize }, {
+    action: { type: 'panel-back' }
+  });
 
   const notes = {
     60000: '极限冲刺',
@@ -220,8 +232,6 @@ function drawTimeSelect(ctx, game, W, H) {
   const startY = frame.panelY + 132;
   const cardH = 56;
   const gap = 10;
-  game.timeBtnArea = [];
-
   for (let i = 0; i < TIME_ATTACK_OPTIONS.length; i++) {
     const option = TIME_ATTACK_OPTIONS[i];
     const x = frame.contentX;
@@ -255,7 +265,9 @@ function drawTimeSelect(ctx, game, W, H) {
     ctx.fillText(notes[option.value] || '挑战', x + frame.contentW - 18, y + cardH / 2);
     ctx.restore();
 
-    game.timeBtnArea.push({ x: x, y: y, w: frame.contentW, h: cardH, value: option.value });
+    registry.register('start.time.option.' + option.value, { x: x, y: y, w: frame.contentW, h: cardH }, {
+      action: { type: 'time-select', value: option.value }
+    });
   }
 }
 
@@ -263,6 +275,7 @@ function drawTimeSelect(ctx, game, W, H) {
  * 绘制地标选择面板
  */
 function drawLandmarkSelect(ctx, game, W, H) {
+  const registry = game.uiRegistry;
   const frame = drawPanelShell(ctx, W, H, 'LANDMARK RUN', '选择目的地', '每个地标都有自己的目标高度和节奏。', {
     glow: 'rgba(255, 191, 134, 0.12)',
     badgeDot: '#ffbf86',
@@ -273,15 +286,18 @@ function drawLandmarkSelect(ctx, game, W, H) {
   const backX = frame.panelX + frame.panelW - backSize - 16;
   const backY = frame.panelY + 18;
   drawBackButton(ctx, backX, backY, backSize);
-  game.backToModeSelect = { x: backX, y: backY, w: backSize, h: backSize };
+  registry.register('start.landmark.panel', { x: frame.panelX, y: frame.panelY, w: frame.panelW, h: frame.panelH }, {
+    consume: true
+  });
+  registry.register('start.landmark.back', { x: backX, y: backY, w: backSize, h: backSize }, {
+    action: { type: 'panel-back' }
+  });
 
   const cols = 2;
   const gap = 10;
   const cardW = Math.floor((frame.contentW - gap) / cols);
   const cardH = 142;
   const startY = frame.panelY + 132;
-  game.landmarkBtnArea = [];
-
   for (let i = 0; i < landmarks.length; i++) {
     const landmark = landmarks[i];
     const col = i % cols;
@@ -331,7 +347,9 @@ function drawLandmarkSelect(ctx, game, W, H) {
     ctx.fillText('★'.repeat(Math.max(1, Math.floor(landmark.targetHeight / 500))), x + 52, y + 110);
     ctx.restore();
 
-    game.landmarkBtnArea.push({ x: x, y: y, w: cardW, h: cardH, landmark: landmark });
+    registry.register('start.landmark.option.' + i, { x: x, y: y, w: cardW, h: cardH }, {
+      action: { type: 'landmark-select', landmarkIndex: i }
+    });
   }
 }
 

@@ -26,6 +26,9 @@ function render(game, images, characterConfig, jobConfig) {
   const { ctx, W, H, shakeTimer } = game;
 
   ctx.clearRect(0, 0, W, H);
+  if (game.uiRegistry) {
+    game.uiRegistry.beginFrame(game.state);
+  }
   let shakeX = 0, shakeY = 0;
   if (shakeTimer > 0) {
     shakeX = (Math.random() - 0.5) * shakeTimer;

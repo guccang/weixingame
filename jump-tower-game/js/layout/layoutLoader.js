@@ -4,6 +4,13 @@
  */
 
 const LayoutEngine = require('./layoutEngine');
+const startScreenLayout = require('./configs/startScreenLayout');
+
+const LAYOUT_FILES = {
+  startScreen: startScreenLayout,
+  'startScreen.json': startScreenLayout,
+  'startScreenLayout.js': startScreenLayout
+};
 
 class LayoutLoader {
   constructor() {
@@ -18,96 +25,8 @@ class LayoutLoader {
    * 初始化所有布局配置
    */
   _initLayouts() {
-    // 开始界面布局配置
-    const startScreenConfig = {
-      id: "startScreen",
-      vars: {
-        iconSize: 50,
-        bottomBarHeight: 100
-      },
-      elements: [
-        {
-          id: "title",
-          type: "text",
-          anchor: { x: "center", y: "top" },
-          offset: { x: 0, y: 180 },
-          size: { width: 200, height: 40 },
-          style: {
-            color: "#ffdd57",
-            fontSize: 36,
-            fontWeight: "bold",
-            textAlign: "center",
-            shadow: { color: "#ffaa00", blur: 20 }
-          }
-        },
-        {
-          id: "subtitle",
-          type: "text",
-          anchor: { x: "center", y: "top" },
-          offset: { x: 0, y: 240 },
-          size: { width: 300, height: 30 },
-          style: {
-            color: "#ff6b6b",
-            fontSize: 20,
-            textAlign: "center"
-          }
-        },
-        {
-          id: "hint",
-          type: "text",
-          anchor: { x: "center", y: "top" },
-          offset: { x: 0, y: 280 },
-          size: { width: 300, height: 24 },
-          style: {
-            color: "#74b9ff",
-            fontSize: 16,
-            textAlign: "center"
-          }
-        },
-        {
-          id: "startBtn",
-          type: "button",
-          anchor: { x: "center", y: "bottom" },
-          offset: { x: 0, y: -170 },
-          size: { width: 140, height: 50 },
-          style: {
-            bgColor: "#00d084",
-            borderRadius: 25,
-            textColor: "#ffffff",
-            fontSize: 20,
-            fontWeight: "bold",
-            textAlign: "center",
-            shadow: { color: "#00d084", blur: 15 }
-          }
-        },
-        {
-          id: "bottomBar",
-          type: "flex",
-          anchor: { x: "center", y: "bottom" },
-          offset: { x: 0, y: -100 },
-          flex: {
-            direction: "row",
-            gap: 0,
-            justify: "space-between",
-            align: "center"
-          },
-          size: { width: "100%", height: 50 },
-          children: [
-            { id: "shop", type: "iconButton", size: { width: 50, height: 50 } },
-            { id: "character", type: "iconButton", size: { width: 50, height: 50 } },
-            { id: "mode", type: "iconButton", size: { width: 50, height: 50 } },
-            { id: "achievement", type: "iconButton", size: { width: 50, height: 50 } },
-            { id: "leaderboard", type: "iconButton", size: { width: 50, height: 50 } },
-            { id: "pet", type: "iconButton", size: { width: 50, height: 50 } },
-            { id: "backpack", type: "iconButton", size: { width: 50, height: 50 } }
-          ]
-        }
-      ]
-    };
-
-    // 加载配置到引擎
-    this.engine.loadLayout('startScreen', startScreenConfig);
-    console.log('[LayoutLoader] Initialized layouts: startScreen');
+    this.loadLayoutFile('startScreen', 'startScreen.json');
+    console.log('[LayoutLoader] Initialized layouts from JSON');
   }
 
   /**
@@ -116,9 +35,15 @@ class LayoutLoader {
    * @param {string} configPath - 配置文件路径（保留参数）
    */
   loadLayoutFile(layoutId, configPath) {
-    // 布局已在构造函数中加载，这里只记录
-    this.loadedFiles.add(configPath || layoutId);
-    console.log(`[LayoutLoader] Layout ready: ${layoutId}`);
+    const key = configPath || layoutId;
+    const config = LAYOUT_FILES[key] || LAYOUT_FILES[layoutId];
+    if (!config) {
+      throw new Error('[LayoutLoader] Missing layout file: ' + key);
+    }
+
+    this.engine.loadLayout(layoutId, cloneConfig(config));
+    this.loadedFiles.add(key);
+    console.log('[LayoutLoader] Layout ready:', layoutId, 'from', key);
     return true;
   }
 
@@ -191,6 +116,10 @@ function getLayoutLoader() {
     instance = new LayoutLoader();
   }
   return instance;
+}
+
+function cloneConfig(config) {
+  return JSON.parse(JSON.stringify(config));
 }
 
 module.exports = {

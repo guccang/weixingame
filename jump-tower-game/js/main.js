@@ -31,6 +31,7 @@ const Barrage = require('./barrage/barrage');
 const MainUI = require('./ui/mainUI');
 const UIPanelManager = require('./ui/panelManager');
 const ScrollHandler = require('./ui/scrollHandler');
+const UIRegistry = require('./ui/registry');
 
 // 控制系统
 const Controls = require('./controls/controls');
@@ -57,7 +58,6 @@ const RunDirector = require('./game/runDirector');
 
 // 绘制系统
 const drawer = require('./drawer/drawer');
-const { getGameOverButtonLayout } = require('./drawer/gameOver');
 
 // 关卡生成系统
 const LevelGenerator = require('./level/level');
@@ -139,10 +139,6 @@ class Game {
     this.bgStars = [];
     this.platforms = [];
     this.player = null;
-    this.showCharacterPanel = false; // 是否显示角色选择面板
-    this.showDebugPanel = false; // 是否显示Debug面板
-    this.showShopPanel = false; // 是否显示强化面板
-    this.showLeaderboardPanel = false; // 是否显示排行榜面板
     this.rankList = []; // 排行榜数据
     this.rankLoading = false; // 排行榜加载状态
     this.wxUserInfo = null; // 微信用户信息
@@ -171,19 +167,12 @@ class Game {
     this.shopMessageColor = '#55efc4';
     this.shopMessageUntil = 0;
     this.shopTab = 'upgrades';
-    this.coinBadgeArea = null;
-    this.debugEntryArea = null;
     this.debugCoinGrantAmount = 1000;
     this.debugProfile = null;
     this.debugDraft = {
       presetIds: [],
       overrides: {}
     };
-    this.debugPresetAreas = [];
-    this.debugOptionAreas = [];
-    this.debugResetBtnArea = null;
-    this.debugLaunchBtnArea = null;
-    this.closeDebugPanel = null;
     this.debugPanelScrollArea = null;
     this.debugPanelScrollY = 0;
     this.debugPanelMaxScroll = 0;
@@ -193,6 +182,7 @@ class Game {
 
     this.controls = new Controls(this); // 控制系统
     this.mainUI = new MainUI(this); // 主界面UI
+    this.uiRegistry = new UIRegistry(); // 统一UI热区注册
     this.audio = new Audio(); // 音效管理
     this.levelGenerator = new LevelGenerator(); // 关卡生成器
     this.difficultyManager = new DifficultyManager(); // 动态难度管理
@@ -337,7 +327,8 @@ class Game {
   }
 
   startDebugPanelDrag(touchX, touchY) {
-    const area = this.debugPanelScrollArea;
+    const areaEntry = this.uiRegistry ? this.uiRegistry.get('start.debug.scrollViewport') : null;
+    const area = areaEntry ? areaEntry.rect : this.debugPanelScrollArea;
     if (!area) return false;
     if (touchX < area.x || touchX > area.x + area.w || touchY < area.y || touchY > area.y + area.h) {
       return false;
@@ -1337,7 +1328,9 @@ class Game {
 
   startGame(options = {}) {
     this.generatePraises();
-    this.showShopPanel = false;
+    if (this.panelManager) {
+      this.panelManager.closeAll();
+    }
     const debugProfile = options && options.debugProfile
       ? debugRuntime.cloneProfile(options.debugProfile)
       : null;
@@ -1430,9 +1423,6 @@ class Game {
     this.pet = null;
     this.combo = 0;
     this.shakeTimer = 0;
-    // 初始化游戏结束按钮区域，确保在渲染前就存在
-    this.gameOverBtnArea = getGameOverButtonLayout(this);
-
     if (!this.isDebugRun()) {
       this.saveToCloudStorage();
     }
@@ -1496,12 +1486,7 @@ class Game {
     this.controlLockedUntil = 0;
     this.bossKnockbackUntil = 0;
     this.pendingBossLaunch = null;
-    this.gameOverBtnArea = null;
     this.nextBossSpawnPlan = null;
-    this.showCharacterPanel = false;
-    this.showDebugPanel = false;
-    this.showShopPanel = false;
-    this.showLeaderboardPanel = false;
     this.runRewardSummary = null;
     this.sessionBossCoins = 0;
     this.sessionPickupCoins = 0;

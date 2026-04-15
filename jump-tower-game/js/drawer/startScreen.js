@@ -11,6 +11,7 @@ const { drawModeSelect, drawTimeSelect, drawLandmarkSelect } = require('./modeSe
 const { drawLeaderboardPanel } = require('./leaderboard');
 const { drawActionButton } = require('./menuTheme');
 const progressionSystem = require('../progression/progression');
+const { getText } = require('../ui/text');
 
 /**
  * 绘制开始界面
@@ -22,6 +23,8 @@ const progressionSystem = require('../progression/progression');
  */
 function drawStartScreen(ctx, game, images, characterConfig, jobConfig) {
   const { W, H } = game;
+  const registry = game.uiRegistry;
+  const pm = game.panelManager;
 
   // 解析布局（使用布局引擎）
   game.layout = game.layoutLoader.resolve('startScreen', W, H);
@@ -32,7 +35,7 @@ function drawStartScreen(ctx, game, images, characterConfig, jobConfig) {
 
   // 如果角色面板显示中，隐藏主页面UI
   // 只有当没有显示任何面板时，才绘制开始按钮和标题
-  if (!game.panelManager.isAnyOpen()) {
+  if (!pm.isAnyOpen()) {
     // 使用布局引擎绘制标题
     const titleEl = layout.elements.title;
     if (titleEl) {
@@ -43,7 +46,7 @@ function drawStartScreen(ctx, game, images, characterConfig, jobConfig) {
         ctx.shadowColor = titleEl.style.shadow.color;
         ctx.shadowBlur = titleEl.style.shadow.blur;
       }
-      ctx.fillText('秀彬跳一跳', titleEl.bounds.x + titleEl.bounds.width / 2, titleEl.bounds.y);
+      ctx.fillText(getText(titleEl.textKey || 'GAME_TITLE'), titleEl.bounds.x + titleEl.bounds.width / 2, titleEl.bounds.y);
       ctx.shadowBlur = 0;
     }
 
@@ -52,7 +55,7 @@ function drawStartScreen(ctx, game, images, characterConfig, jobConfig) {
     if (subtitleEl) {
       ctx.fillStyle = subtitleEl.style.color;
       ctx.font = `${subtitleEl.style.fontSize}px sans-serif`;
-      ctx.fillText('💪 健身大佬的极限跳跃 💪', subtitleEl.bounds.x + subtitleEl.bounds.width / 2, subtitleEl.bounds.y);
+      ctx.fillText(getText(subtitleEl.textKey || 'SUBTITLE'), subtitleEl.bounds.x + subtitleEl.bounds.width / 2, subtitleEl.bounds.y);
     }
 
     // 提示文字
@@ -60,7 +63,7 @@ function drawStartScreen(ctx, game, images, characterConfig, jobConfig) {
     if (hintEl) {
       ctx.fillStyle = hintEl.style.color;
       ctx.font = `${hintEl.style.fontSize}px sans-serif`;
-      ctx.fillText('看谁跳得高！全程为你疯狂打call！', hintEl.bounds.x + hintEl.bounds.width / 2, hintEl.bounds.y);
+      ctx.fillText(getText(hintEl.textKey || 'HINT'), hintEl.bounds.x + hintEl.bounds.width / 2, hintEl.bounds.y);
     }
 
     // 开始按钮（使用布局引擎）
@@ -76,9 +79,10 @@ function drawStartScreen(ctx, game, images, characterConfig, jobConfig) {
 
       ctx.fillStyle = btnEl.style.textColor;
       ctx.font = `bold ${btnEl.style.fontSize}px sans-serif`;
-      ctx.fillText('开始游戏', btn.x + btn.width / 2, btn.y + 32);
-
-      game.startBtnArea = { x: btn.x, y: btn.y, w: btn.width, h: btn.height };
+      ctx.fillText(getText(btnEl.textKey || 'START_BUTTON'), btn.x + btn.width / 2, btn.y + 32);
+      registry.register('start.home.startButton', btn, {
+        action: btnEl.action || { type: 'start-game', mode: 'endless' }
+      });
     }
 
     const debugBtnW = 108;
@@ -95,49 +99,40 @@ function drawStartScreen(ctx, game, images, characterConfig, jobConfig) {
         [1, '#ff8e6b']
       ]
     });
-    game.debugEntryArea = { x: debugBtnX, y: debugBtnY, w: debugBtnW, h: debugBtnH };
-  } else {
-    // 有面板显示时，清空开始按钮区域
-    game.startBtnArea = null;
-    game.debugEntryArea = null;
+    registry.register('start.home.debugEntry', { x: debugBtnX, y: debugBtnY, w: debugBtnW, h: debugBtnH }, {
+      action: { type: 'open-debug-panel' }
+    });
   }
 
-  drawCoinBadge(ctx, game, images);
+  drawCoinBadge(ctx, game, images, registry);
 
   // 底部图标按钮区域（使用布局引擎的Flex布局）
   const bottomBarEl = layout.elements.bottomBar;
   if (bottomBarEl && bottomBarEl.children) {
     const iconY = H - 105;
     const iconSize = 60;
-    const icons = [
-      { key: 'shop', color: '#fd79a8', text: '强化', img: images.iconShop, highlight: game.showShopPanel },
-      { key: 'character', color: '#74b9ff', text: '角色', img: images.iconCharacter },
-      { key: 'mode', color: '#ffdd57', text: '玩法', img: images.iconMode, highlight: game.gameMode.showModeSelect },
-      { key: 'achievement', color: '#fdcb6e', text: '成就', img: images.iconAchievement, highlight: game.showAchievementPanel },
-      { key: 'leaderboard', color: '#55efc4', text: '排行', img: images.iconLeaderboard },
-      { key: 'pet', color: '#a29bfe', text: '宠物', img: images.iconPet },
-      { key: 'backpack', color: '#ffeaa7', text: '背包', img: images.iconBackpack }
-    ];
-
-    game.bottomBtnArea = {};
     bottomBarEl.children.forEach((child, i) => {
-      const icon = icons[i];
-      if (!icon || !child.bounds) return;
+      if (!child || !child.bounds) return;
 
       const x = child.bounds.x;
-      game.bottomBtnArea[icon.key] = { x, y: iconY, w: iconSize, h: iconSize };
+      const action = child.action || {};
+      const panelKey = action.panel;
+      const isActive = panelKey === 'showModeSelect'
+        ? (pm.isOpen('showModeSelect') || pm.isOpen('showTimeSelect') || pm.isOpen('showLandmarkSelect'))
+        : (panelKey ? pm.isOpen(panelKey) : false);
 
       // 高亮背景
-      if (icon.highlight) {
+      if (isActive) {
         ctx.fillStyle = 'rgba(255, 221, 87, 0.5)';
         ctx.fillRect(x - 5, iconY - 5, iconSize + 10, iconSize + 10);
       }
 
       // 图标
-      if (icon.img && icon.img.width > 0) {
-        ctx.drawImage(icon.img, x, iconY, iconSize, iconSize);
+      const iconImage = images[child.imageKey];
+      if (iconImage && iconImage.width > 0) {
+        ctx.drawImage(iconImage, x, iconY, iconSize, iconSize);
       } else {
-        ctx.fillStyle = icon.color;
+        ctx.fillStyle = getFallbackColor(child.id);
         ctx.fillRect(x, iconY, iconSize, iconSize);
       }
 
@@ -145,46 +140,42 @@ function drawStartScreen(ctx, game, images, characterConfig, jobConfig) {
       ctx.fillStyle = '#fff';
       ctx.font = '12px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(icon.text, x + iconSize / 2, iconY + iconSize + 18);
+      ctx.fillText(getText(child.textKey), x + iconSize / 2, iconY + iconSize + 18);
+      registry.register('start.nav.' + child.id, { x: x, y: iconY, w: iconSize, h: iconSize }, {
+        action: action
+      });
     });
     ctx.textAlign = 'left';
   }
 
   // 根据状态显示面板
-  if (game.showCharacterPanel) {
+  if (pm.isOpen('showCharacterPanel')) {
     drawCharacterSelect(ctx, game, characterConfig);
-  } else if (game.showDebugPanel) {
+  } else if (pm.isOpen('showDebugPanel')) {
     drawDebugPanel(ctx, game, W, H);
-  } else if (game.showShopPanel) {
+  } else if (pm.isOpen('showShopPanel')) {
     drawShopPanel(ctx, game, images, W, H);
-  } else if (game.showAchievementPanel) {
+  } else if (pm.isOpen('showAchievementPanel')) {
     drawAchievementPanel(ctx, game, W, H);
-  } else if (game.gameMode.showModeSelect) {
+  } else if (pm.isOpen('showModeSelect')) {
     drawModeSelect(ctx, game, W, H);
-  } else if (game.gameMode.showTimeSelect) {
+  } else if (pm.isOpen('showTimeSelect')) {
     drawTimeSelect(ctx, game, W, H);
-  } else if (game.gameMode.showLandmarkSelect) {
+  } else if (pm.isOpen('showLandmarkSelect')) {
     drawLandmarkSelect(ctx, game, W, H);
-  } else if (game.showLeaderboardPanel) {
+  } else if (pm.isOpen('showLeaderboardPanel')) {
     drawLeaderboardPanel(ctx, game, W, H);
   } else {
-    drawCurrentCharacter(ctx, game, characterConfig, jobConfig);
+    drawCurrentCharacter(ctx, game, characterConfig, jobConfig, registry);
   }
 }
 
-function drawCoinBadge(ctx, game, images) {
+function drawCoinBadge(ctx, game, images, registry) {
   const balance = game.progression ? game.progression.coins : 0;
   const x = 24;
   const y = 90; // 向下移动，避免与文字重叠
   const w = 102;
   const h = 34;
-
-  game.coinBadgeArea = {
-    x: x,
-    y: y,
-    w: w,
-    h: h
-  };
 
   ctx.save();
   ctx.fillStyle = 'rgba(18, 18, 36, 0.72)';
@@ -208,6 +199,10 @@ function drawCoinBadge(ctx, game, images) {
   ctx.textAlign = 'left';
   ctx.fillText(String(balance), x + 34, y + 22);
   ctx.restore();
+
+  registry.register('start.home.coinBadge', { x: x, y: y, w: w, h: h }, {
+    action: { type: 'grant-debug-coins' }
+  });
 }
 
 function drawShopPanel(ctx, game, images, W, H) {
@@ -222,10 +217,7 @@ function drawShopPanel(ctx, game, images, W, H) {
   const activeTab = game.shopTab || 'upgrades';
   const entries = progressionSystem.getShopCatalogByTab(progress, activeTab);
 
-  game.shopItemAreas = [];
-  game.shopCloseBtnArea = null;
-  game.shopTabAreas = [];
-  game.shopResetBtnArea = null;
+  const registry = game.uiRegistry;
 
   ctx.save();
   if (images.bgShop && images.bgShop.width > 0) {
@@ -264,7 +256,12 @@ function drawShopPanel(ctx, game, images, W, H) {
   ctx.fillStyle = '#ffffff';
   ctx.font = 'bold 16px sans-serif';
   ctx.fillText('X', closeX + 12, closeY + 17);
-  game.shopCloseBtnArea = { x: closeX, y: closeY, w: 24, h: 24 };
+  registry.register('start.shop.panel', { x: panelX, y: panelY, w: panelW, h: panelH }, {
+    consume: true
+  });
+  registry.register('start.shop.close', { x: closeX, y: closeY, w: 24, h: 24 }, {
+    action: { type: 'close-panel', panel: 'showShopPanel' }
+  });
 
   const tabY = panelY + 76;
   const tabGap = 6;
@@ -280,12 +277,13 @@ function drawShopPanel(ctx, game, images, W, H) {
     ctx.font = 'bold 12px sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText(tab.name, x + tabW / 2, tabY + 19);
-    game.shopTabAreas.push({
-      tabId: tab.id,
+    registry.register('start.shop.tab.' + tab.id, {
       x: x,
       y: tabY,
       w: tabW,
       h: tabH
+    }, {
+      action: { type: 'shop-tab', tabId: tab.id }
     });
   });
 
@@ -300,7 +298,9 @@ function drawShopPanel(ctx, game, images, W, H) {
   ctx.font = 'bold 11px sans-serif';
   ctx.textAlign = 'center';
   ctx.fillText('清空存档', resetBtnX + resetBtnW / 2, resetBtnY + 16);
-  game.shopResetBtnArea = { x: resetBtnX, y: resetBtnY, w: resetBtnW, h: resetBtnH };
+  registry.register('start.shop.reset', { x: resetBtnX, y: resetBtnY, w: resetBtnW, h: resetBtnH }, {
+    action: { type: 'shop-action', actionName: 'reset-progress' }
+  });
 
   const startY = panelY + 116;
   const cardH = activeTab === 'trails' ? 58 : 52;
@@ -337,24 +337,32 @@ function drawShopPanel(ctx, game, images, W, H) {
     }
 
     drawShopButton(ctx, primaryX, buttonY, primaryW, 24, meta.primary.color, meta.primary.label);
-    game.shopItemAreas.push({
-      action: meta.primary.action,
-      itemId: meta.primary.itemId,
+    registry.register('start.shop.item.' + i + '.primary', {
       x: primaryX,
       y: buttonY,
       w: primaryW,
       h: 24
+    }, {
+      action: {
+        type: 'shop-action',
+        actionName: meta.primary.action,
+        itemId: meta.primary.itemId
+      }
     });
 
     if (meta.secondary) {
       drawShopButton(ctx, secondaryX, buttonY, secondaryW, 24, meta.secondary.color, meta.secondary.label);
-      game.shopItemAreas.push({
-        action: meta.secondary.action,
-        itemId: meta.secondary.itemId,
+      registry.register('start.shop.item.' + i + '.secondary', {
         x: secondaryX,
         y: buttonY,
         w: secondaryW,
         h: 24
+      }, {
+        action: {
+          type: 'shop-action',
+          actionName: meta.secondary.action,
+          itemId: meta.secondary.itemId
+        }
       });
     }
   }
@@ -383,8 +391,7 @@ function drawAchievementPanel(ctx, game, W, H) {
   const contentW = panelW - 36;
   const progress = game.progression || progressionSystem.getDefaultProgress();
 
-  game.achievementCloseBtnArea = null;
-  game.achievementPanelArea = { x: panelX, y: panelY, w: panelW, h: panelH };
+  const registry = game.uiRegistry;
 
   ctx.save();
   ctx.fillStyle = 'rgba(12, 12, 28, 0.95)';
@@ -421,7 +428,12 @@ function drawAchievementPanel(ctx, game, W, H) {
   ctx.fillStyle = '#ffffff';
   ctx.font = 'bold 16px sans-serif';
   ctx.fillText('X', closeX + 12, closeY + 17);
-  game.achievementCloseBtnArea = { x: closeX, y: closeY, w: 24, h: 24 };
+  registry.register('start.achievement.panel', { x: panelX, y: panelY, w: panelW, h: panelH }, {
+    consume: true
+  });
+  registry.register('start.achievement.close', { x: closeX, y: closeY, w: 24, h: 24 }, {
+    action: { type: 'close-panel', panel: 'showAchievementPanel' }
+  });
 
   // 已解锁/总成就数
   const achievements = achievementSystem.getAllAchievements();
@@ -625,7 +637,7 @@ function getShopEntryMeta(entry) {
 /**
  * 绘制当前选中的角色（序列帧动画）
  */
-function drawCurrentCharacter(ctx, game, characterConfig, jobConfig) {
+function drawCurrentCharacter(ctx, game, characterConfig, jobConfig, registry) {
   const { W, H } = game;
   const charName = characterConfig.current;
   const charDisplayName = characterConfig.names[charName] || charName;
@@ -635,9 +647,6 @@ function drawCurrentCharacter(ctx, game, characterConfig, jobConfig) {
   const charBoxHeight = 160;
   const charBoxX = W / 2 - charBoxWidth / 2;
   const charBoxY = H / 2 - 100; // 上方位置
-
-  // 保存角色预览点击区域
-  game.characterPreviewArea = { x: charBoxX, y: charBoxY, w: charBoxWidth, h: charBoxHeight };
 
   // 绘制角色框背景
   ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
@@ -671,6 +680,28 @@ function drawCurrentCharacter(ctx, game, characterConfig, jobConfig) {
   ctx.textAlign = 'center';
   ctx.fillText(charDisplayName, charBoxX + charBoxWidth / 2, charBoxY + 140);
   ctx.textAlign = 'left';
+
+  if (registry) {
+    registry.register('start.home.characterPreview', {
+      x: charBoxX,
+      y: charBoxY,
+      w: charBoxWidth,
+      h: charBoxHeight
+    }, {
+      action: { type: 'open-panel', panel: 'showCharacterPanel' }
+    });
+  }
+}
+
+function getFallbackColor(key) {
+  const colors = {
+    shop: '#fd79a8',
+    character: '#74b9ff',
+    mode: '#ffdd57',
+    achievement: '#fdcb6e',
+    leaderboard: '#55efc4'
+  };
+  return colors[key] || '#ffffff';
 }
 
 module.exports = {

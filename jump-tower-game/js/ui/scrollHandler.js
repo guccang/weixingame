@@ -12,7 +12,7 @@ class ScrollHandler {
         scrollKey: 'achievementScrollOffset',
         maxKey: 'achievementMaxScroll',
         panelKey: 'showAchievementPanel',
-        areaKey: 'achievementPanelArea',
+        areaId: 'start.achievement.panel',
         sensitivity: 20,
         axis: 'vertical'
       }
@@ -41,7 +41,7 @@ class ScrollHandler {
       if (!this._isPanelOpen(config.panelKey)) continue;
 
       // 检查是否在滚动区域内
-      if (!this._hitArea(config.areaKey, touchX, touchY)) continue;
+      if (!this._hitArea(config.areaId, touchX, touchY)) continue;
 
       // 根据轴向判断滚动方向
       if (config.axis === 'vertical') {
@@ -103,8 +103,10 @@ class ScrollHandler {
   /**
    * 检查点是否在区域内
    */
-  _hitArea(areaKey, x, y) {
-    const area = this.game[areaKey];
+  _hitArea(areaId, x, y) {
+    const registry = this.game.uiRegistry;
+    const entry = registry ? registry.get(areaId) : null;
+    const area = entry ? entry.rect : null;
     return area && x >= area.x && x <= area.x + area.w &&
            y >= area.y && y <= area.y + area.h;
   }
@@ -116,13 +118,13 @@ class ScrollHandler {
    */
   addScrollable(name, config) {
     this.scrollables[name] = {
-      scrollKey: config.scrollKey,
-      maxKey: config.maxKey || null,
-      panelKey: config.panelKey,
-      areaKey: config.areaKey,
-      sensitivity: config.sensitivity || 20,
-      axis: config.axis || 'vertical'
-    };
+        scrollKey: config.scrollKey,
+        maxKey: config.maxKey || null,
+        panelKey: config.panelKey,
+        areaId: config.areaId,
+        sensitivity: config.sensitivity || 20,
+        axis: config.axis || 'vertical'
+      };
   }
 
   /**

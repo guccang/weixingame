@@ -62,6 +62,7 @@
         "shadow": { "color": "#00d084", "blur": 15 }
       },
       "textKey": "START_BUTTON",
+      "action": { "type": "start-game", "mode": "endless" },
       "visibleWhen": "!panelManager.isAnyOpen()"
     },
     {
@@ -80,27 +81,42 @@
         {
           "id": "shop",
           "type": "iconButton",
-          "size": { "width": 60, "height": 60 }
+          "size": { "width": 60, "height": 60 },
+          "textKey": "NAV_SHOP",
+          "imageKey": "iconShop",
+          "action": { "type": "open-panel", "panel": "showShopPanel" }
         },
         {
           "id": "character",
           "type": "iconButton",
-          "size": { "width": 60, "height": 60 }
+          "size": { "width": 60, "height": 60 },
+          "textKey": "NAV_CHARACTER",
+          "imageKey": "iconCharacter",
+          "action": { "type": "open-panel", "panel": "showCharacterPanel" }
         },
         {
           "id": "mode",
           "type": "iconButton",
-          "size": { "width": 60, "height": 60 }
+          "size": { "width": 60, "height": 60 },
+          "textKey": "NAV_MODE",
+          "imageKey": "iconMode",
+          "action": { "type": "open-panel", "panel": "showModeSelect" }
         },
         {
           "id": "achievement",
           "type": "iconButton",
-          "size": { "width": 60, "height": 60 }
+          "size": { "width": 60, "height": 60 },
+          "textKey": "NAV_ACHIEVEMENT",
+          "imageKey": "iconAchievement",
+          "action": { "type": "open-panel", "panel": "showAchievementPanel" }
         },
         {
           "id": "leaderboard",
           "type": "iconButton",
-          "size": { "width": 60, "height": 60 }
+          "size": { "width": 60, "height": 60 },
+          "textKey": "NAV_LEADERBOARD",
+          "imageKey": "iconLeaderboard",
+          "action": { "type": "open-panel", "panel": "showLeaderboardPanel" }
         }
       ]
     }

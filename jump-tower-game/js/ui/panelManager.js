@@ -68,31 +68,6 @@ class UIPanelManager {
     }
   }
 
-  // 同步内部状态到外部（兼容旧代码，逐步迁移）
-  _syncToExternal(panelKey) {
-    const value = this.panels[panelKey];
-    // gameMode 下的面板
-    if (['showModeSelect', 'showTimeSelect', 'showLandmarkSelect'].includes(panelKey)) {
-      this.game.gameMode[panelKey] = value;
-    } else {
-      // game 顶层面板
-      this.game[panelKey] = value;
-    }
-  }
-
-  // 从外部状态同步到内部（初始化时使用）
-  _syncFromExternal() {
-    const g = this.game;
-    this.panels.showCharacterPanel = !!g.showCharacterPanel;
-    this.panels.showDebugPanel = !!g.showDebugPanel;
-    this.panels.showShopPanel = !!g.showShopPanel;
-    this.panels.showAchievementPanel = !!g.showAchievementPanel;
-    this.panels.showLeaderboardPanel = !!g.showLeaderboardPanel;
-    this.panels.showModeSelect = !!g.gameMode.showModeSelect;
-    this.panels.showTimeSelect = !!g.gameMode.showTimeSelect;
-    this.panels.showLandmarkSelect = !!g.gameMode.showLandmarkSelect;
-  }
-
   // 获取面板状态（推荐使用此方法访问面板状态）
   isOpen(panelKey) {
     return this.panels[panelKey] || false;
@@ -125,7 +100,6 @@ class UIPanelManager {
     // 关闭所有面板
     for (const key in this.panels) {
       this.panels[key] = false;
-      this._syncToExternal(key);
     }
     // 触发关闭后钩子
     for (const key of openPanels) {
@@ -142,7 +116,6 @@ class UIPanelManager {
 
     this.closeAll();
     this.panels[panelKey] = true;
-    this._syncToExternal(panelKey);
 
     // 记录历史
     if (saveHistory) {
@@ -165,7 +138,6 @@ class UIPanelManager {
     this._runHooks('beforeClose', panelKey);
 
     this.panels[panelKey] = false;
-    this._syncToExternal(panelKey);
 
     // 从历史栈中移除
     const index = this.history.indexOf(panelKey);

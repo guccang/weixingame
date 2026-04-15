@@ -16,6 +16,7 @@ const {
  */
 function drawCharacterSelect(ctx, game, characterConfig) {
   const { W, H } = game;
+  const registry = game.uiRegistry;
   const list = characterConfig.list;
   const listCount = list.length;
   const time = Date.now();
@@ -226,9 +227,14 @@ function drawCharacterSelect(ctx, game, characterConfig) {
   const closeBtnSize = 36;
   const closeBtnX = 18;  // 左上角
   const closeBtnY = H * 0.10 - 45;  // 顶部安全区向上50像素
-  game.closeCharacterPanel = { x: closeBtnX, y: closeBtnY, w: closeBtnSize, h: closeBtnSize };
   drawCloseButton(ctx, closeBtnX, closeBtnY, closeBtnSize, {
     glow: 'rgba(255, 127, 127, 0.12)'
+  });
+  registry.register('start.character.panel', { x: 0, y: 0, w: W, h: H }, {
+    consume: true
+  });
+  registry.register('start.character.close', { x: closeBtnX, y: closeBtnY, w: closeBtnSize, h: closeBtnSize }, {
+    action: { type: 'close-character-panel' }
   });
 
   // 底部确认按钮
@@ -237,8 +243,6 @@ function drawCharacterSelect(ctx, game, characterConfig) {
   const confirmBtnX = (W - confirmBtnW) / 2;
   const confirmBtnY = H - confirmBtnH - 30;
   const hasPending = game.characterPendingSelect != null;
-
-  game.characterConfirmBtn = { x: confirmBtnX, y: confirmBtnY, w: confirmBtnW, h: confirmBtnH };
 
   drawActionButton(ctx, confirmBtnX, confirmBtnY, confirmBtnW, confirmBtnH, hasPending ? '确认选择' : '选择一个角色', {
     shadowColor: hasPending ? 'rgba(116, 247, 208, 0.35)' : 'rgba(150, 150, 150, 0.2)',
@@ -252,6 +256,9 @@ function drawCharacterSelect(ctx, game, characterConfig) {
       [1, 'rgba(60, 60, 80, 0.5)']
     ],
     textColor: hasPending ? '#051120' : '#888888'
+  });
+  registry.register('start.character.confirm', { x: confirmBtnX, y: confirmBtnY, w: confirmBtnW, h: confirmBtnH }, {
+    action: { type: 'confirm-character-select' }
   });
 }
 

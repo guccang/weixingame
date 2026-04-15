@@ -5,25 +5,7 @@
 
 const gameConstants = require('../game/constants');
 const { GAME_MODES } = gameConstants;
-const tableManager = require('../tables/tableManager');
-
-/**
- * 获取UI文本
- * @param {string} key - 文本键
- * @param {Array} args - 格式化参数
- */
-function getText(key, ...args) {
-  const texts = tableManager.getAll('UIText');
-  const item = texts.find(t => t.Key === key);
-  if (!item) return key;
-
-  let text = item.Text;
-  // 替换 {0}, {1} 等占位符
-  for (let i = 0; i < args.length; i++) {
-    text = text.replace(`{${i}}`, args[i]);
-  }
-  return text;
-}
+const { getText } = require('../ui/text');
 
 /**
  * 绘制游戏UI

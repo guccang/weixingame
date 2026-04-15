@@ -26,6 +26,7 @@ function isVisible(y, h, top, bottom) {
 }
 
 function drawDebugPanel(ctx, game, W, H) {
+  const registry = game.uiRegistry;
   const debugConfig = game.getDebugConfig ? game.getDebugConfig() : null;
   const presets = debugConfig && debugConfig.presets ? debugConfig.presets : [];
   const draft = game.debugDraft || {};
@@ -38,12 +39,7 @@ function drawDebugPanel(ctx, game, W, H) {
   const contentX = panelX + 16;
   const contentW = panelW - 32;
 
-  game.debugPresetAreas = [];
-  game.debugOptionAreas = [];
   game.debugPanelPresetIds = Array.isArray(draft.presetIds) ? draft.presetIds.slice() : [];
-  game.debugResetBtnArea = null;
-  game.debugLaunchBtnArea = null;
-  game.closeDebugPanel = null;
   game.debugPanelScrollArea = null;
 
   drawModalScrim(ctx, W, H);
@@ -68,7 +64,12 @@ function drawDebugPanel(ctx, game, W, H) {
   const closeX = panelX + panelW - closeSize - 16;
   const closeY = panelY + 18;
   drawCloseButton(ctx, closeX, closeY, closeSize);
-  game.closeDebugPanel = { x: closeX, y: closeY, w: closeSize, h: closeSize };
+  registry.register('start.debug.panel', { x: panelX, y: panelY, w: panelW, h: panelH }, {
+    consume: true
+  });
+  registry.register('start.debug.close', { x: closeX, y: closeY, w: closeSize, h: closeSize }, {
+    action: { type: 'close-panel', panel: 'showDebugPanel' }
+  });
 
   ctx.save();
   ctx.textAlign = 'left';
@@ -112,6 +113,10 @@ function drawDebugPanel(ctx, game, W, H) {
     w: contentW,
     h: scrollViewportH
   };
+  registry.register('start.debug.scrollViewport', game.debugPanelScrollArea, {
+    consume: true,
+    scrollable: true
+  });
 
   ctx.save();
   ctx.beginPath();
@@ -167,12 +172,13 @@ function drawDebugPanel(ctx, game, W, H) {
     ctx.fillText(fitText(ctx, preset.notes || preset.description, presetCardW - 18), x + 10, presetStartY + row * (presetCardH + presetGap) + 27);
     ctx.restore();
 
-    game.debugPresetAreas.push({
-      presetId: preset.id,
+    registry.register('start.debug.preset.' + preset.id, {
       x: x,
       y: y,
       w: presetCardW,
       h: presetCardH
+    }, {
+      action: { type: 'debug-preset-toggle', presetId: preset.id }
     });
   }
 
@@ -223,12 +229,13 @@ function drawDebugPanel(ctx, game, W, H) {
     ctx.fillText('点击切换', contentX + contentW - 14, localY + optionRowH / 2);
     ctx.restore();
 
-    game.debugOptionAreas.push({
-      key: key,
+    registry.register('start.debug.option.' + key, {
       x: contentX,
       y: screenY,
       w: contentW,
       h: optionRowH
+    }, {
+      action: { type: 'debug-option-cycle', key: key }
     });
   }
 
@@ -291,8 +298,12 @@ function drawDebugPanel(ctx, game, W, H) {
     shadowColor: 'rgba(66, 214, 242, 0.24)'
   });
 
-  game.debugResetBtnArea = { x: contentX, y: buttonY, w: resetW, h: 42 };
-  game.debugLaunchBtnArea = { x: contentX + resetW + gap, y: buttonY, w: launchW, h: 42 };
+  registry.register('start.debug.reset', { x: contentX, y: buttonY, w: resetW, h: 42 }, {
+    action: { type: 'debug-reset' }
+  });
+  registry.register('start.debug.launch', { x: contentX + resetW + gap, y: buttonY, w: launchW, h: 42 }, {
+    action: { type: 'debug-launch' }
+  });
 }
 
 module.exports = {
