@@ -53,6 +53,14 @@
         "ignore": [
             {
                 "type": "folder",
+                "value": "audio"
+            },
+            {
+                "type": "folder",
+                "value": "images"
+            },
+            {
+                "type": "folder",
                 "value": "cloudfunctions"
             },
             {

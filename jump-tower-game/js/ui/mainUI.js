@@ -7,6 +7,22 @@ class MainUI {
     this.game = game;
   }
 
+  _togglePanel(panelKey) {
+    const pm = this.game.panelManager;
+    if (!pm || !panelKey) return false;
+
+    if (pm.isOpen(panelKey)) {
+      if (panelKey === 'showCharacterPanel') {
+        this.game.characterPendingSelect = null;
+      }
+      pm.close(panelKey);
+      return true;
+    }
+
+    pm.open(panelKey);
+    return true;
+  }
+
   handleTouch(touchX, touchY) {
     const target = this._hit(touchX, touchY);
     if (target && this._dispatch(target)) {
@@ -58,14 +74,14 @@ class MainUI {
         if (typeof this.game.resetDebugPanelScroll === 'function') {
           this.game.resetDebugPanelScroll();
         }
-        pm.open('showDebugPanel');
+        this._togglePanel('showDebugPanel');
         return true;
       case 'open-panel':
-        pm.open(action.panel);
+        this._togglePanel(action.panel);
         if (action.panel === 'showShopPanel') {
           this.game.setShopTab(this.game.shopTab || 'upgrades');
         }
-        if (action.panel === 'showLeaderboardPanel') {
+        if (action.panel === 'showLeaderboardPanel' && pm.isOpen('showLeaderboardPanel')) {
           this.game.fetchRankList();
         }
         return true;

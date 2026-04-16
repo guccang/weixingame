@@ -15,6 +15,7 @@ class Controls {
     this.isSlidingDown = false;
     this.lastSlideTime = 0;
     this.skipTouchEndSkill = false;
+    this.startUiTouchHandled = false;
 
     this.initInput();
   }
@@ -24,6 +25,7 @@ class Controls {
 
     // 触摸开始 - 使用微信小游戏 API
     wx.onTouchStart(function(e) {
+      _this.startUiTouchHandled = false;
       var touches = e.touches;
       if (touches && touches.length > 0) {
         _this.touchStartX = touches[0].clientX;
@@ -47,6 +49,7 @@ class Controls {
             return;
           }
           if (_this.game.mainUI.handleTouch(touchX, touchY)) {
+            _this.startUiTouchHandled = true;
             return;
           }
         }
@@ -54,6 +57,7 @@ class Controls {
         // 游戏结束时检测按钮点击
         if (_this.game.state === 'gameover') {
           if (_this.game.mainUI.handleGameOverTouch(touchX, touchY)) {
+            _this.startUiTouchHandled = true;
             return;
           }
         }
@@ -98,9 +102,11 @@ class Controls {
 
         // 开始界面：处理面板滚动和面板守卫
         if (_this.game.state === 'start') {
+          if (_this.startUiTouchHandled) {
+            return;
+          }
           var touchDx = touchX - _this.touchStartX;
           var touchDy = touchY - _this.touchStartY;
-          var isMoving = Math.abs(touchDx) > 5 || Math.abs(touchDy) > 5;
 
           // 更新delta
           _this.lastDeltaX = touchDx;
@@ -150,8 +156,6 @@ class Controls {
           if (_this.game.panelManager.isAnyOpen()) {
             return;
           }
-
-          _this.game.mainUI.handleTouch(touchX, touchY);
           return;
         }
 
@@ -193,6 +197,17 @@ class Controls {
 
     // 触摸结束
     wx.onTouchEnd(function(e) {
+      if (_this.game.state === 'start' && _this.startUiTouchHandled) {
+        _this.touchStartX = null;
+        _this.touchStartY = null;
+        _this.lastDeltaX = 0;
+        _this.lastDeltaY = 0;
+        _this.isSlidingDown = false;
+        _this.skipTouchEndSkill = false;
+        _this.startUiTouchHandled = false;
+        return;
+      }
+
       if (_this.game.state === 'playing' && _this.game.runDirector && _this.game.runDirector.isBuffOfferOpen()) {
         _this.keys['ArrowLeft'] = false;
         _this.keys['ArrowRight'] = false;
@@ -202,6 +217,7 @@ class Controls {
         _this.lastDeltaY = 0;
         _this.isSlidingDown = false;
         _this.skipTouchEndSkill = false;
+        _this.startUiTouchHandled = false;
         return;
       }
 
@@ -247,6 +263,7 @@ class Controls {
       _this.lastDeltaY = 0;
       _this.isSlidingDown = false;
       _this.skipTouchEndSkill = false;
+      _this.startUiTouchHandled = false;
     });
   }
 
@@ -264,6 +281,7 @@ class Controls {
     this.lastTapTime = 0;
     this.lastDeltaX = 0;
     this.lastDeltaY = 0;
+    this.startUiTouchHandled = false;
   }
 }
 
