@@ -76,6 +76,7 @@ const BossSystem = require('./monster/boss');
 const trailEffects = require('./effects/trail');
 const petSystem = require('./pet/pet');
 const progressionSystem = require('./progression/progression');
+const worldview = require('./worldview/index');
 
 const MAX_PARTICLES = 260;
 
@@ -171,6 +172,8 @@ class Game {
     this.shopTab = 'upgrades';
     this.debugCoinGrantAmount = 1000;
     this.debugProfile = null;
+    this.runEncounteredBossTypes = {};
+    this.worldviewLastRunUnlocks = [];
     this.debugDraft = {
       presetIds: [],
       overrides: {}
@@ -689,6 +692,11 @@ class Game {
     this.shopMessageUntil = Date.now() + 1800;
   }
 
+  recordBossEncounter(behaviorType) {
+    if (!behaviorType) return;
+    this.runEncounteredBossTypes[behaviorType] = true;
+  }
+
   grantDebugCoins() {
     const reward = progressionSystem.grantCoins(this.progression, this.debugCoinGrantAmount);
     this.progression = reward.progress;
@@ -918,7 +926,7 @@ class Game {
       height: height,
       monsterId: picked.monsterId,
       behaviorType: picked.behaviorType || 'leaper',
-      warningText: picked.warningText || '前方检测到Boss动静！'
+      warningText: picked.warningText || worldview.getBossWarningText(picked.behaviorType)
     };
   }
 
@@ -1375,19 +1383,22 @@ class Game {
     this.applyDebugStartProfile();
     this.runItemEffects = Object.assign({}, this.pendingRunItemEffects);
     this.pendingRunItemEffects = {};
+    this.runEncounteredBossTypes = {};
+    this.worldviewLastRunUnlocks = [];
     this.updateDifficulty();
     this.refreshPlatformRuntimeEffects();
     this.state = 'playing';
     this.audio.playBGM();
+    const intro = worldview.getRunStartNarrative(this);
     const _this = this;
     this.scheduleTimeout(function() {
       if (_this.state === 'playing') {
-        _this.barrage.show(_this.W / 2 - 80, _this.H / 2, _this.playerName + "出发！冲冲冲！💪");
+        _this.barrage.show(_this.W / 2 - 96, _this.H / 2, intro.headline, '#7ce7ff');
       }
     }, 500);
     this.scheduleTimeout(function() {
       if (_this.state === 'playing') {
-        _this.barrage.show(_this.W / 2 - 60, _this.H / 2 - 60, _this.playerJob + "牛逼！！！");
+        _this.barrage.show(_this.W / 2 - 132, _this.H / 2 - 60, intro.subline, '#ffd166');
       }
     }, 1200);
     if (itemResult.itemName) {
@@ -1423,12 +1434,33 @@ class Game {
       });
       this.progression = achievementResult.progress;
 
+      const worldviewResult = worldview.resolveWorldviewProgress(this.progression, {
+        score: this.score,
+        mode: this.gameMode.gameMode,
+        selectedLandmark: this.gameMode.selectedLandmark,
+        bossProfilesEncountered: Object.keys(this.runEncounteredBossTypes || {})
+      });
+      this.progression.worldview = worldviewResult.state;
+      this.progression = progressionSystem.saveProgress(this.progression);
+      this.worldviewLastRunUnlocks = worldviewResult.unlocks || [];
+
+      let delay = 2000;
       if (achievementResult.unlocks && achievementResult.unlocks.length > 0 && this.barrage) {
-        let delay = 2000;
         for (const unlock of achievementResult.unlocks) {
           this.scheduleTimeout(() => {
             if (this.barrage && this.state === 'gameover') {
               this.barrage.show(this.W / 2 - 100, this.H / 2 - 80, unlock.message, '#ffd700');
+            }
+          }, delay);
+          delay += 1200;
+        }
+      }
+
+      if (this.worldviewLastRunUnlocks.length > 0 && this.barrage) {
+        for (const unlock of this.worldviewLastRunUnlocks) {
+          this.scheduleTimeout(() => {
+            if (this.barrage && this.state === 'gameover') {
+              this.barrage.show(this.W / 2 - 118, this.H / 2 - 30, unlock.message, '#7ce7ff');
             }
           }, delay);
           delay += 1200;

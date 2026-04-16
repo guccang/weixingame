@@ -7,11 +7,12 @@ const { GAME_MODES } = require('../game/constants');
 const trailEffects = require('../effects/trail');
 const petSystem = require('../pet/pet');
 const physics = require('../physics/physics');
+const worldview = require('../worldview/index');
 
 const STORAGE_KEY = 'jump_tower_progress_v3';
 const LEGACY_STORAGE_KEY_V2 = 'jump_tower_progress_v2';
 const LEGACY_STORAGE_KEY_V1 = 'jump_tower_progress_v1';
-const PROGRESS_VERSION = 3;
+const PROGRESS_VERSION = 4;
 const BASE_GROWTH_DURATION_MS = 6500;
 
 const baseTrailConfig = trailEffects.getTrailConfig();
@@ -537,6 +538,7 @@ function getDefaultProgress() {
     itemInventory: {},
     equippedItemId: null,
     achievements: {},
+    worldview: worldview.getDefaultState(),
     achievementStats: {
       totalRuns: 0,
       totalPlayTime: 0,
@@ -612,6 +614,7 @@ function normalizeProgress(progress) {
   next.equippedCapabilities = next.equippedCapabilities || {};
   next.enabledCapabilities = next.enabledCapabilities || {};
   next.achievements = next.achievements || {};
+  next.worldview = worldview.normalizeState(next.worldview);
   next.achievementStats = Object.assign(getDefaultProgress().achievementStats, next.achievementStats || {});
 
   // Normalize achievementStats fields

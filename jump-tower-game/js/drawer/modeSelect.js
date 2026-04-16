@@ -276,7 +276,7 @@ function drawTimeSelect(ctx, game, W, H) {
  */
 function drawLandmarkSelect(ctx, game, W, H) {
   const registry = game.uiRegistry;
-  const frame = drawPanelShell(ctx, W, H, 'LANDMARK RUN', '选择目的地', '每个地标都有自己的目标高度和节奏。', {
+  const frame = drawPanelShell(ctx, W, H, 'LANDMARK RUN', '选择赛区', '每个赛区都有自己的目标高度、节奏和守关风格。', {
     glow: 'rgba(255, 191, 134, 0.12)',
     badgeDot: '#ffbf86',
     maxHeight: 572
@@ -332,19 +332,27 @@ function drawLandmarkSelect(ctx, game, W, H) {
 
     ctx.fillStyle = accent;
     ctx.font = font(13, '700');
-    ctx.fillText('目标 ' + landmark.targetHeight + 'm', x + 16, y + 58);
-
-    ctx.fillStyle = 'rgba(224, 233, 245, 0.74)';
-    ctx.font = font(11, '500');
-    ctx.fillText(fitText(ctx, landmark.desc, cardW - 32), x + 16, y + 84);
-
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-    ctx.font = font(11, '600');
-    ctx.fillText('难度', x + 16, y + 112);
+    ctx.fillText(landmark.leagueTitle || landmark.name, x + 16, y + 56);
 
     ctx.fillStyle = '#ffd166';
     ctx.font = font(12, '700');
-    ctx.fillText('★'.repeat(Math.max(1, Math.floor(landmark.targetHeight / 500))), x + 52, y + 110);
+    ctx.fillText('目标 ' + landmark.targetHeight + 'm', x + 16, y + 76);
+
+    ctx.fillStyle = 'rgba(224, 233, 245, 0.74)';
+    ctx.font = font(11, '500');
+    ctx.fillText(fitText(ctx, landmark.arenaDesc || landmark.desc, cardW - 32), x + 16, y + 96);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    ctx.font = font(11, '600');
+    ctx.fillText('守关', x + 16, y + 116);
+
+    ctx.fillStyle = 'rgba(224, 233, 245, 0.8)';
+    ctx.font = font(11, '600');
+    ctx.fillText(fitText(ctx, landmark.bossFactionHint || '赛区守卫', cardW - 92), x + 50, y + 116);
+
+    ctx.fillStyle = '#ffd166';
+    ctx.font = font(12, '700');
+    ctx.fillText('★'.repeat(Math.max(1, Math.floor(landmark.targetHeight / 500))), x + cardW - 44, y + 116);
     ctx.restore();
 
     registry.register('start.landmark.option.' + i, { x: x, y: y, w: cardW, h: cardH }, {

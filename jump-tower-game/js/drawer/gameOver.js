@@ -12,6 +12,7 @@ const {
   drawMetricCard,
   drawActionButton
 } = require('./menuTheme');
+const worldview = require('../worldview/index');
 
 function formatElapsed(ms) {
   const totalSeconds = Math.max(0, Math.floor((ms || 0) / 1000));
@@ -228,10 +229,11 @@ function drawRewardChip(ctx, x, y, w, h, label, value) {
 function drawGameOverScreen(ctx, game, images) {
   const { W, H, score } = game;
   const registry = game.uiRegistry;
-  const meta = getResultMeta(game);
+  const narrative = worldview.getResultNarrative(game);
+  const meta = narrative.meta || getResultMeta(game);
   const reward = game.runRewardSummary;
   const layout = getGameOverButtonLayout(game);
-  const message = getFinalMessage(game);
+  const message = narrative.message || getFinalMessage(game);
   const rewardItems = getRewardItems(reward);
 
   drawGameOverBackground(ctx, W, H, game.cameraY, score, game.bgStars, images);
@@ -306,7 +308,7 @@ function drawGameOverScreen(ctx, game, images) {
   ctx.textBaseline = 'top';
   ctx.fillStyle = 'rgba(199, 214, 235, 0.68)';
   ctx.font = font(11, '600');
-  ctx.fillText('结束点评', layout.contentX + 16, messageY + 12);
+  ctx.fillText('赛事点评', layout.contentX + 16, messageY + 12);
 
   ctx.fillStyle = '#ffffff';
   ctx.font = font(14, '600');

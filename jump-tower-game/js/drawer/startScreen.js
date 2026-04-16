@@ -12,6 +12,7 @@ const { drawLeaderboardPanel } = require('./leaderboard');
 const { drawActionButton } = require('./menuTheme');
 const progressionSystem = require('../progression/progression');
 const { getText } = require('../ui/text');
+const worldview = require('../worldview/index');
 
 /**
  * 绘制开始界面
@@ -32,6 +33,9 @@ function drawStartScreen(ctx, game, images, characterConfig, jobConfig) {
 
   // 绘制主界面背景图（优先使用 Bg01 滚屏背景）
   drawStartBackground(ctx, W, H, images);
+  const homeNarrative = worldview.getHomeNarrative(game.progression, {
+    selectedLandmark: game.gameMode ? game.gameMode.selectedLandmark : null
+  });
 
   // 如果角色面板显示中，隐藏主页面UI
   // 只有当没有显示任何面板时，才绘制开始按钮和标题
@@ -46,7 +50,7 @@ function drawStartScreen(ctx, game, images, characterConfig, jobConfig) {
         ctx.shadowColor = titleEl.style.shadow.color;
         ctx.shadowBlur = titleEl.style.shadow.blur;
       }
-      ctx.fillText(getText(titleEl.textKey || 'GAME_TITLE'), titleEl.bounds.x + titleEl.bounds.width / 2, titleEl.bounds.y);
+      ctx.fillText(homeNarrative.title || getText(titleEl.textKey || 'GAME_TITLE'), titleEl.bounds.x + titleEl.bounds.width / 2, titleEl.bounds.y);
       ctx.shadowBlur = 0;
     }
 
@@ -55,7 +59,7 @@ function drawStartScreen(ctx, game, images, characterConfig, jobConfig) {
     if (subtitleEl) {
       ctx.fillStyle = subtitleEl.style.color;
       ctx.font = `${subtitleEl.style.fontSize}px sans-serif`;
-      ctx.fillText(getText(subtitleEl.textKey || 'SUBTITLE'), subtitleEl.bounds.x + subtitleEl.bounds.width / 2, subtitleEl.bounds.y);
+      ctx.fillText(homeNarrative.subtitle || getText(subtitleEl.textKey || 'SUBTITLE'), subtitleEl.bounds.x + subtitleEl.bounds.width / 2, subtitleEl.bounds.y);
     }
 
     // 提示文字
@@ -63,7 +67,7 @@ function drawStartScreen(ctx, game, images, characterConfig, jobConfig) {
     if (hintEl) {
       ctx.fillStyle = hintEl.style.color;
       ctx.font = `${hintEl.style.fontSize}px sans-serif`;
-      ctx.fillText(getText(hintEl.textKey || 'HINT'), hintEl.bounds.x + hintEl.bounds.width / 2, hintEl.bounds.y);
+      ctx.fillText(homeNarrative.hint || getText(hintEl.textKey || 'HINT'), hintEl.bounds.x + hintEl.bounds.width / 2, hintEl.bounds.y);
     }
 
     // 开始按钮（使用布局引擎）
@@ -168,7 +172,7 @@ function drawStartScreen(ctx, game, images, characterConfig, jobConfig) {
   } else if (pm.isOpen('showLeaderboardPanel')) {
     drawLeaderboardPanel(ctx, game, W, H);
   } else {
-    drawCurrentCharacter(ctx, game, characterConfig, jobConfig, registry);
+    drawCurrentCharacter(ctx, game, characterConfig, jobConfig, registry, homeNarrative);
   }
 }
 
@@ -741,7 +745,7 @@ function getShopEntryMeta(entry) {
 /**
  * 绘制当前选中的角色（序列帧动画）
  */
-function drawCurrentCharacter(ctx, game, characterConfig, jobConfig, registry) {
+function drawCurrentCharacter(ctx, game, characterConfig, jobConfig, registry, homeNarrative) {
   const { W, H } = game;
   const charName = characterConfig.current;
   const charDisplayName = characterConfig.names[charName] || charName;
@@ -783,6 +787,15 @@ function drawCurrentCharacter(ctx, game, characterConfig, jobConfig, registry) {
   ctx.font = 'bold 16px sans-serif';
   ctx.textAlign = 'center';
   ctx.fillText(charDisplayName, charBoxX + charBoxWidth / 2, charBoxY + 140);
+
+  if (homeNarrative) {
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.78)';
+    ctx.font = '12px sans-serif';
+    ctx.fillText(homeNarrative.statusLine || '', charBoxX + charBoxWidth / 2, charBoxY + charBoxHeight + 22);
+    ctx.fillStyle = 'rgba(124, 231, 255, 0.88)';
+    ctx.font = '11px sans-serif';
+    ctx.fillText(homeNarrative.unlockLine || '', charBoxX + charBoxWidth / 2, charBoxY + charBoxHeight + 42);
+  }
   ctx.textAlign = 'left';
 
   if (registry) {

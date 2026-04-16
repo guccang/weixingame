@@ -61,3 +61,4 @@ npm --prefix scripts run upload-experience -- --version 1.3.0
 UI、输入、面板切换和资源模式的项目约束见：
 
 - [docs/technical/ui-input-and-asset-rules.md](/Users/guccang/github_repo/weixingame/jump-tower-game/docs/technical/ui-input-and-asset-rules.md)
+- [docs/technical/worldview-module.md](/Users/guccang/github_repo/weixingame/jump-tower-game/docs/technical/worldview-module.md)

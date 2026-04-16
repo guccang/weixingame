@@ -211,7 +211,7 @@ function drawThemePill(ctx, game, safeTop) {
   const theme = game.runDirector.getActiveTheme();
   if (!theme) return;
 
-  const text = theme.name + ' 空域';
+  const text = theme.eventLabel || (theme.name + ' 空域');
   const w = Math.max(120, text.length * 13);
   const x = (game.W - w) / 2;
   const y = safeTop - 8;

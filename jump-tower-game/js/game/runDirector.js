@@ -2,6 +2,7 @@ const gameConstants = require('./constants');
 const debugRuntime = require('./debugRuntime');
 const { landmarks } = require('./landmarks');
 const PickupSystem = require('./run/pickupSystem');
+const worldview = require('../worldview/index');
 
 const RESONANCE_COLORS = ['#55efc4', '#ffd166', '#74b9ff'];
 
@@ -201,10 +202,11 @@ class RunDirector {
   }
 
   onBossInterrupted(monster) {
-    this.showBanner(monster && monster.name ? monster.name + ' 被打断！' : 'Boss被打断！', '#ff9f1a');
+    this.showBanner(worldview.getBossInterruptText(monster), '#ff9f1a');
   }
 
   onBossDefeated(monster, context = {}) {
+    this.showBanner(worldview.getBossDefeatText(monster, context), '#ffd166');
     if (context.viaChargeDash) {
       this.game.grantRunCoins(this.getConfig().bossChargeDash.rewardCoins, {
         bucket: 'event',
@@ -449,15 +451,18 @@ class RunDirector {
         id: definition.id,
         name: definition.name,
         desc: definition.desc,
+        leagueTitle: definition.leagueTitle,
+        eventLabel: definition.eventLabel,
         startHeight,
         endHeight: startHeight + durationHeight,
         theme: definition.theme,
         platformConfig: definition.platformConfig
       };
       this.themeIndex++;
-      this.showBanner(definition.name + ' 空域开启', definition.theme.accentColor);
+      const themeNarrative = worldview.getThemeNarrative(definition);
+      this.showBanner(themeNarrative.bannerText, definition.theme.accentColor);
       if (this.game.barrage) {
-        this.game.barrage.show(this.game.W / 2 - 90, 150, definition.name + ' 空域', definition.theme.accentColor);
+        this.game.barrage.show(this.game.W / 2 - 110, 150, themeNarrative.barrageText, definition.theme.accentColor);
       }
     }
   }

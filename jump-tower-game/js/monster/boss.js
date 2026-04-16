@@ -7,6 +7,7 @@ const { getById, find } = require('../tables/tableManager');
 const assetManager = require('../resource/assetManager');
 const gameConstants = require('../game/constants');
 const debugRuntime = require('../game/debugRuntime');
+const worldview = require('../worldview/index');
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
@@ -96,11 +97,14 @@ class Boss {
     this._loadFrames(monster);
     this.monsters.push(monster);
     console.log('[Boss] 生成怪物:', monster.name, monster.behaviorType);
+    if (this.game && typeof this.game.recordBossEncounter === 'function') {
+      this.game.recordBossEncounter(monster.behaviorType);
+    }
     if (this.game.barrage) {
       this.game.barrage.show(
-        this.game.W / 2 - 70,
+        this.game.W / 2 - 120,
         150,
-        monster.name + '出现了！',
+        worldview.getBossSpawnText(monster),
         monster.behaviorType === 'thrower' ? '#ffb36b' : '#ff0066'
       );
     }
@@ -305,7 +309,7 @@ class Boss {
         if (!monster.warningShown) {
           monster.warningShown = true;
           if (this.game.barrage) {
-            this.game.barrage.show(monster.x - 60, monster.y - this.game.cameraY - 150, 'Boss起跳预警！', '#ff9966');
+            this.game.barrage.show(monster.x - 90, monster.y - this.game.cameraY - 150, worldview.getBossProfile('leaper').warningText, '#ff9966');
           }
         }
         if (monster.stateTimer <= 0) {
@@ -359,7 +363,7 @@ class Boss {
           monster.stateTimer = Math.max(120, config.throwPauseMs || 260);
           monster.throwPrepared = false;
           if (this.game.barrage) {
-            this.game.barrage.show(monster.x - 44, bandY - this.game.cameraY + 36, '小心空投！', '#ffb36b');
+            this.game.barrage.show(monster.x - 72, bandY - this.game.cameraY + 36, worldview.getBossProfile('thrower').warningText, '#ffb36b');
           }
         }
         break;
@@ -453,7 +457,7 @@ class Boss {
     if (monster.state === 'exit') return;
     monster.state = 'exit';
     if (!monster.exitAnnounced && this.game.barrage) {
-      this.game.barrage.show(monster.x - 56, monster.y - this.game.cameraY - 70, '上方空投结束', '#74b9ff');
+      this.game.barrage.show(monster.x - 72, monster.y - this.game.cameraY - 70, worldview.getBossExitText(monster), '#74b9ff');
     }
     monster.exitAnnounced = true;
   }
@@ -490,7 +494,7 @@ class Boss {
     this.game.shakeTimer = Math.max(this.game.shakeTimer, 14);
     this.game.spawnParticles(playerCenterX, playerCenterY, '#ff9f1a', 22);
     if (this.game.barrage) {
-      this.game.barrage.show(player.x - 40, player.y - this.game.cameraY - 90, '蓄力冲刺打断Boss！', '#ff9f1a');
+      this.game.barrage.show(player.x - 116, player.y - this.game.cameraY - 90, worldview.getBossProfile(monster.behaviorType).dashText, '#ff9f1a');
     }
     return true;
   }
@@ -524,7 +528,7 @@ class Boss {
     this.game.shakeTimer = Math.max(this.game.shakeTimer, 12);
     this.game.spawnParticles(playerCenterX, playerCenterY, '#ff9f1a', 24);
     if (this.game.barrage) {
-      this.game.barrage.show(player.x - 40, player.y - this.game.cameraY - 90, 'Boss被顶飞了！', '#ff9f1a');
+      this.game.barrage.show(player.x - 126, player.y - this.game.cameraY - 90, worldview.getGrowthBossDefeatText(monster), '#ff9f1a');
     }
     return true;
   }
@@ -583,7 +587,7 @@ class Boss {
         monster.y += 80;
       }
       if (!monster.attackResolved && this.game.barrage) {
-        this.game.barrage.show(monster.x - 50, monster.y - this.game.cameraY - 100, 'Boss扑空了！', '#74b9ff');
+        this.game.barrage.show(monster.x - 84, monster.y - this.game.cameraY - 100, worldview.getBossMissText(monster), '#74b9ff');
       }
     }
   }
@@ -595,7 +599,7 @@ class Boss {
     this.game.skillSystem.applyBossKnockback(monster.x, { isFinalHit: isFinalAttack });
 
     if (this.game.barrage) {
-      const hitText = isFinalAttack ? monster.name + '终结命中！' : monster.name + '重击命中！';
+      const hitText = worldview.getBossHitText(monster, isFinalAttack);
       this.game.barrage.show(player.x - 40, player.y - this.game.cameraY - 80, hitText, '#ff0066');
     }
 
