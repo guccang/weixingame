@@ -1,0 +1,7 @@
+interface:
+  display_name: "Document Fix Rules"
+  short_description: "Turn repaired issues into reusable project rules."
+  default_prompt: "Use $document-fix-rules to convert the fixes from this task into project rules or incident documentation so future work can avoid the same class of problems."
+
+policy:
+  allow_implicit_invocation: true

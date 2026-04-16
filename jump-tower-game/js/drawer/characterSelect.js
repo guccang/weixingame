@@ -30,15 +30,20 @@ function drawCharacterSelect(ctx, game, characterConfig) {
   const gridWidth = colCount * selectWidth + (colCount - 1) * spacing;
   const startX = (W - gridWidth) / 2;
 
-  // 布局区域划分
-  const safeTop = H * 0.10;  // 顶部安全距离，避免被微信设置界面遮挡
-  const titleTop = safeTop;  // 标题顶部
-  const titleEndY = titleTop + 70;  // 标题区域底部
-  const cbH = 52;  // 确认按钮高度
-  const cbY = H - cbH - 30;  // 确认按钮顶部
-  const navSafeBottom = H - 100;  // 底部导航栏安全区
-  const scrollAreaTop = titleEndY;  // 滚动区域从标题下方开始
-  const scrollAreaBottom = Math.min(cbY, navSafeBottom);  // 滚动区域到确认按钮或导航栏上方
+  // 布局区域划分：保留下方导航栏点击区域
+  const safeTop = H * 0.10;
+  const bottomNavReserve = 126;
+  const panelX = 18;
+  const panelY = Math.max(20, safeTop - 14);
+  const panelW = W - panelX * 2;
+  const panelBottom = H - bottomNavReserve;
+  const panelH = Math.max(320, panelBottom - panelY);
+  const titleTop = panelY + 16;
+  const titleEndY = titleTop + 62;
+  const cbH = 48;
+  const cbY = panelY + panelH - cbH - 18;
+  const scrollAreaTop = titleEndY + 8;
+  const scrollAreaBottom = cbY - 14;
   const scrollAreaHeight = scrollAreaBottom - scrollAreaTop;
   const rowSpacing = selectHeight + spacing;
   const totalContentHeight = rowCount * rowSpacing;
@@ -70,10 +75,20 @@ function drawCharacterSelect(ctx, game, characterConfig) {
     list: list
   };
 
-  // 绘制不透明背景（悬浮页面效果）
+  // 绘制半透明背景，让下方主页面按钮保持可见
   ctx.save();
-  ctx.fillStyle = 'rgba(10, 18, 34, 0.96)';
+  ctx.fillStyle = 'rgba(8, 14, 26, 0.54)';
   ctx.fillRect(0, 0, W, H);
+  drawGlassPanel(ctx, panelX, panelY, panelW, panelH, {
+    radius: 28,
+    shadowBlur: 24,
+    glow: 'rgba(124, 231, 255, 0.10)',
+    stroke: 'rgba(207, 230, 255, 0.18)',
+    stops: [
+      [0, 'rgba(19, 28, 45, 0.94)'],
+      [1, 'rgba(10, 16, 29, 0.92)']
+    ]
+  });
   ctx.restore();
 
   // 标题区域（固定不滚动）
@@ -225,13 +240,14 @@ function drawCharacterSelect(ctx, game, characterConfig) {
   ctx.restore();  // 恢复裁剪区域
 
   const closeBtnSize = 36;
-  const closeBtnX = 18;  // 左上角
-  const closeBtnY = H * 0.10 - 45;  // 顶部安全区向上50像素
+  const closeBtnX = panelX + 14;
+  const closeBtnY = panelY + 12;
   drawCloseButton(ctx, closeBtnX, closeBtnY, closeBtnSize, {
     glow: 'rgba(255, 127, 127, 0.12)'
   });
-  registry.register('start.character.panel', { x: 0, y: 0, w: W, h: H }, {
-    consume: true
+  registry.register('start.character.panel', { x: panelX, y: panelY, w: panelW, h: panelH }, {
+    consume: true,
+    passThrough: true
   });
   registry.register('start.character.close', { x: closeBtnX, y: closeBtnY, w: closeBtnSize, h: closeBtnSize }, {
     action: { type: 'close-character-panel' }
@@ -239,9 +255,9 @@ function drawCharacterSelect(ctx, game, characterConfig) {
 
   // 底部确认按钮
   const confirmBtnW = 200;
-  const confirmBtnH = 52;
+  const confirmBtnH = cbH;
   const confirmBtnX = (W - confirmBtnW) / 2;
-  const confirmBtnY = H - confirmBtnH - 30;
+  const confirmBtnY = cbY;
   const hasPending = game.characterPendingSelect != null;
 
   drawActionButton(ctx, confirmBtnX, confirmBtnY, confirmBtnW, confirmBtnH, hasPending ? '确认选择' : '选择一个角色', {

@@ -151,6 +151,8 @@ function drawStartScreen(ctx, game, images, characterConfig, jobConfig) {
   // 根据状态显示面板
   if (pm.isOpen('showCharacterPanel')) {
     drawCharacterSelect(ctx, game, characterConfig);
+  } else if (pm.isOpen('showPetPanel')) {
+    drawPetPanel(ctx, game, images, W, H);
   } else if (pm.isOpen('showDebugPanel')) {
     drawDebugPanel(ctx, game, W, H);
   } else if (pm.isOpen('showShopPanel')) {
@@ -378,6 +380,108 @@ function drawShopButton(ctx, x, y, w, h, color, text) {
   ctx.font = 'bold 11px sans-serif';
   ctx.textAlign = 'center';
   ctx.fillText(text, x + w / 2, y + 16);
+}
+
+function drawPetPanel(ctx, game, images, W, H) {
+  const panelW = Math.min(W - 48, 360);
+  const panelH = Math.min(H - 110, 520);
+  const panelX = (W - panelW) / 2;
+  const panelY = 76;
+  const contentX = panelX + 18;
+  const contentW = panelW - 36;
+  const progress = game.progression || progressionSystem.getDefaultProgress();
+  const entries = progressionSystem.getPetCatalog(progress);
+  const registry = game.uiRegistry;
+
+  ctx.save();
+  if (images.bgShop && images.bgShop.width > 0) {
+    ctx.globalAlpha = 0.92;
+    ctx.drawImage(images.bgShop, panelX, panelY, panelW, panelH);
+    ctx.globalAlpha = 1;
+  }
+  ctx.fillStyle = 'rgba(12, 12, 28, 0.92)';
+  ctx.strokeStyle = 'rgba(116, 247, 208, 0.78)';
+  ctx.lineWidth = 2;
+  roundRect(ctx, panelX, panelY, panelW, panelH, 22);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = '#b8ffef';
+  ctx.font = 'bold 24px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('宠物舱', W / 2, panelY + 34);
+
+  ctx.fillStyle = '#9ee7ff';
+  ctx.font = '13px sans-serif';
+  ctx.fillText('当前金币: ' + progress.coins, W / 2, panelY + 58);
+
+  const selectedPetId = progressionSystem.getSelectedPetId(progress);
+  ctx.fillStyle = '#ffeaa7';
+  ctx.font = '12px sans-serif';
+  ctx.fillText(selectedPetId ? ('当前出战: ' + selectedPetId) : '当前出战: 无', W / 2, panelY + 78);
+
+  const closeX = panelX + panelW - 38;
+  const closeY = panelY + 14;
+  ctx.fillStyle = 'rgba(255,255,255,0.14)';
+  roundRect(ctx, closeX, closeY, 24, 24, 12);
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 16px sans-serif';
+  ctx.fillText('X', closeX + 12, closeY + 17);
+  registry.register('start.pet.panel', { x: panelX, y: panelY, w: panelW, h: panelH }, {
+    consume: true
+  });
+  registry.register('start.pet.close', { x: closeX, y: closeY, w: 24, h: 24 }, {
+    action: { type: 'close-panel', panel: 'showPetPanel' }
+  });
+
+  const startY = panelY + 96;
+  const cardH = 58;
+  const gap = 8;
+  const maxCards = Math.min(entries.length, Math.floor((panelH - 122) / (cardH + gap)));
+
+  for (let i = 0; i < maxCards; i++) {
+    const entry = entries[i];
+    const meta = getShopEntryMeta(entry);
+    const y = startY + i * (cardH + gap);
+    const primaryW = 82;
+    const primaryX = panelX + panelW - primaryW - 16;
+    const buttonY = y + cardH - 34;
+
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    roundRect(ctx, contentX, y, contentW, cardH, 14);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 14px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(meta.title, contentX + 12, y + 18);
+
+    ctx.fillStyle = '#a5f3fc';
+    ctx.font = '12px sans-serif';
+    ctx.fillText(meta.desc, contentX + 12, y + 35);
+
+    if (meta.detail) {
+      ctx.fillStyle = '#ffeaa7';
+      ctx.fillText(meta.detail, contentX + 12, y + 50);
+    }
+
+    drawShopButton(ctx, primaryX, buttonY, primaryW, 24, meta.primary.color, meta.primary.label);
+    registry.register('start.pet.item.' + i + '.primary', {
+      x: primaryX,
+      y: buttonY,
+      w: primaryW,
+      h: 24
+    }, {
+      action: {
+        type: 'shop-action',
+        actionName: meta.primary.action,
+        itemId: meta.primary.itemId
+      }
+    });
+  }
+
+  ctx.restore();
 }
 
 function drawAchievementPanel(ctx, game, W, H) {

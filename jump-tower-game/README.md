@@ -55,3 +55,9 @@ npm --prefix scripts run upload-experience -- --version 1.3.0
 - `--desc` 自定义备注
 - `--robot` 指定 CI 机器人编号，默认 `1`
 - `--upload-source-map` 开启 sourceMap 上传；默认关闭，避免 4MB 限制
+
+## 项目规则
+
+UI、输入、面板切换和资源模式的项目约束见：
+
+- [docs/technical/ui-input-and-asset-rules.md](/Users/guccang/github_repo/weixingame/jump-tower-game/docs/technical/ui-input-and-asset-rules.md)

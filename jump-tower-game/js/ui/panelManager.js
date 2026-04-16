@@ -12,13 +12,15 @@ class UIPanelManager {
     // 内部面板状态（单一数据源）
     this.panels = {
       showCharacterPanel: false,
+      showPetPanel: false,
       showDebugPanel: false,
       showShopPanel: false,
       showAchievementPanel: false,
       showLeaderboardPanel: false,
       showModeSelect: false,
       showTimeSelect: false,
-      showLandmarkSelect: false
+      showLandmarkSelect: false,
+      showBackpackPanel: false
     };
     // 钩子系统
     this.hooks = {
@@ -199,10 +201,12 @@ class UIPanelManager {
   openFromIcon(iconKey) {
     const iconToPanel = {
       character: 'showCharacterPanel',
+      pet: 'showPetPanel',
       shop: 'showShopPanel',
       leaderboard: 'showLeaderboardPanel',
       achievement: 'showAchievementPanel',
-      mode: 'showModeSelect'
+      mode: 'showModeSelect',
+      backpack: 'showBackpackPanel'
     };
     const panelKey = iconToPanel[iconKey];
     if (panelKey) {

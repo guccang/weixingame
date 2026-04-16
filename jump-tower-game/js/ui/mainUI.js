@@ -55,6 +55,9 @@ class MainUI {
     const meta = entry && entry.meta ? entry.meta : {};
     const action = meta.action;
     if (!action) {
+      if (meta.passThrough) {
+        return false;
+      }
       return !!meta.consume;
     }
 
@@ -183,6 +186,11 @@ class MainUI {
       return true;
     }
 
+    if (pm.isOpen('showPetPanel')) {
+      pm.close('showPetPanel');
+      return true;
+    }
+
     if (pm.isOpen('showLeaderboardPanel')) {
       pm.close('showLeaderboardPanel');
       return true;
@@ -190,6 +198,11 @@ class MainUI {
 
     if (pm.isOpen('showAchievementPanel')) {
       pm.close('showAchievementPanel');
+      return true;
+    }
+
+    if (pm.isOpen('showBackpackPanel')) {
+      pm.close('showBackpackPanel');
       return true;
     }
 
