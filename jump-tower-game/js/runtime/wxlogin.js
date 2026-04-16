@@ -2,6 +2,7 @@
 const { getConfig } = require('../resource/envConfig');
 
 let loginCallback = null;
+let authTouchBound = false;
 
 // 初始化云开发
 function initCloud() {
@@ -59,6 +60,7 @@ function getWxUserInfo() {
     withCredentials: false,
     lang: 'zh_CN',
     success: function(res) {
+      GameGlobal.authBtnArea = null;
       if (loginCallback) {
         loginCallback(true, res.userInfo);
       }
@@ -114,21 +116,23 @@ function showAuthButton() {
     h: btnHeight
   };
 
-  // 绑定点击事件
-  wx.onTouchStart(function(e) {
-    const touches = e.touches;
-    if (touches && touches.length > 0) {
-      const touchX = touches[0].clientX;
-      const touchY = touches[0].clientY;
-      const btn = GameGlobal.authBtnArea;
+  if (!authTouchBound) {
+    authTouchBound = true;
+    wx.onTouchStart(function(e) {
+      const touches = e.touches;
+      if (touches && touches.length > 0) {
+        const touchX = touches[0].clientX;
+        const touchY = touches[0].clientY;
+        const btn = GameGlobal.authBtnArea;
 
-      if (btn && touchX >= btn.x && touchX <= btn.x + btn.w &&
-          touchY >= btn.y && touchY <= btn.y + btn.h) {
-        // 点击了授权按钮，尝试重新获取
-        getWxUserInfo();
+        if (btn && touchX >= btn.x && touchX <= btn.x + btn.w &&
+            touchY >= btn.y && touchY <= btn.y + btn.h) {
+          // 点击了授权按钮，尝试重新获取
+          getWxUserInfo();
+        }
       }
-    }
-  });
+    });
+  }
 }
 
 // 导出模块

@@ -210,6 +210,23 @@ function parseWxIgnore(projectPath) {
     .map(normalizePattern);
 }
 
+function parseUploadOnlyIgnore(projectPath) {
+  const uploadIgnorePath = path.join(projectPath, '.wxignore.upload');
+  if (!fs.existsSync(uploadIgnorePath)) {
+    return [];
+  }
+
+  return fs.readFileSync(uploadIgnorePath, 'utf8')
+    .split(/\r?\n/)
+    .map(function(line) {
+      return line.trim();
+    })
+    .filter(function(line) {
+      return line && !line.startsWith('#');
+    })
+    .map(normalizePattern);
+}
+
 function convertPackOptionToPatterns(packOption) {
   if (!packOption || !packOption.value) {
     return [];
@@ -254,6 +271,11 @@ function resolveProjectIgnores(projectPath, projectConfig) {
   const wxIgnorePatterns = parseWxIgnore(projectPath);
   for (let k = 0; k < wxIgnorePatterns.length; k++) {
     pushPattern(wxIgnorePatterns[k]);
+  }
+
+  const uploadOnlyPatterns = parseUploadOnlyIgnore(projectPath);
+  for (let m = 0; m < uploadOnlyPatterns.length; m++) {
+    pushPattern(uploadOnlyPatterns[m]);
   }
 
   pushPattern('node_modules/**');

@@ -1,0 +1,8 @@
+# Upload-only ignore rules.
+# Keep local simulator/devtools assets available in project.config.json.
+# Exclude heavy runtime assets only when packaging experience builds with scripts/uploadExperience.js.
+
+images/**
+images/**/*
+audio/**
+audio/**/*

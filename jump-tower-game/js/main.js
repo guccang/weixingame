@@ -77,6 +77,8 @@ const trailEffects = require('./effects/trail');
 const petSystem = require('./pet/pet');
 const progressionSystem = require('./progression/progression');
 
+const MAX_PARTICLES = 260;
+
 // ==================== 游戏类 ====================
 class Game {
   constructor() {
@@ -194,6 +196,7 @@ class Game {
     this.bossSystem = new BossSystem(this); // Boss系统
     this.runDirector = new RunDirector(this); // 单局事件管理
     this.animationId = null; // 动画帧ID，用于取消动画循环
+    this.pendingTimeouts = [];
 
     // 初始化布局系统
     this.layoutLoader = getLayoutLoader();
@@ -457,6 +460,7 @@ class Game {
   }
 
   initGame() {
+    this.clearPendingTimeouts();
     progressionSystem.applyUpgradesToGame(this, this.progression);
     this.syncDifficulty(true);
     this.syncCharacterSelection();
@@ -518,6 +522,29 @@ class Game {
   spawnParticles(x, y, color, count) {
     const newParticles = particlePhysics.spawnParticles(x, y, color, count);
     this.particles.push(...newParticles);
+    if (this.particles.length > MAX_PARTICLES) {
+      this.particles.splice(0, this.particles.length - MAX_PARTICLES);
+    }
+  }
+
+  scheduleTimeout(callback, delay) {
+    const timerId = setTimeout(() => {
+      const index = this.pendingTimeouts.indexOf(timerId);
+      if (index !== -1) {
+        this.pendingTimeouts.splice(index, 1);
+      }
+      callback();
+    }, delay);
+    this.pendingTimeouts.push(timerId);
+    return timerId;
+  }
+
+  clearPendingTimeouts() {
+    if (!this.pendingTimeouts || this.pendingTimeouts.length === 0) return;
+    for (let i = 0; i < this.pendingTimeouts.length; i++) {
+      clearTimeout(this.pendingTimeouts[i]);
+    }
+    this.pendingTimeouts = [];
   }
 
   isControlLocked() {
@@ -1327,6 +1354,7 @@ class Game {
   }
 
   startGame(options = {}) {
+    this.clearPendingTimeouts();
     this.generatePraises();
     if (this.panelManager) {
       this.panelManager.closeAll();
@@ -1352,20 +1380,27 @@ class Game {
     this.state = 'playing';
     this.audio.playBGM();
     const _this = this;
-    setTimeout(function() {
-      _this.barrage.show(_this.W / 2 - 80, _this.H / 2, _this.playerName + "出发！冲冲冲！💪");
+    this.scheduleTimeout(function() {
+      if (_this.state === 'playing') {
+        _this.barrage.show(_this.W / 2 - 80, _this.H / 2, _this.playerName + "出发！冲冲冲！💪");
+      }
     }, 500);
-    setTimeout(function() {
-      _this.barrage.show(_this.W / 2 - 60, _this.H / 2 - 60, _this.playerJob + "牛逼！！！");
+    this.scheduleTimeout(function() {
+      if (_this.state === 'playing') {
+        _this.barrage.show(_this.W / 2 - 60, _this.H / 2 - 60, _this.playerJob + "牛逼！！！");
+      }
     }, 1200);
     if (itemResult.itemName) {
-      setTimeout(function() {
-        _this.barrage.show(_this.W / 2 - 70, _this.H / 2 + 50, '本局使用：' + itemResult.itemName, '#55efc4');
+      this.scheduleTimeout(function() {
+        if (_this.state === 'playing') {
+          _this.barrage.show(_this.W / 2 - 70, _this.H / 2 + 50, '本局使用：' + itemResult.itemName, '#55efc4');
+        }
       }, 1600);
     }
   }
 
   gameOver() {
+    this.clearPendingTimeouts();
     this.gameMode.onGameOver(this);
     if (this.isDebugRun()) {
       this.runRewardSummary = null;
@@ -1391,8 +1426,8 @@ class Game {
       if (achievementResult.unlocks && achievementResult.unlocks.length > 0 && this.barrage) {
         let delay = 2000;
         for (const unlock of achievementResult.unlocks) {
-          setTimeout(() => {
-            if (this.barrage) {
+          this.scheduleTimeout(() => {
+            if (this.barrage && this.state === 'gameover') {
               this.barrage.show(this.W / 2 - 100, this.H / 2 - 80, unlock.message, '#ffd700');
             }
           }, delay);
@@ -1477,6 +1512,7 @@ class Game {
   }
 
   goToHome() {
+    this.clearPendingTimeouts();
     this.state = 'start';
     this.combo = 0;
     this.chargeCount = 0;

@@ -12,6 +12,23 @@ const {
 } = require('./menuTheme');
 
 const avatarCache = {};
+const avatarCacheOrder = [];
+const MAX_AVATAR_CACHE = 64;
+
+function touchAvatarCache(url) {
+  const index = avatarCacheOrder.indexOf(url);
+  if (index !== -1) {
+    avatarCacheOrder.splice(index, 1);
+  }
+  avatarCacheOrder.push(url);
+
+  while (avatarCacheOrder.length > MAX_AVATAR_CACHE) {
+    const evicted = avatarCacheOrder.shift();
+    if (evicted) {
+      delete avatarCache[evicted];
+    }
+  }
+}
 
 function fitText(ctx, text, maxWidth) {
   const source = text || '';
@@ -47,6 +64,8 @@ function getAvatarImage(url) {
     };
     img.src = url;
   }
+
+  touchAvatarCache(url);
 
   const cached = avatarCache[url];
   return cached.loaded && !cached.failed ? cached.img : null;

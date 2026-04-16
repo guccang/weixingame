@@ -51,14 +51,6 @@
     "simulatorPluginLibVersion": {},
     "packOptions": {
         "ignore": [
-			{
-                "type": "folder",
-                "value": "images"
-            },
-            {
-                "type": "folder",
-                "value": "audio"
-            },
             {
                 "type": "folder",
                 "value": "cloudfunctions"

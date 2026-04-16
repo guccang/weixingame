@@ -1,5 +1,7 @@
 // 弹幕系统
 
+const MAX_FLOATING_TEXTS = 48;
+
 class Barrage {
   constructor() {
     this.floatingTexts = [];
@@ -7,6 +9,7 @@ class Barrage {
 
   // 显示浮动文字
   show(x, y, text, color) {
+    if (!text) return;
     this.floatingTexts.push({
       x,
       y,
@@ -16,6 +19,11 @@ class Barrage {
       scale: 1,
       vy: -2
     });
+
+    // 高频事件下限制弹幕堆积，避免长时间游玩后遍历成本持续增长
+    if (this.floatingTexts.length > MAX_FLOATING_TEXTS) {
+      this.floatingTexts.splice(0, this.floatingTexts.length - MAX_FLOATING_TEXTS);
+    }
   }
 
   // 更新浮动文字

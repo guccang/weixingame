@@ -1,0 +1,7 @@
+interface:
+  display_name: "Detect WeChat Game Performance"
+  short_description: "Find WeChat game perf and leak risks."
+  default_prompt: "Use $detect-wechat-game-performance to inspect this WeChat mini game for FPS drops, memory growth, event buildup, and long-session freeze risks."
+
+policy:
+  allow_implicit_invocation: true

@@ -2,6 +2,8 @@ const gameConstants = require('../constants');
 const debugRuntime = require('../debugRuntime');
 const { platform: platformPhysics } = require('../../physics/physics');
 
+const MAX_FLOATING_PICKUPS = 36;
+
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
@@ -333,6 +335,9 @@ class PickupSystem {
 
     const pickup = this.createProjectilePickup(definition, spawnX, spawnY, options);
     this.floatingPickups.push(pickup);
+    if (this.floatingPickups.length > MAX_FLOATING_PICKUPS) {
+      this.floatingPickups.splice(0, this.floatingPickups.length - MAX_FLOATING_PICKUPS);
+    }
     return pickup;
   }
 

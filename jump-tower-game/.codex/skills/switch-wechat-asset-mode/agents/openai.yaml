@@ -1,0 +1,4 @@
+interface:
+  display_name: "Switch WeChat Asset Mode"
+  short_description: "Toggle local/cloud asset package mode."
+  default_prompt: "Use $switch-wechat-asset-mode to switch this WeChat mini game between local simulator packaging and cloud-backed device packaging."

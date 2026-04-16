@@ -4,7 +4,9 @@
   "scripts": {
     "build-manifest": "node buildAssetManifest.js",
     "publish-cloud-assets": "node publishCloudAssets.js",
-    "upload-experience": "node uploadExperience.js"
+    "upload-experience": "node uploadExperience.js",
+    "pack-mode:local": "node setProjectPackMode.js --mode local",
+    "pack-mode:cloud": "node setProjectPackMode.js --mode cloud"
   },
   "dependencies": {
     "@cloudbase/node-sdk": "^3.8.0",
