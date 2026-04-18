@@ -6,6 +6,7 @@
 const physics = require('../physics/physics');
 const { player: playerPhysics, platform: platformPhysics, particle: particlePhysics } = physics;
 const { characterConfig } = require('../character/character');
+const gameConstants = require('../game/constants');
 
 /**
  * 创建玩家对象
@@ -76,6 +77,43 @@ function isFalling(player) {
   return playerPhysics.isFalling(player);
 }
 
+function armOneWayPlatforms(player, platforms, now) {
+  if (!platforms || !player || player.vy >= 0) return;
+  const previousTop = player.y - player.vy;
+  const playerTop = player.y;
+
+  for (let i = 0; i < platforms.length; i++) {
+    const platform = platforms[i];
+    if (!platform || platform.dead || platform.specialType !== 'one_way') continue;
+    const px = platformPhysics.getMovingPlatformX(platform, now);
+    const overlapsX = player.x + player.w > px + 8 && player.x < px + platform.w - 8;
+    const platformBottom = platform.y + platform.h;
+    if (overlapsX && previousTop >= platformBottom && playerTop <= platformBottom) {
+      platform.oneWayArmed = true;
+    }
+  }
+}
+
+function resolvePlatformSpecialJump(player, platform, game, jumpForce) {
+  if (!platform || !game) return jumpForce;
+  platform.lastChargeSinkTriggered = false;
+
+  if (platform.specialType !== 'charge_sink') {
+    return jumpForce;
+  }
+
+  const specialConfig = gameConstants.runEventConfig.platformSpecial;
+  const cost = Math.max(1, Math.round(platform.chargeSinkCost || specialConfig.chargeSinkCost || 1));
+  if ((game.chargeCount || 0) < cost) {
+    return jumpForce;
+  }
+
+  game.chargeCount = Math.max(0, game.chargeCount - cost);
+  game.chargeFull = game.chargeCount >= Math.max(1, game.chargeMax || 1);
+  platform.lastChargeSinkTriggered = true;
+  return jumpForce * Math.max(1.05, platform.chargeSinkBoostScale || specialConfig.chargeSinkBoostScale || 1.2);
+}
+
 /**
  * 处理玩家与平台的碰撞
  * @param {Object} player - 玩家对象
@@ -97,10 +135,15 @@ function handlePlatformCollisions(player, platforms, game, now) {
     return; // Boss击飞期间不处理普通跳跃
   }
 
+  armOneWayPlatforms(player, platforms, now);
   if (!isFalling(player)) return;
 
   for (let p of platforms) {
     if (platformPhysics.checkCollision(player, p, now, false)) {
+      if (p.specialType === 'one_way' && !p.oneWayArmed) {
+        continue;
+      }
+
       if (p.type === 'crumble' && !p.crumbling) {
         p.crumbling = true;
         p.crumbleTimer = setTimeout(function(platform) { platform.dead = true; }, 300, p);
@@ -109,6 +152,8 @@ function handlePlatformCollisions(player, platforms, game, now) {
       if (!p.dead) {
         player.y = p.y - player.h;
         let jumpForce = platformPhysics.handlePlatformJump(player, p, physics.constants);
+        jumpForce = resolvePlatformSpecialJump(player, p, game, jumpForce);
+        p.oneWayArmed = false;
 
         // 使用技能系统触发跳跃（包含粒子、音效、特效）
         game.skillSystem.onJumpLand(p);
@@ -152,6 +197,7 @@ function handlePlatformCollisions(player, platforms, game, now) {
         if (typeof game.onPlatformLanded === 'function') {
           game.onPlatformLanded(p);
         }
+        break;
       }
     }
   }

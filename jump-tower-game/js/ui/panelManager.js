@@ -20,7 +20,8 @@ class UIPanelManager {
       showModeSelect: false,
       showTimeSelect: false,
       showLandmarkSelect: false,
-      showBackpackPanel: false
+      showBackpackPanel: false,
+      showSettingsPanel: false
     };
     // 钩子系统
     this.hooks = {
@@ -206,7 +207,8 @@ class UIPanelManager {
       leaderboard: 'showLeaderboardPanel',
       achievement: 'showAchievementPanel',
       mode: 'showModeSelect',
-      backpack: 'showBackpackPanel'
+      backpack: 'showBackpackPanel',
+      settings: 'showSettingsPanel'
     };
     const panelKey = iconToPanel[iconKey];
     if (panelKey) {

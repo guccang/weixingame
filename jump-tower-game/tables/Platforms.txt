@@ -5,4 +5,4 @@ INT	STRING	STRING	STRING	FLOAT	FLOAT	FLOAT	FLOAT
 2	冰块台子	images/platforms/platform_ice.png	normal	1.0	0	0	1.0
 3	岩石台子	images/platforms/platform_rock.png	crumble	0.8	0	0	1.0
 4	移动台子	images/platforms/platform_moving.png	moving	1.0	3.0	100	1.2
-5	弹跳台子	images/platforms/platform_moving.png	boost	1.5	0	0	1.2
+5	弹跳台子	images/platforms/platform_moving.png	boost	1.8	0	0	1.2

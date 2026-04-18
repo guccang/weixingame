@@ -3,6 +3,7 @@
  */
 
 const progressionSystem = require('../progression/progression');
+const { roundRect } = require('./helper');
 const {
   font,
   drawGlassPanel,
@@ -11,186 +12,157 @@ const {
   drawActionButton
 } = require('./menuTheme');
 
-/**
- * 绘制角色选择区域
- */
+function ensureCharacterFocus(game, list, currentCharacter) {
+  if (game.characterProfileFocus && list.indexOf(game.characterProfileFocus) >= 0) {
+    return game.characterProfileFocus;
+  }
+  if (game.characterPendingSelect && list.indexOf(game.characterPendingSelect) >= 0) {
+    game.characterProfileFocus = game.characterPendingSelect;
+    return game.characterProfileFocus;
+  }
+  game.characterProfileFocus = currentCharacter;
+  return game.characterProfileFocus;
+}
+
 function drawCharacterSelect(ctx, game, characterConfig) {
   const { W, H } = game;
   const registry = game.uiRegistry;
-  const list = characterConfig.list;
-  const listCount = list.length;
-  const time = Date.now();
-  const breathe = Math.sin(time * 0.003) * 0.5 + 0.5;
+  const list = characterConfig.list.slice();
+  const currentCharacter = characterConfig.current;
+  const focusId = ensureCharacterFocus(game, list, currentCharacter);
+  const focusedProfile = progressionSystem.getCharacterProfile(game.progression, focusId);
 
-  const selectWidth = 140;
-  const selectHeight = 150;
-  const spacing = 16;
-  const colCount = 2;
-  const rowCount = Math.ceil(listCount / colCount);
-  const gridWidth = colCount * selectWidth + (colCount - 1) * spacing;
-  const startX = (W - gridWidth) / 2;
-
-  // 布局区域划分：保留下方导航栏点击区域
-  const safeTop = H * 0.10;
-  const bottomNavReserve = 126;
-  const panelX = 18;
-  const panelY = Math.max(20, safeTop - 14);
+  const panelX = 16;
+  const panelY = Math.max(22, H * 0.07);
   const panelW = W - panelX * 2;
-  const panelBottom = H - bottomNavReserve;
-  const panelH = Math.max(320, panelBottom - panelY);
-  const titleTop = panelY + 16;
-  const titleEndY = titleTop + 62;
-  const cbH = 48;
-  const cbY = panelY + panelH - cbH - 18;
-  const scrollAreaTop = titleEndY + 8;
-  const scrollAreaBottom = cbY - 14;
-  const scrollAreaHeight = scrollAreaBottom - scrollAreaTop;
-  const rowSpacing = selectHeight + spacing;
-  const totalContentHeight = rowCount * rowSpacing;
+  const panelH = Math.max(420, H - panelY - 134);
+  const closeBtnSize = 36;
+  const listW = Math.min(142, Math.floor(panelW * 0.36));
+  const gap = 12;
+  const detailX = panelX + 18 + listW + gap;
+  const detailW = panelX + panelW - detailX - 18;
+  const titleY = panelY + 18;
+  const listTop = panelY + 76;
+  const listBottom = panelY + panelH - 22;
+  const listH = listBottom - listTop;
+  const cardH = 108;
+  const cardGap = 12;
+  const totalContentHeight = list.length * (cardH + cardGap) - cardGap;
+  const maxScroll = Math.max(0, totalContentHeight - listH);
 
-  // 初始化滚动偏移量
   if (typeof game.characterScrollY !== 'number') {
     game.characterScrollY = 0;
   }
-
-  // 计算最大滚动量
-  const maxScroll = Math.max(0, totalContentHeight - scrollAreaHeight);
-
-  // 确保滚动值在有效范围内
   game.characterScrollY = Math.max(0, Math.min(game.characterScrollY, maxScroll));
 
-  // 保存滚动信息供点击检测使用
   game.characterScroll = {
-    startX: startX,
-    scrollAreaTop: scrollAreaTop,
-    scrollAreaBottom: scrollAreaBottom,
-    scrollAreaHeight: scrollAreaHeight,
-    selectWidth: selectWidth,
-    selectHeight: selectHeight,
-    spacing: spacing,
-    colCount: colCount,
-    rowSpacing: rowSpacing,
+    startX: panelX + 18,
+    scrollAreaTop: listTop,
+    scrollAreaBottom: listBottom,
+    scrollAreaHeight: listH,
+    selectWidth: listW,
+    selectHeight: cardH,
+    spacing: cardGap,
+    colCount: 1,
+    rowSpacing: cardH + cardGap,
     maxScroll: maxScroll,
-    listCount: listCount,
+    listCount: list.length,
     list: list
   };
 
-  // 绘制半透明背景，让下方主页面按钮保持可见
   ctx.save();
-  ctx.fillStyle = 'rgba(8, 14, 26, 0.54)';
+  ctx.fillStyle = 'rgba(6, 10, 18, 0.60)';
   ctx.fillRect(0, 0, W, H);
   drawGlassPanel(ctx, panelX, panelY, panelW, panelH, {
     radius: 28,
-    shadowBlur: 24,
-    glow: 'rgba(124, 231, 255, 0.10)',
-    stroke: 'rgba(207, 230, 255, 0.18)',
+    shadowBlur: 26,
+    glow: 'rgba(116, 247, 208, 0.12)',
+    stroke: 'rgba(220, 237, 255, 0.18)',
     stops: [
-      [0, 'rgba(19, 28, 45, 0.94)'],
-      [1, 'rgba(10, 16, 29, 0.92)']
+      [0, 'rgba(17, 24, 38, 0.96)'],
+      [0.48, 'rgba(10, 18, 30, 0.94)'],
+      [1, 'rgba(8, 13, 24, 0.96)']
     ]
   });
   ctx.restore();
 
-  // 标题区域（固定不滚动）
   ctx.save();
   ctx.fillStyle = '#ffffff';
-  ctx.font = font(28, '700');
-  ctx.textAlign = 'center';
+  ctx.font = font(26, '700');
+  ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
-  ctx.fillText('角色列表', W / 2, titleTop + 10);
-
+  ctx.fillText('角色档案', panelX + 18, titleY);
   ctx.fillStyle = 'rgba(214, 227, 245, 0.72)';
-  ctx.font = font(13, '500');
-  ctx.fillText('选择当前出战角色', W / 2, titleTop + 48);
+  ctx.font = font(12, '500');
+  ctx.fillText('按高度与关键成就逐步解锁人物与传记', panelX + 18, titleY + 34);
   ctx.restore();
 
-  // 绘制滚动条（如果需要滚动）
-  if (maxScroll > 0) {
-    const scrollBarWidth = 6;
-    const scrollBarHeight = Math.max(40, (scrollAreaHeight / totalContentHeight) * scrollAreaHeight);
-    const scrollBarX = W - 20;
-    const scrollBarY = scrollAreaTop + (game.characterScrollY / maxScroll) * (scrollAreaHeight - scrollBarHeight);
-    const scrollBarTotalHeight = scrollAreaHeight;
+  const closeBtnX = panelX + panelW - closeBtnSize - 14;
+  const closeBtnY = panelY + 14;
+  drawCloseButton(ctx, closeBtnX, closeBtnY, closeBtnSize, {
+    glow: 'rgba(255, 127, 127, 0.12)'
+  });
 
-    // 保存滚动条区域供拖动使用
-    game.characterScrollBar = {
-      x: scrollBarX,
-      y: scrollAreaTop,
-      width: scrollBarWidth,
-      height: scrollBarTotalHeight,
-      thumbY: scrollBarY,
-      thumbHeight: scrollBarHeight,
-      maxScroll: maxScroll
-    };
+  drawGlassPanel(ctx, panelX + 14, listTop - 8, listW + 8, listH + 16, {
+    radius: 22,
+    shadowBlur: 12,
+    glow: 'rgba(82, 199, 255, 0.08)',
+    stroke: 'rgba(255,255,255,0.08)',
+    stops: [
+      [0, 'rgba(13, 22, 38, 0.76)'],
+      [1, 'rgba(9, 15, 27, 0.82)']
+    ]
+  });
 
-    ctx.save();
-    // 滚动条轨道
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
-    ctx.fillRect(scrollBarX, scrollAreaTop, scrollBarWidth, scrollBarTotalHeight);
-    // 可拖动滑块
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
-    ctx.fillRect(scrollBarX, scrollBarY, scrollBarWidth, scrollBarHeight);
-    // 滑块高亮效果
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-    ctx.fillRect(scrollBarX + 1, scrollBarY + 2, scrollBarWidth - 2, 6);
-    ctx.restore();
-  } else {
-    game.characterScrollBar = null;
-  }
-
-  // 内容区域裁剪（只显示可见范围）
   ctx.save();
   ctx.beginPath();
-  ctx.rect(0, scrollAreaTop, W, scrollAreaHeight);
+  ctx.rect(panelX + 18, listTop, listW, listH);
   ctx.clip();
 
-  // 应用滚动偏移
-  const scrollOffset = game.characterScrollY;
-
-  for (let i = 0; i < listCount; i++) {
-    const row = Math.floor(i / colCount);
-    const col = i % colCount;
-    const charName = list[i];
-    const x = startX + col * (selectWidth + spacing);
-    const y = scrollAreaTop + row * rowSpacing - scrollOffset;
-    const isSelected = characterConfig.current === charName;
-    const isPending = game.characterPendingSelect === charName;
-    const isUnlocked = progressionSystem.isCharacterUnlocked(game.progression, charName);
-
-    // 只绘制可见区域内的卡片
-    if (y + selectHeight < scrollAreaTop || y > scrollAreaBottom) {
-      continue;
+  list.forEach(function(charId, index) {
+    const y = listTop + index * (cardH + cardGap) - game.characterScrollY;
+    const isSelected = currentCharacter === charId;
+    const isFocused = focusId === charId;
+    const isPending = game.characterPendingSelect === charId;
+    const unlockStatus = progressionSystem.getCharacterUnlockStatus(game.progression, charId);
+    const profile = progressionSystem.getCharacterProfile(game.progression, charId);
+    if (y + cardH < listTop || y > listBottom) {
+      return;
     }
 
-    drawGlassPanel(ctx, x, y, selectWidth, selectHeight, {
+    drawGlassPanel(ctx, panelX + 18, y, listW, cardH, {
       radius: 18,
-      shadowBlur: isSelected || isPending ? 18 : 10,
-      glow: isSelected || isPending ? 'rgba(255, 221, 120, 0.2)' : 'rgba(0, 0, 0, 0.08)',
-      stroke: isSelected || isPending ? 'rgba(255, 221, 120, ' + (0.28 + breathe * 0.18) + ')' : 'rgba(255, 255, 255, 0.12)',
+      shadowBlur: isFocused ? 18 : 8,
+      glow: isFocused ? 'rgba(116, 247, 208, 0.18)' : 'rgba(0, 0, 0, 0.08)',
+      stroke: isFocused ? 'rgba(116, 247, 208, 0.34)' : 'rgba(255,255,255,0.10)',
       stops: [
-        [0, 'rgba(19, 34, 57, 0.88)'],
-        [1, 'rgba(10, 18, 31, 0.84)']
+        [0, isFocused ? 'rgba(20, 42, 58, 0.92)' : 'rgba(17, 28, 45, 0.88)'],
+        [1, 'rgba(10, 18, 29, 0.88)']
       ]
     });
 
-    const frames = characterConfig.frames[charName];
+    const frames = characterConfig.frames[charId];
     if (frames && frames[0] && frames[0].width > 0) {
-      ctx.drawImage(frames[0], x + 38, y + 18, 64, 64);
+      ctx.drawImage(frames[0], panelX + 18 + 10, y + 18, 52, 52);
     }
 
     ctx.save();
-    ctx.fillStyle = isSelected || isPending ? '#ffe39a' : '#ffffff';
+    ctx.fillStyle = '#ffffff';
     ctx.font = font(14, '700');
-    ctx.textAlign = 'center';
+    ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
-    ctx.fillText(characterConfig.names[charName] || charName, x + selectWidth / 2, y + 94);
+    ctx.fillText(characterConfig.names[charId] || charId, panelX + 84, y + 16);
+
+    ctx.fillStyle = 'rgba(214, 227, 245, 0.76)';
+    ctx.font = font(10, '500');
+    wrapText(ctx, profile.role + ' · ' + profile.skillLabel, panelX + 84, y + 40, listW - 92, 14, 2);
     ctx.restore();
 
     if (isSelected) {
-      drawBadge(ctx, x + 34, y + 116, '使用中', {
-        width: 72,
-        height: 24,
-        paddingX: 10,
+      drawBadge(ctx, panelX + 26, y + 78, '使用中', {
+        width: 58,
+        height: 22,
+        paddingX: 8,
         color: '#ffe39a',
         glow: 'rgba(255, 221, 120, 0.12)',
         stroke: 'rgba(255, 221, 120, 0.18)',
@@ -200,10 +172,10 @@ function drawCharacterSelect(ctx, game, characterConfig) {
         ]
       });
     } else if (isPending) {
-      drawBadge(ctx, x + 34, y + 116, '待确认', {
-        width: 72,
-        height: 24,
-        paddingX: 10,
+      drawBadge(ctx, panelX + 26, y + 78, '待上阵', {
+        width: 58,
+        height: 22,
+        paddingX: 8,
         color: '#74f7d0',
         glow: 'rgba(116, 247, 208, 0.12)',
         stroke: 'rgba(116, 247, 208, 0.18)',
@@ -214,37 +186,38 @@ function drawCharacterSelect(ctx, game, characterConfig) {
       });
     }
 
-    if (!isUnlocked) {
+    if (!unlockStatus.unlocked) {
       ctx.save();
-      ctx.fillStyle = 'rgba(7, 12, 21, 0.72)';
-      ctx.fillRect(x + 8, y + 8, selectWidth - 16, selectHeight - 16);
-      ctx.restore();
-
-      ctx.save();
-      ctx.fillStyle = '#ffb4b4';
-      ctx.font = font(14, '700');
+      ctx.fillStyle = 'rgba(5, 8, 16, 0.54)';
+      roundRect(ctx, panelX + 24, y + 72, listW - 12, 28, 14);
+      ctx.fill();
+      ctx.fillStyle = '#ffcf99';
+      ctx.font = font(10, '600');
       ctx.textAlign = 'center';
-      ctx.textBaseline = 'top';
-      ctx.fillText('未解锁', x + selectWidth / 2, y + 56);
-      const catalog = progressionSystem.getCharacterCatalog(game.progression);
-      const item = catalog.find(function(entry) { return entry.id === charName; });
-      if (item) {
-        ctx.fillStyle = '#ffe3a1';
-        ctx.font = font(12, '600');
-        ctx.fillText(item.price + ' 金币', x + selectWidth / 2, y + 82);
-      }
+      ctx.fillText(fitText(ctx, unlockStatus.label, listW - 26), panelX + 18 + listW / 2, y + 90);
       ctx.restore();
     }
+  });
+  ctx.restore();
+
+  if (maxScroll > 0) {
+    const trackX = panelX + 18 + listW - 4;
+    const trackY = listTop + 4;
+    const trackH = listH - 8;
+    const thumbH = Math.max(46, (listH / totalContentHeight) * trackH);
+    const thumbY = trackY + (game.characterScrollY / maxScroll) * (trackH - thumbH);
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    roundRect(ctx, trackX, trackY, 4, trackH, 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.42)';
+    roundRect(ctx, trackX, thumbY, 4, thumbH, 2);
+    ctx.fill();
+    ctx.restore();
   }
 
-  ctx.restore();  // 恢复裁剪区域
+  drawCharacterDetail(ctx, game, characterConfig, detailX, listTop, detailW, listH, focusedProfile);
 
-  const closeBtnSize = 36;
-  const closeBtnX = panelX + 14;
-  const closeBtnY = panelY + 12;
-  drawCloseButton(ctx, closeBtnX, closeBtnY, closeBtnSize, {
-    glow: 'rgba(255, 127, 127, 0.12)'
-  });
   registry.register('start.character.panel', { x: panelX, y: panelY, w: panelW, h: panelH }, {
     consume: true,
     passThrough: true
@@ -252,30 +225,163 @@ function drawCharacterSelect(ctx, game, characterConfig) {
   registry.register('start.character.close', { x: closeBtnX, y: closeBtnY, w: closeBtnSize, h: closeBtnSize }, {
     action: { type: 'close-character-panel' }
   });
+}
 
-  // 底部确认按钮
-  const confirmBtnW = 200;
-  const confirmBtnH = cbH;
-  const confirmBtnX = (W - confirmBtnW) / 2;
-  const confirmBtnY = cbY;
-  const hasPending = game.characterPendingSelect != null;
+function drawCharacterDetail(ctx, game, characterConfig, x, y, width, height, profile) {
+  const headerH = 118;
+  const actionH = 48;
+  const gap = 10;
+  const chaptersTop = y + headerH + 10;
+  const availableH = height - headerH - actionH - 26;
+  const chapterH = Math.max(46, Math.floor((availableH - gap * 5) / 6));
+  const actionY = y + height - actionH;
+  const currentCharacter = characterConfig.current;
+  const isFocusedCurrent = currentCharacter === profile.id;
+  const isFocusedPending = game.characterPendingSelect === profile.id;
 
-  drawActionButton(ctx, confirmBtnX, confirmBtnY, confirmBtnW, confirmBtnH, hasPending ? '确认选择' : '选择一个角色', {
-    shadowColor: hasPending ? 'rgba(116, 247, 208, 0.35)' : 'rgba(150, 150, 150, 0.2)',
+  drawGlassPanel(ctx, x, y, width, height, {
+    radius: 24,
+    shadowBlur: 14,
+    glow: 'rgba(116, 247, 208, 0.10)',
+    stroke: 'rgba(255,255,255,0.10)',
+    stops: [
+      [0, 'rgba(15, 24, 40, 0.82)'],
+      [1, 'rgba(8, 14, 24, 0.88)']
+    ]
+  });
+
+  ctx.save();
+  ctx.fillStyle = '#8fe9ff';
+  ctx.font = font(12, '700');
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.fillText(profile.role || '角色', x + 16, y + 16);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = font(24, '700');
+  ctx.fillText(profile.name || profile.id, x + 16, y + 34);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.78)';
+  ctx.font = font(12, '500');
+  wrapText(ctx, profile.desc || '', x + 16, y + 64, width - 32, 16, 3);
+  ctx.restore();
+
+  drawBadge(ctx, x + 16, y + 92, profile.skillLabel || '均衡', {
+    width: Math.min(108, width - 32),
+    height: 22,
+    paddingX: 10,
+    color: '#dff7ff',
+    glow: 'rgba(82, 199, 255, 0.10)',
+    stroke: 'rgba(82, 199, 255, 0.16)',
+    stops: [
+      [0, 'rgba(18, 53, 72, 0.82)'],
+      [1, 'rgba(10, 33, 48, 0.86)']
+    ]
+  });
+
+  ctx.save();
+  ctx.fillStyle = profile.unlockStatus.unlocked ? '#74f7d0' : '#ffcf99';
+  ctx.font = font(11, '600');
+  ctx.textAlign = 'right';
+  ctx.fillText(fitText(ctx, profile.unlockStatus.label, width - 24), x + width - 16, y + 24);
+  ctx.fillStyle = 'rgba(214, 227, 245, 0.72)';
+  ctx.font = font(10, '500');
+  ctx.fillText(fitText(ctx, profile.unlockStatus.progressText, width - 24), x + width - 16, y + 44);
+  ctx.restore();
+
+  profile.chapters.forEach(function(chapter, index) {
+    const itemY = chaptersTop + index * (chapterH + gap);
+    drawGlassPanel(ctx, x + 12, itemY, width - 24, chapterH, {
+      radius: 16,
+      shadowBlur: 8,
+      glow: chapter.unlocked ? 'rgba(116, 247, 208, 0.06)' : 'rgba(255, 176, 121, 0.05)',
+      stroke: chapter.unlocked ? 'rgba(255,255,255,0.08)' : 'rgba(255, 207, 153, 0.14)',
+      stops: [
+        [0, chapter.unlocked ? 'rgba(17, 29, 45, 0.82)' : 'rgba(28, 20, 20, 0.84)'],
+        [1, 'rgba(9, 14, 24, 0.88)']
+      ]
+    });
+
+    ctx.save();
+    ctx.fillStyle = chapter.unlocked ? '#ffffff' : '#ffcf99';
+    ctx.font = font(11, '700');
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText((index + 1) + '. ' + chapter.title, x + 24, itemY + 10);
+
+    ctx.font = font(10, '500');
+    ctx.fillStyle = chapter.unlocked ? 'rgba(228, 238, 247, 0.82)' : 'rgba(255, 224, 196, 0.78)';
+    wrapText(
+      ctx,
+      chapter.unlocked ? chapter.text : ('解锁条件：' + chapter.requirementLabel + ' · ' + chapter.progressText),
+      x + 24,
+      itemY + 28,
+      width - 48,
+      13,
+      2
+    );
+    ctx.restore();
+  });
+
+  const buttonLabel = !profile.unlockStatus.unlocked
+    ? '未满足解锁条件'
+    : (isFocusedCurrent ? '当前使用角色' : (isFocusedPending ? '点击确认上阵' : '设为出战角色'));
+  drawActionButton(ctx, x + 12, actionY, width - 24, actionH, buttonLabel, {
+    shadowColor: profile.unlockStatus.unlocked ? 'rgba(116, 247, 208, 0.28)' : 'rgba(255, 180, 180, 0.14)',
     shadowBlur: 16,
-    stops: hasPending ? [
-      [0, '#74f7d0'],
-      [0.55, '#42d6f2'],
-      [1, '#2f83ff']
+    stops: profile.unlockStatus.unlocked ? [
+      [0, isFocusedCurrent ? 'rgba(102, 116, 134, 0.82)' : '#74f7d0'],
+      [0.5, isFocusedCurrent ? 'rgba(82, 92, 108, 0.82)' : '#42d6f2'],
+      [1, isFocusedCurrent ? 'rgba(66, 74, 88, 0.82)' : '#2f83ff']
     ] : [
-      [0, 'rgba(100, 100, 120, 0.6)'],
-      [1, 'rgba(60, 60, 80, 0.5)']
+      [0, 'rgba(112, 60, 60, 0.84)'],
+      [1, 'rgba(78, 34, 34, 0.90)']
     ],
-    textColor: hasPending ? '#051120' : '#888888'
+    textColor: profile.unlockStatus.unlocked ? (isFocusedCurrent ? '#dfe6ee' : '#051120') : '#ffd3d3'
   });
-  registry.register('start.character.confirm', { x: confirmBtnX, y: confirmBtnY, w: confirmBtnW, h: confirmBtnH }, {
-    action: { type: 'confirm-character-select' }
-  });
+
+  if (profile.unlockStatus.unlocked && !isFocusedCurrent) {
+    game.uiRegistry.register('start.character.confirm', {
+      x: x + 12,
+      y: actionY,
+      w: width - 24,
+      h: actionH
+    }, {
+      action: { type: 'confirm-character-select' }
+    });
+  }
+}
+
+function wrapText(ctx, text, x, y, maxWidth, lineHeight, maxLines) {
+  if (!text) return;
+  const content = String(text);
+  let line = '';
+  let row = 0;
+  for (let i = 0; i < content.length; i++) {
+    const testLine = line + content[i];
+    if (ctx.measureText(testLine).width > maxWidth && line) {
+      ctx.fillText(line, x, y + row * lineHeight);
+      row += 1;
+      if (row >= maxLines) return;
+      line = content[i];
+    } else {
+      line = testLine;
+    }
+  }
+  if (line && row < maxLines) {
+    ctx.fillText(line, x, y + row * lineHeight);
+  }
+}
+
+function fitText(ctx, text, maxWidth) {
+  const content = String(text || '');
+  if (!content) return '';
+  if (ctx.measureText(content).width <= maxWidth) return content;
+  let trimmed = content;
+  while (trimmed.length > 1 && ctx.measureText(trimmed + '...').width > maxWidth) {
+    trimmed = trimmed.slice(0, -1);
+  }
+  return trimmed + '...';
 }
 
 module.exports = {

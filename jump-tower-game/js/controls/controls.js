@@ -16,6 +16,7 @@ class Controls {
     this.lastSlideTime = 0;
     this.skipTouchEndSkill = false;
     this.startUiTouchHandled = false;
+    this.barragePanelGesture = false;
 
     this.initInput();
   }
@@ -39,6 +40,16 @@ class Controls {
           return;
         }
 
+        if (_this.game.state === 'playing' &&
+            _this.game.barrage &&
+            _this.game.barrage.shouldStartGesture(_this.game.W, _this.game.H, touchX, touchY)) {
+          _this.barragePanelGesture = true;
+          _this.game.barrage.beginPanelDrag(_this.game.W, _this.game.H, touchX);
+          _this.keys['ArrowLeft'] = false;
+          _this.keys['ArrowRight'] = false;
+          return;
+        }
+
         // 蓄力冲刺期间只记录触摸位置，不处理其他逻辑
         if (_this.game.chargeDashing) return;
         if (_this.game.isControlLocked()) return;
@@ -46,6 +57,16 @@ class Controls {
         // 在主界面检测按钮和角色选择点击
         if (_this.game.state === 'start') {
           if (_this.game.panelManager && _this.game.panelManager.isOpen('showDebugPanel')) {
+            return;
+          }
+          var shouldDeferPanelTouch =
+            (_this.game.panelManager && _this.game.panelManager.isOpen('showCharacterPanel') &&
+              _this.game.isTouchInCharacterScrollArea &&
+              _this.game.isTouchInCharacterScrollArea(touchX, touchY)) ||
+            (_this.game.panelManager && _this.game.panelManager.isOpen('showAchievementPanel') &&
+              _this.game.isTouchInAchievementScrollArea &&
+              _this.game.isTouchInAchievementScrollArea(touchX, touchY));
+          if (shouldDeferPanelTouch) {
             return;
           }
           if (_this.game.mainUI.handleTouch(touchX, touchY)) {
@@ -100,6 +121,13 @@ class Controls {
         var touchX = touches[0].clientX;
         var touchY = touches[0].clientY;
 
+        if (_this.barragePanelGesture) {
+          _this.game.barrage.updatePanelDrag(_this.game.W, _this.game.H, touchX);
+          _this.keys['ArrowLeft'] = false;
+          _this.keys['ArrowRight'] = false;
+          return;
+        }
+
         // 开始界面：处理面板滚动和面板守卫
         if (_this.game.state === 'start') {
           if (_this.startUiTouchHandled) {
@@ -128,9 +156,21 @@ class Controls {
             return;
           }
 
-          // 使用 ScrollHandler 处理面板滚动
-          if (_this.game.scrollHandler && _this.game.scrollHandler.handleMove(touchX, touchY, _this.touchStartX, _this.touchStartY)) {
-            return;
+          if (_this.game.panelManager.isOpen('showAchievementPanel')) {
+            var achievementTouchDy = touchY - _this.touchStartY;
+            var isAchievementVerticalDrag = Math.abs(achievementTouchDy) > 10;
+
+            if (_this.game.isDraggingAchievementList) {
+              _this.game.handleAchievementScroll(touchY);
+              return;
+            }
+
+            if (isAchievementVerticalDrag) {
+              if (_this.game.startAchievementDrag && _this.game.startAchievementDrag(touchX, touchY)) {
+                _this.game.handleAchievementScroll(touchY);
+                return;
+              }
+            }
           }
 
           // 角色面板内容拖动
@@ -147,6 +187,7 @@ class Controls {
             // 如果检测到垂直移动超过阈值，开始拖动
             if (isVerticalDrag) {
               if (_this.game.startCharacterDrag && _this.game.startCharacterDrag(touchX, touchY)) {
+                _this.game.handleCharacterScroll(touchX, touchY);
                 return;
               }
             }
@@ -208,6 +249,21 @@ class Controls {
         return;
       }
 
+      if (_this.barragePanelGesture) {
+        _this.game.barrage.endPanelDrag();
+        _this.keys['ArrowLeft'] = false;
+        _this.keys['ArrowRight'] = false;
+        _this.touchStartX = null;
+        _this.touchStartY = null;
+        _this.lastDeltaX = 0;
+        _this.lastDeltaY = 0;
+        _this.isSlidingDown = false;
+        _this.skipTouchEndSkill = false;
+        _this.startUiTouchHandled = false;
+        _this.barragePanelGesture = false;
+        return;
+      }
+
       if (_this.game.state === 'playing' && _this.game.runDirector && _this.game.runDirector.isBuffOfferOpen()) {
         _this.keys['ArrowLeft'] = false;
         _this.keys['ArrowRight'] = false;
@@ -242,6 +298,10 @@ class Controls {
         if (_this.game.checkCharacterSelectClick && _this.game.checkCharacterSelectClick(_this.touchStartX, _this.touchStartY)) {
           // 点击了角色，不关闭面板
         }
+      }
+
+      if (_this.game.isDraggingAchievementList) {
+        _this.game.stopAchievementDrag();
       }
 
       // 停止角色列表拖动
@@ -282,6 +342,7 @@ class Controls {
     this.lastDeltaX = 0;
     this.lastDeltaY = 0;
     this.startUiTouchHandled = false;
+    this.barragePanelGesture = false;
   }
 }
 

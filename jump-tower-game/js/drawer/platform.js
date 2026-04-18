@@ -118,6 +118,42 @@ function drawPlatformDecorators(ctx, platform, px, sy) {
     ctx.closePath();
     ctx.fill();
     ctx.restore();
+    return;
+  }
+
+  if (platform.specialType === 'one_way') {
+    ctx.save();
+    ctx.strokeStyle = '#ffd166';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(px + platform.w / 2, sy + 5);
+    ctx.lineTo(px + platform.w / 2, sy + 15);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(px + platform.w / 2 - 7, sy + 10);
+    ctx.lineTo(px + platform.w / 2, sy + 4);
+    ctx.lineTo(px + platform.w / 2 + 7, sy + 10);
+    ctx.stroke();
+    ctx.restore();
+    return;
+  }
+
+  if (platform.specialType === 'charge_sink') {
+    ctx.save();
+    ctx.strokeStyle = '#7ce7ff';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(px + platform.w / 2 - 10, sy + 6);
+    ctx.lineTo(px + platform.w / 2 + 10, sy + 6);
+    ctx.moveTo(px + platform.w / 2, sy + 6);
+    ctx.lineTo(px + platform.w / 2, sy + 16);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(px + platform.w / 2 - 7, sy + 13);
+    ctx.lineTo(px + platform.w / 2, sy + 18);
+    ctx.lineTo(px + platform.w / 2 + 7, sy + 13);
+    ctx.stroke();
+    ctx.restore();
   }
 }
 

@@ -184,6 +184,12 @@ class Game {
     this.isDraggingDebugPanel = false;
     this.debugPanelDragStartY = 0;
     this.debugPanelDragStartScrollY = 0;
+    this.achievementScrollArea = null;
+    this.achievementScrollY = 0;
+    this.achievementMaxScroll = 0;
+    this.isDraggingAchievementList = false;
+    this.achievementDragStartY = 0;
+    this.achievementDragStartScrollY = 0;
 
     this.controls = new Controls(this); // 控制系统
     this.mainUI = new MainUI(this); // 主界面UI
@@ -686,6 +692,12 @@ class Game {
     this.shopTab = tabId || 'upgrades';
   }
 
+  setUITheme(themeId) {
+    this.progression = progressionSystem.setUITheme(this.progression, themeId);
+    this.showShopToast('界面主题已切换', '#dcefe8');
+    return this.progression;
+  }
+
   showShopToast(text, color) {
     this.shopMessage = text;
     this.shopMessageColor = color || '#55efc4';
@@ -916,9 +928,22 @@ class Game {
   }
 
   createBossSpawnPlan(height) {
-    const pool = debugRuntime.filterBossPool(gameConstants.bossConfig.pool, this.debugProfile);
+    let pool = debugRuntime.filterBossPool(gameConstants.bossConfig.pool, this.debugProfile);
     if (!pool || pool.length === 0) {
       return null;
+    }
+
+    const themeProfile = this.runDirector ? this.runDirector.getSpawnProfile(height) : null;
+    const bossWeights = themeProfile && themeProfile.platformConfig
+      ? themeProfile.platformConfig.bossWeights
+      : null;
+    if (bossWeights) {
+      pool = pool.map(function(entry) {
+        const overrideWeight = bossWeights[entry.behaviorType];
+        return Object.assign({}, entry, {
+          weight: typeof overrideWeight === 'number' ? overrideWeight : entry.weight
+        });
+      });
     }
 
     const picked = this.pickWeightedBossEntry(pool);
@@ -1020,6 +1045,9 @@ class Game {
   }
 
   onPlatformLanded(platform) {
+    if (this.gameMode && typeof this.gameMode.recordPlatformLanding === 'function') {
+      this.gameMode.recordPlatformLanding(this, platform);
+    }
     if (!this.runDirector) return;
     this.runDirector.onPlatformLanded(platform);
   }
@@ -1287,7 +1315,8 @@ class Game {
   startCharacterDrag(touchX, touchY) {
     const scroll = this.characterScroll;
     if (!scroll) return false;
-    const { scrollAreaTop, scrollAreaBottom } = scroll;
+    const { scrollAreaTop, scrollAreaBottom, maxScroll } = scroll;
+    if (maxScroll <= 0) return false;
     if (touchY >= scrollAreaTop && touchY <= scrollAreaBottom) {
       this.isDraggingCharacterList = true;
       this.characterDragStartY = touchY;
@@ -1302,6 +1331,47 @@ class Game {
     this.isDraggingCharacterList = false;
     this.characterDragStartY = 0;
     this.characterDragStartScrollY = 0;
+  }
+
+  isTouchInCharacterScrollArea(touchX, touchY) {
+    const scroll = this.characterScroll;
+    if (!scroll) return false;
+    return touchY >= scroll.scrollAreaTop && touchY <= scroll.scrollAreaBottom;
+  }
+
+  handleAchievementScroll(touchY) {
+    const area = this.achievementScrollArea;
+    if (!area || !this.isDraggingAchievementList) return false;
+    const deltaY = touchY - this.achievementDragStartY;
+    const newScrollY = this.achievementDragStartScrollY - deltaY;
+    this.achievementScrollY = Math.max(0, Math.min(this.achievementMaxScroll || 0, newScrollY));
+    return true;
+  }
+
+  startAchievementDrag(touchX, touchY) {
+    const area = this.achievementScrollArea;
+    if (!area || (this.achievementMaxScroll || 0) <= 0) return false;
+    if (touchX >= area.x && touchX <= area.x + area.w &&
+        touchY >= area.y && touchY <= area.y + area.h) {
+      this.isDraggingAchievementList = true;
+      this.achievementDragStartY = touchY;
+      this.achievementDragStartScrollY = this.achievementScrollY || 0;
+      return true;
+    }
+    return false;
+  }
+
+  stopAchievementDrag() {
+    this.isDraggingAchievementList = false;
+    this.achievementDragStartY = 0;
+    this.achievementDragStartScrollY = 0;
+  }
+
+  isTouchInAchievementScrollArea(touchX, touchY) {
+    const area = this.achievementScrollArea;
+    if (!area) return false;
+    return touchX >= area.x && touchX <= area.x + area.w &&
+      touchY >= area.y && touchY <= area.y + area.h;
   }
 
   // 检测角色选择点击
@@ -1324,9 +1394,12 @@ class Game {
       // 检查是否在卡片范围内
       if (touchX >= x && touchX <= x + selectWidth &&
           touchY >= y && touchY <= y + selectHeight) {
+        this.characterProfileFocus = charName;
         if (!progressionSystem.isCharacterUnlocked(this.progression, charName)) {
-          this.showShopToast('先解锁该角色', '#ff7675');
-          return false;  // 未解锁不关闭面板
+          this.characterPendingSelect = null;
+          const unlockStatus = progressionSystem.getCharacterUnlockStatus(this.progression, charName);
+          this.showShopToast(unlockStatus.label + '，' + unlockStatus.progressText, '#ffb37a');
+          return true;
         }
         // 只标记待确认选择，不真正切换
         this.characterPendingSelect = charName;
@@ -1339,7 +1412,7 @@ class Game {
 
   // 确认角色选择
   confirmCharacterSelect() {
-    const pending = this.characterPendingSelect;
+    const pending = this.characterPendingSelect || this.characterProfileFocus;
     if (!pending) {
       this.showShopToast('请先选择一个角色', '#ff7675');
       return false;
@@ -1422,8 +1495,8 @@ class Game {
         combo: this.maxCombo,
         time: this.finalElapsedTime || 0,
         challengeCompleted: this.gameMode.gameMode === 'challenge' &&
-          !!this.gameMode.selectedLandmark &&
-          this.score >= this.gameMode.selectedLandmark.targetHeight
+          typeof this.gameMode.isChallengeCompleted === 'function' &&
+          this.gameMode.isChallengeCompleted()
       });
       this.progression = rewardResult.progress;
 

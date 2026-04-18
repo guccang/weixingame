@@ -336,7 +336,10 @@ function drawLandmarkSelect(ctx, game, W, H) {
 
     ctx.fillStyle = '#ffd166';
     ctx.font = font(12, '700');
-    ctx.fillText('目标 ' + landmark.targetHeight + 'm', x + 16, y + 76);
+    const previewText = landmark.challengeObjective && landmark.challengeObjective.preview
+      ? landmark.challengeObjective.preview
+      : ('目标 ' + landmark.targetHeight + 'm');
+    ctx.fillText(previewText, x + 16, y + 76);
 
     ctx.fillStyle = 'rgba(224, 233, 245, 0.74)';
     ctx.font = font(11, '500');
@@ -344,15 +347,19 @@ function drawLandmarkSelect(ctx, game, W, H) {
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
     ctx.font = font(11, '600');
-    ctx.fillText('守关', x + 16, y + 116);
+    ctx.fillText(landmark.badgeName || '赛区徽章', x + 16, y + 116);
 
     ctx.fillStyle = 'rgba(224, 233, 245, 0.8)';
     ctx.font = font(11, '600');
-    ctx.fillText(fitText(ctx, landmark.bossFactionHint || '赛区守卫', cardW - 92), x + 50, y + 116);
+    ctx.fillText(fitText(ctx, landmark.captainTitle || landmark.bossFactionHint || '赛区守卫', cardW - 92), x + 88, y + 116);
+
+    ctx.fillStyle = 'rgba(255, 244, 204, 0.88)';
+    ctx.font = font(10, '700');
+    ctx.fillText(fitText(ctx, landmark.stageName || '赛区考核', cardW - 110), x + 16, y + 136);
 
     ctx.fillStyle = '#ffd166';
     ctx.font = font(12, '700');
-    ctx.fillText('★'.repeat(Math.max(1, Math.floor(landmark.targetHeight / 500))), x + cardW - 44, y + 116);
+    ctx.fillText('★'.repeat(Math.max(1, Math.floor(landmark.targetHeight / 500))), x + cardW - 44, y + 136);
     ctx.restore();
 
     registry.register('start.landmark.option.' + i, { x: x, y: y, w: cardW, h: cardH }, {

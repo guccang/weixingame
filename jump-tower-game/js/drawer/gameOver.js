@@ -84,15 +84,21 @@ function getResultMeta(game) {
   }
 
   if (gameMode.gameMode === GAME_MODES.CHALLENGE && gameMode.selectedLandmark) {
-    const target = gameMode.selectedLandmark.targetHeight;
-    const achieved = score >= target;
+    const challengeGoal = typeof gameMode.getChallengeGoal === 'function' ? gameMode.getChallengeGoal() : null;
+    const goalProgress = challengeGoal ? challengeGoal.progress : 0;
+    const goalTarget = challengeGoal ? challengeGoal.target : gameMode.selectedLandmark.targetHeight;
+    const achieved = typeof gameMode.isChallengeCompleted === 'function'
+      ? gameMode.isChallengeCompleted()
+      : score >= gameMode.selectedLandmark.targetHeight;
     return {
       title: achieved ? '挑战成功' : '目标未完成',
       accent: achieved ? '#7cf3c8' : '#ffba7c',
       modeLabel: '闯关模式',
-      summaryText: gameMode.selectedLandmark.name + ' ' + score + ' / ' + target + ' m',
+      summaryText: challengeGoal
+        ? (gameMode.selectedLandmark.name + ' ' + goalProgress + ' / ' + goalTarget + ' ' + challengeGoal.summaryLabel)
+        : (gameMode.selectedLandmark.name + ' ' + score + ' / ' + gameMode.selectedLandmark.targetHeight + ' m'),
       sideLabel: '目标',
-      sideValue: String(target) + ' m'
+      sideValue: challengeGoal ? challengeGoal.summaryLabel : (String(gameMode.selectedLandmark.targetHeight) + ' m')
     };
   }
 
@@ -291,7 +297,7 @@ function drawGameOverScreen(ctx, game, images) {
   });
 
   const messageY = metricY + 76;
-  const messageH = 76;
+  const messageH = 96;
   drawGlassPanel(ctx, layout.contentX, messageY, layout.contentW, messageH, {
     radius: 22,
     shadowBlur: 10,
@@ -308,11 +314,15 @@ function drawGameOverScreen(ctx, game, images) {
   ctx.textBaseline = 'top';
   ctx.fillStyle = 'rgba(199, 214, 235, 0.68)';
   ctx.font = font(11, '600');
-  ctx.fillText('赛事点评', layout.contentX + 16, messageY + 12);
+  ctx.fillText(narrative.commentaryTitle || '赛事点评', layout.contentX + 16, messageY + 12);
 
   ctx.fillStyle = '#ffffff';
   ctx.font = font(14, '600');
   drawWrappedText(ctx, message, layout.contentX + 16, messageY + 32, layout.contentW - 32, 20, 2);
+
+  ctx.fillStyle = meta.accent;
+  ctx.font = font(11, '700');
+  drawWrappedText(ctx, narrative.spotlight || '', layout.contentX + 16, messageY + 74, layout.contentW - 32, 18, 1);
   ctx.restore();
 
   const rewardY = messageY + messageH + 14;

@@ -58,8 +58,8 @@ function render(game, images, characterConfig, jobConfig) {
     drawPlayer(ctx, game.player, game.cameraY, characterConfig, game.skillSystem);
     drawParticles(ctx, game.particles, game.cameraY);
     game.bossSystem.render(ctx); // 渲染Boss
-    game.barrage.draw(ctx, W);
     drawUI(ctx, game);
+    game.barrage.draw(ctx, W, H);
   } else if (game.state === 'gameover') {
     drawGameOverScreen(ctx, game, images);
   }

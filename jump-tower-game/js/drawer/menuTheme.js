@@ -31,26 +31,26 @@ function drawGlowOrb(ctx, x, y, radius, colors) {
 function drawSceneBackdrop(ctx, W, H) {
   ctx.save();
   ctx.fillStyle = createGradient(ctx, 0, 0, W, H, [
-    [0, 'rgba(6, 14, 28, 0.94)'],
-    [0.48, 'rgba(11, 25, 47, 0.92)'],
-    [1, 'rgba(3, 8, 18, 0.98)']
+    [0, 'rgba(11, 17, 22, 0.92)'],
+    [0.48, 'rgba(18, 28, 34, 0.90)'],
+    [1, 'rgba(8, 11, 14, 0.96)']
   ]);
   ctx.fillRect(0, 0, W, H);
 
   drawGlowOrb(ctx, W * 0.82, H * 0.14, Math.max(W, H) * 0.28, [
-    'rgba(104, 208, 255, 0.34)',
-    'rgba(76, 140, 255, 0.12)',
-    'rgba(76, 140, 255, 0)'
+    'rgba(176, 215, 206, 0.18)',
+    'rgba(130, 169, 160, 0.08)',
+    'rgba(130, 169, 160, 0)'
   ]);
   drawGlowOrb(ctx, W * 0.18, H * 0.28, Math.max(W, H) * 0.24, [
-    'rgba(82, 255, 206, 0.22)',
-    'rgba(82, 255, 206, 0.08)',
-    'rgba(82, 255, 206, 0)'
+    'rgba(224, 206, 183, 0.16)',
+    'rgba(224, 206, 183, 0.07)',
+    'rgba(224, 206, 183, 0)'
   ]);
   drawGlowOrb(ctx, W * 0.56, H * 0.76, Math.max(W, H) * 0.22, [
-    'rgba(255, 176, 99, 0.18)',
-    'rgba(255, 176, 99, 0.06)',
-    'rgba(255, 176, 99, 0)'
+    'rgba(169, 189, 155, 0.12)',
+    'rgba(169, 189, 155, 0.05)',
+    'rgba(169, 189, 155, 0)'
   ]);
 
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.045)';
@@ -81,11 +81,11 @@ function drawSceneBackdrop(ctx, W, H) {
 function drawGlassPanel(ctx, x, y, w, h, options) {
   const opts = options || {};
   const radius = opts.radius || 24;
-  const stroke = opts.stroke || 'rgba(255, 255, 255, 0.16)';
-  const glow = opts.glow || 'rgba(88, 190, 255, 0.16)';
+  const stroke = opts.stroke || 'rgba(232, 240, 236, 0.18)';
+  const glow = opts.glow || 'rgba(168, 191, 183, 0.10)';
   const stops = opts.stops || [
-    [0, 'rgba(21, 35, 58, 0.92)'],
-    [1, 'rgba(10, 18, 34, 0.86)']
+    [0, 'rgba(22, 30, 36, 0.78)'],
+    [1, 'rgba(12, 17, 21, 0.64)']
   ];
 
   ctx.save();
@@ -97,8 +97,8 @@ function drawGlassPanel(ctx, x, y, w, h, options) {
 
   const sheenHeight = Math.max(22, h * 0.42);
   ctx.fillStyle = createGradient(ctx, x, y, x + w, y + sheenHeight, [
-    [0, 'rgba(255, 255, 255, 0.16)'],
-    [0.45, 'rgba(255, 255, 255, 0.06)'],
+    [0, 'rgba(255, 255, 255, 0.08)'],
+    [0.45, 'rgba(255, 255, 255, 0.03)'],
     [1, 'rgba(255, 255, 255, 0.01)']
   ]);
   fillRoundRect(ctx, x + 1, y + 1, w - 2, sheenHeight, Math.max(14, radius - 2));
@@ -125,13 +125,13 @@ function drawBadge(ctx, x, y, text, options) {
 
   drawGlassPanel(ctx, x, y, width, height, {
     radius: height / 2,
-    shadowBlur: 12,
-    glow: opts.glow || 'rgba(88, 190, 255, 0.12)',
+    shadowBlur: 10,
+    glow: opts.glow || 'rgba(167, 194, 184, 0.10)',
     stops: opts.stops || [
-      [0, 'rgba(28, 49, 80, 0.84)'],
-      [1, 'rgba(14, 24, 40, 0.78)']
+      [0, 'rgba(24, 34, 40, 0.66)'],
+      [1, 'rgba(14, 19, 23, 0.58)']
     ],
-    stroke: opts.stroke || 'rgba(255, 255, 255, 0.14)'
+    stroke: opts.stroke || 'rgba(232, 240, 236, 0.14)'
   });
 
   let textX = x + width / 2;  // 居中
@@ -143,7 +143,7 @@ function drawBadge(ctx, x, y, text, options) {
     textX = x + paddingX + 12;  // 如果有圆点，文字在圆点后面
   }
 
-  ctx.fillStyle = opts.color || '#e6f7ff';
+  ctx.fillStyle = opts.color || '#edf6f7';
   ctx.textAlign = opts.dotColor ? 'left' : 'center';  // 有圆点时左对齐，否则居中
   ctx.textBaseline = 'middle';
   ctx.fillText(text, textX, y + height / 2 + 1);
@@ -156,23 +156,23 @@ function drawMetricCard(ctx, x, y, w, h, label, value, options) {
   const opts = options || {};
   drawGlassPanel(ctx, x, y, w, h, {
     radius: opts.radius || 18,
-    shadowBlur: 12,
-    glow: opts.glow || 'rgba(88, 190, 255, 0.08)',
+    shadowBlur: 10,
+    glow: opts.glow || 'rgba(167, 194, 184, 0.08)',
     stops: opts.stops || [
-      [0, 'rgba(17, 29, 49, 0.88)'],
-      [1, 'rgba(8, 16, 30, 0.82)']
+      [0, 'rgba(22, 30, 35, 0.72)'],
+      [1, 'rgba(12, 17, 20, 0.60)']
     ],
-    stroke: opts.stroke || 'rgba(255, 255, 255, 0.12)'
+    stroke: opts.stroke || 'rgba(232, 240, 236, 0.12)'
   });
 
   ctx.save();
-  ctx.fillStyle = opts.labelColor || 'rgba(214, 231, 255, 0.72)';
+  ctx.fillStyle = opts.labelColor || 'rgba(228, 236, 232, 0.70)';
   ctx.font = opts.labelFont || font(11, '500');
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
   ctx.fillText(label, x + 14, y + 12);
 
-  ctx.fillStyle = opts.valueColor || '#ffffff';
+  ctx.fillStyle = opts.valueColor || '#f8fbfa';
   ctx.font = opts.valueFont || font(20, '700');
   ctx.fillText(value, x + 14, y + 30);
   ctx.restore();
@@ -183,20 +183,20 @@ function drawActionButton(ctx, x, y, w, h, label, options) {
   const radius = opts.radius || Math.floor(h / 2);
 
   ctx.save();
-  ctx.shadowColor = opts.shadowColor || 'rgba(90, 199, 255, 0.28)';
-  ctx.shadowBlur = opts.shadowBlur || 18;
+  ctx.shadowColor = opts.shadowColor || 'rgba(190, 207, 198, 0.16)';
+  ctx.shadowBlur = opts.shadowBlur || 14;
   ctx.fillStyle = createGradient(ctx, x, y, x + w, y + h, opts.stops || [
-    [0, '#74f7d0'],
-    [0.55, '#42d6f2'],
-    [1, '#2f83ff']
+    [0, '#dde9e1'],
+    [0.55, '#bed4ca'],
+    [1, '#9eb5ad']
   ]);
   fillRoundRect(ctx, x, y, w, h, radius);
   ctx.shadowBlur = 0;
 
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
   fillRoundRect(ctx, x + 2, y + 2, w - 4, Math.max(14, h * 0.48), Math.max(10, radius - 4));
 
-  ctx.fillStyle = opts.textColor || '#051120';
+  ctx.fillStyle = opts.textColor || '#172126';
   ctx.font = opts.font || font(18, '700');
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -209,26 +209,26 @@ function drawIconTile(ctx, x, y, w, h, iconText, label, options) {
   const active = !!opts.active;
   drawGlassPanel(ctx, x, y, w, h, {
     radius: opts.radius || 24,
-    shadowBlur: active ? 18 : 10,
-    glow: active ? (opts.activeGlow || 'rgba(110, 225, 255, 0.18)') : 'rgba(0, 0, 0, 0.08)',
+    shadowBlur: active ? 14 : 8,
+    glow: active ? (opts.activeGlow || 'rgba(178, 203, 193, 0.12)') : 'rgba(0, 0, 0, 0.04)',
     stops: active ? [
-      [0, 'rgba(36, 58, 94, 0.94)'],
-      [1, 'rgba(18, 29, 51, 0.88)']
+      [0, 'rgba(34, 45, 44, 0.74)'],
+      [1, 'rgba(19, 24, 24, 0.64)']
     ] : [
-      [0, 'rgba(19, 30, 50, 0.82)'],
-      [1, 'rgba(10, 17, 31, 0.8)']
+      [0, 'rgba(24, 30, 33, 0.56)'],
+      [1, 'rgba(14, 18, 20, 0.48)']
     ],
-    stroke: active ? 'rgba(124, 223, 255, 0.4)' : 'rgba(255, 255, 255, 0.1)'
+    stroke: active ? 'rgba(221, 235, 228, 0.24)' : 'rgba(255, 255, 255, 0.08)'
   });
 
   ctx.save();
-  ctx.fillStyle = active ? (opts.activeAccent || '#7ee3ff') : (opts.iconColor || '#d8e9ff');
+  ctx.fillStyle = active ? (opts.activeAccent || '#dcefe8') : (opts.iconColor || '#d6e3e5');
   ctx.font = font(opts.iconSize || 24, '700');
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(iconText, x + w / 2, y + h / 2 - 10);
 
-  ctx.fillStyle = active ? '#ffffff' : 'rgba(222, 236, 255, 0.88)';
+  ctx.fillStyle = active ? '#f8fbfa' : 'rgba(223, 232, 232, 0.82)';
   ctx.font = font(opts.labelSize || 11, '600');
   ctx.fillText(label, x + w / 2, y + h - 16);
   ctx.restore();

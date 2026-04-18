@@ -14,6 +14,7 @@ class MainUI {
     if (pm.isOpen(panelKey)) {
       if (panelKey === 'showCharacterPanel') {
         this.game.characterPendingSelect = null;
+        this.game.characterProfileFocus = null;
       }
       pm.close(panelKey);
       return true;
@@ -93,6 +94,7 @@ class MainUI {
         return true;
       case 'close-character-panel':
         this.game.characterPendingSelect = null;
+        this.game.characterProfileFocus = null;
         pm.close('showCharacterPanel');
         return true;
       case 'panel-back':
@@ -103,6 +105,9 @@ class MainUI {
         return true;
       case 'shop-action':
         this.game.performShopAction(action.actionName, action.itemId);
+        return true;
+      case 'set-ui-theme':
+        this.game.setUITheme(action.themeId);
         return true;
       case 'mode-select':
         this.game.gameMode.selectMode(action.modeName);
@@ -203,6 +208,11 @@ class MainUI {
 
     if (pm.isOpen('showBackpackPanel')) {
       pm.close('showBackpackPanel');
+      return true;
+    }
+
+    if (pm.isOpen('showSettingsPanel')) {
+      pm.close('showSettingsPanel');
       return true;
     }
 

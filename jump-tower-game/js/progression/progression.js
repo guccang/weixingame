@@ -8,11 +8,12 @@ const trailEffects = require('../effects/trail');
 const petSystem = require('../pet/pet');
 const physics = require('../physics/physics');
 const worldview = require('../worldview/index');
+const uiTheme = require('../ui/theme');
 
 const STORAGE_KEY = 'jump_tower_progress_v3';
 const LEGACY_STORAGE_KEY_V2 = 'jump_tower_progress_v2';
 const LEGACY_STORAGE_KEY_V1 = 'jump_tower_progress_v1';
-const PROGRESS_VERSION = 4;
+const PROGRESS_VERSION = 5;
 const BASE_GROWTH_DURATION_MS = 6500;
 
 const baseTrailConfig = trailEffects.getTrailConfig();
@@ -47,7 +48,45 @@ const EQUIP_SLOTS = {
 const CHARACTER_META = {
   coach: {
     price: 0,
-    desc: '均衡角色，适合稳定冲层。',
+    desc: '旧校队陪练出身，擅长用稳定节奏把一次次普通起跳磨成可靠成绩。',
+    role: '基础型选手',
+    skillLabel: '稳态控节奏',
+    unlock: {
+      type: 'default',
+      label: '初始解锁'
+    },
+    chapters: [
+      {
+        title: '旧操场',
+        text: '林教练以前在县中学带田径队，器材旧、场地破，他就用粉笔在地上画起跳线，一遍遍教孩子把脚落准。',
+        unlock: { type: 'default', label: '初始档案' }
+      },
+      {
+        title: '停表的人',
+        text: '他最擅长的不是喊口号，而是安静地拿着秒表站在边上。谁状态乱了，他先让人呼吸，再让人重来，不急着骂。',
+        unlock: { type: 'height', target: 80 }
+      },
+      {
+        title: '手写计划',
+        text: '他抽屉里一直压着一叠训练纸，边角卷了，汗印也在。每个人的弱点、受伤史、脾气，他都记得比本人还细。',
+        unlock: { type: 'runs', target: 10 }
+      },
+      {
+        title: '没说出口的退役',
+        text: '真正让他离开赛场的不是一次大伤，是连续几年看着好苗子因为家里出事退训。他开始觉得，留下来的人更需要他。',
+        unlock: { type: 'height', target: 260 }
+      },
+      {
+        title: '夜里关灯',
+        text: '训练馆最后一个关灯的人常常是他。地上散着胶带和旧水瓶，他会一件件捡起来，像在替谁守住明天还能继续练的秩序。',
+        unlock: { type: 'score', target: 500 }
+      },
+      {
+        title: '站在身后',
+        text: '后来很多年轻选手成名时都提过他，说林教练最大的本事，是让人相信普通人也可以靠重复和耐心走得很远。',
+        unlock: { type: 'height', target: 600 }
+      },
+    ],
     bonuses: {
       chargeMax: 0,
       moveSpeed: 0.15,
@@ -56,11 +95,378 @@ const CHARACTER_META = {
   },
   ironman: {
     price: 180,
-    desc: '偏向冲刺与横移，适合吃空中金币。',
+    desc: '硬件工程师转来的业余选手，把维修习惯带进身体训练，起跳干净，横移像修正误差。',
+    role: '冲刺型选手',
+    skillLabel: '空中修线',
+    unlock: {
+      type: 'height',
+      target: 100
+    },
+    chapters: [
+      {
+        title: '通宵焊点',
+        text: '严承以前做机甲外骨骼的耐久测试，手最稳的时候往往是在凌晨三点。白天修电路，晚上跑步，他把失眠练成了耐性。',
+        unlock: { type: 'default', label: '角色解锁后开放' }
+      },
+      {
+        title: '第一双鞋',
+        text: '他买训练鞋时算得比谁都细，鞋底回弹、侧向支撑、能撑多久，全记在表格里。贵的不一定买，合适的一定穿到报废。',
+        unlock: { type: 'height', target: 140 }
+      },
+      {
+        title: '不肯求快',
+        text: '别人说他像机器，他其实最怕的是仓促。每次起跳前那半秒的停顿，不是摆样子，是确认身体每个关节都在位置上。',
+        unlock: { type: 'combo', target: 10 }
+      },
+      {
+        title: '维修间窗外',
+        text: '厂区后门有一条没人注意的小坡道，他常在午休时对着那段坡练横移。风吹着工牌打在胸口，像提醒他别再拖延人生。',
+        unlock: { type: 'height', target: 320 }
+      },
+      {
+        title: '被裁员那天',
+        text: '项目砍掉那天，他把工具箱收得整整齐齐，没发火，只是回家后第一次把“报名公开赛”四个字发到了家族群里。',
+        unlock: { type: 'runs', target: 10 }
+      },
+      {
+        title: '铁皮心脏',
+        text: '他从不把自己说成天才，顶多算会修东西的人。只是后来大家发现，他连自己的犹豫也能拆开、校准，再装回去继续跑。',
+        unlock: { type: 'score', target: 1000 }
+      },
+    ],
     bonuses: {
       chargeMax: 1,
       moveSpeed: 0.3,
       playerCoinPickup: 6
+    }
+  },
+  chengxu: {
+    price: 0,
+    desc: '写代码写到肩颈僵硬后开始练跳跃，把“调参”做成了自己的比赛方法。',
+    role: '技巧型选手',
+    skillLabel: '节奏拆解',
+    unlock: {
+      type: 'achievement',
+      achievementKey: 'combo_10'
+    },
+    chapters: [
+      {
+        title: '工位末班车',
+        text: '程序最熟悉的声音不是掌声，是深夜办公区空调出风口的低鸣。她常在发布后一个人坐着，盯着报错日志发呆。',
+        unlock: { type: 'default', label: '角色解锁后开放' }
+      },
+      {
+        title: '肩周炎处方',
+        text: '医生让她别只靠止痛贴，去做点真正会出汗的运动。她最开始连热身都不会，照着视频练，动作像还没编译通过。',
+        unlock: { type: 'height', target: 180 }
+      },
+      {
+        title: '拆解失败',
+        text: '她解决问题的方式一直没变，先复现，再分段。比赛里别人凭直觉起跳，她会在心里把节奏切成六码，再一格一格执行。',
+        unlock: { type: 'combo', target: 20 }
+      },
+      {
+        title: '周五晚上',
+        text: '有次项目上线崩了，她在公司躺椅上醒来时天已经亮了。就是那天，她决定以后至少给自己留一个能呼吸的周末。',
+        unlock: { type: 'runs', target: 50 }
+      },
+      {
+        title: '学会失误',
+        text: '她以前很怕失误，一次没踩准就想重来。后来真正让她进步的，是接受自己会错，然后在下一跳里把错改短一点。',
+        unlock: { type: 'score', target: 2000 }
+      },
+      {
+        title: '代码之外',
+        text: '现在她仍然写程序，但不再把结果全押在屏幕里。有人问她为什么比赛，她说想证明人也能像系统一样，被慢慢优化好。',
+        unlock: { type: 'height', target: 1200 }
+      },
+    ],
+    bonuses: {
+      chargeMax: 0,
+      moveSpeed: 0.12,
+      playerCoinPickup: 4
+    }
+  },
+  daodundog: {
+    price: 0,
+    desc: '退役安防犬训导员的老搭档，起步慢一点，但落点很稳，极少乱节奏。',
+    role: '防守反击型',
+    skillLabel: '低重心稳落',
+    unlock: {
+      type: 'height',
+      target: 300
+    },
+    chapters: [
+      {
+        title: '退编那天',
+        text: '刀盾狗原来叫“盾牌”，是搜爆队退下来的工作犬。正式退编那天，它比谁都安静，只是一直看着训导员的手。',
+        unlock: { type: 'default', label: '角色解锁后开放' }
+      },
+      {
+        title: '不爱热闹',
+        text: '它不喜欢太多人围着，也不爱被抱。真正信任谁时，它会默默贴着腿边趴下，耳朵立着，像随时准备继续上岗。',
+        unlock: { type: 'height', target: 360 }
+      },
+      {
+        title: '旧护具',
+        text: '训导员一直留着它当年的训练护具，边缘咬痕都还在。每次比赛前摸一把那层磨旧的织带，心就会定一点。',
+        unlock: { type: 'coins_collected', target: 500 }
+      },
+      {
+        title: '动作记忆',
+        text: '有些指令它几年没听了，身体却没忘。抬手、停步、绕障，它的反应仍然快得像从没离开过那条训练跑道。',
+        unlock: { type: 'perfect_landings', target: 20 }
+      },
+      {
+        title: '怕烟花',
+        text: '它唯一明显的弱点是怕烟花，爆声一近就会发抖。训导员后来学会在它耳边低声数拍子，让它一点点把呼吸找回来。',
+        unlock: { type: 'height', target: 900 }
+      },
+      {
+        title: '最后一次出勤',
+        text: '真正让人记住它的不是奖章，是一次没有上新闻的雨夜搜救。回来时全身都是泥，它却还是先回头确认所有人都在。',
+        unlock: { type: 'boss_kills', target: 1 }
+      },
+    ],
+    bonuses: {
+      chargeMax: 0,
+      moveSpeed: 0.1,
+      playerCoinPickup: 8
+    }
+  },
+  hushi: {
+    price: 0,
+    desc: '夜班护士，长期高压下练出的判断很准，动作节省、不浪费一步。',
+    role: '续航型选手',
+    skillLabel: '疲劳管理',
+    unlock: {
+      type: 'achievement',
+      achievementKey: 'coins_500'
+    },
+    chapters: [
+      {
+        title: '三班倒',
+        text: '许宁在急诊待了六年，最清楚人是怎么在疲惫里继续撑着工作的。她下班后不爱说话，只想把耳边报警声忘掉。',
+        unlock: { type: 'default', label: '角色解锁后开放' }
+      },
+      {
+        title: '鞋底磨平',
+        text: '她的工作鞋总比别人磨得快，因为走路太急，也因为习惯在病房门口突然停住，先看一眼，再决定下一步往哪去。',
+        unlock: { type: 'height', target: 240 }
+      },
+      {
+        title: '值夜的人',
+        text: '很多凌晨四点的决定都没人会记得，但她记得。谁家属哭得发抖，谁装作没事，其实手一直在抖，她都看得见。',
+        unlock: { type: 'runs', target: 10 }
+      },
+      {
+        title: '食堂热汤',
+        text: '她最常吃的是交班后那碗快凉掉的清汤面。有时候刚坐下又被叫回去，回头再吃，面坨了，她也不会抱怨。',
+        unlock: { type: 'coins_collected', target: 500 }
+      },
+      {
+        title: '学会分开',
+        text: '她以前把每个没救回来的夜晚都带回家，后来才慢慢学会，在出医院门的那一刻把情绪留一半在门里，不然活不长。',
+        unlock: { type: 'score', target: 2000 }
+      },
+      {
+        title: '还愿意相信',
+        text: '她继续比赛，不是因为热血，而是想保留一种不被工作磨平的感觉。哪怕只是起跳那几秒，她也还是完整的自己。',
+        unlock: { type: 'height', target: 1300 }
+      },
+    ],
+    bonuses: {
+      chargeMax: 1,
+      moveSpeed: 0.08,
+      playerCoinPickup: 3
+    }
+  },
+  coach_fitness: {
+    price: 0,
+    desc: '社区健身教练，擅长把笨动作练顺，爆发不极端，但整体身体控制很完整。',
+    role: '全面型选手',
+    skillLabel: '动作纠偏',
+    unlock: {
+      type: 'achievement',
+      achievementKey: 'runs_10'
+    },
+    chapters: [
+      {
+        title: '早课铃声',
+        text: '白晨的工作从早上六点开始，第一批学员多半是想减肥又舍不得睡的人。他笑着带课，其实自己也常常困得发空。',
+        unlock: { type: 'default', label: '角色解锁后开放' }
+      },
+      {
+        title: '看动作的人',
+        text: '他最常说的一句不是“再来一个”，而是“别硬顶”。见过太多人逞强受伤之后，他更在意每一下是不是做得对。',
+        unlock: { type: 'height', target: 200 }
+      },
+      {
+        title: '租房阳台',
+        text: '他租的房子不大，阳台只能放一张折叠垫。夜里下课回来，他常在那儿自己补训练，楼下电动车一排排充着电。',
+        unlock: { type: 'runs', target: 50 }
+      },
+      {
+        title: '营业和生活',
+        text: '做教练久了，人会下意识显得有精神。可真回到家，他也会盯着手机算课时和房租，发一会儿愣再去洗澡。',
+        unlock: { type: 'combo', target: 10 }
+      },
+      {
+        title: '不只卖身材',
+        text: '他最反感把运动说成捷径。真正见过身体一点点变好的人，都会知道那里面有疼、有懒、有很多次想放弃又没放弃。',
+        unlock: { type: 'score', target: 2000 }
+      },
+      {
+        title: '带人往上',
+        text: '后来他决定参赛，也是想让学员看到自己不是只会喊口令。一个总劝别人坚持的人，也得拿出点真东西给人看。',
+        unlock: { type: 'height', target: 1500 }
+      },
+    ],
+    bonuses: {
+      chargeMax: 1,
+      moveSpeed: 0.16,
+      playerCoinPickup: 2
+    }
+  },
+  green_giant: {
+    price: 0,
+    desc: '体格惊人的搬运工，爆发和抗压极强，但并不鲁莽，反而比外表更克制。',
+    role: '重装型选手',
+    skillLabel: '重心压制',
+    unlock: {
+      type: 'height',
+      target: 1000
+    },
+    chapters: [
+      {
+        title: '码头肩膀',
+        text: '阿绿在冷链码头干了很多年，肩膀是长期扛货扛出来的，不是健身房练出来的那种好看线条。',
+        unlock: { type: 'default', label: '角色解锁后开放' }
+      },
+      {
+        title: '慢一点稳',
+        text: '他干活时不爱抢第一，因为知道东西重、地又滑，急一次可能就是一整天的麻烦。这个习惯后来也带进了比赛。',
+        unlock: { type: 'height', target: 1200 }
+      },
+      {
+        title: '冰库里',
+        text: '零下的仓里说话会冒白气，手套湿了再干会发硬。他曾在那种环境里连干十几个小时，出来时连鼻梁都是麻的。',
+        unlock: { type: 'coins_collected', target: 2000 }
+      },
+      {
+        title: '不想再弯腰',
+        text: '他开始训练，其实是因为有天给母亲系鞋带时腰直不起来。那一瞬间他突然怕自己老得太快，怕家里先垮的是自己。',
+        unlock: { type: 'runs', target: 50 }
+      },
+      {
+        title: '粗声细心',
+        text: '认识他的人都说他凶，其实他给家里打电话时声音会放得很轻。母亲关节不好，他比谁都记得哪天该去复诊。',
+        unlock: { type: 'boss_kills', target: 1 }
+      },
+      {
+        title: '巨人的分寸',
+        text: '他后来让人服气，不是因为力量大，而是知道什么时候该压上去，什么时候该收回来。真正稳的人，从来不是只会硬撞。',
+        unlock: { type: 'height', target: 2600 }
+      },
+    ],
+    bonuses: {
+      chargeMax: 2,
+      moveSpeed: 0.04,
+      playerCoinPickup: 10
+    }
+  },
+  batman: {
+    price: 0,
+    desc: '夜间安防顾问，擅长判断风险和窗口期，出手果断，但情绪一直压得很深。',
+    role: '压迫型选手',
+    skillLabel: '夜视判断',
+    unlock: {
+      type: 'achievement',
+      achievementKey: 'boss_kill_1'
+    },
+    chapters: [
+      {
+        title: '夜巡',
+        text: '顾野做的是商业安防顾问，最熟悉的时间段是凌晨两点到四点。那时城市还没醒，很多人的防备也最低。',
+        unlock: { type: 'default', label: '角色解锁后开放' }
+      },
+      {
+        title: '习惯看出口',
+        text: '他进任何地方先看出口，坐下先看监控死角。朋友说他活得太紧，他笑一笑，也懒得解释这不是装出来的毛病。',
+        unlock: { type: 'height', target: 500 }
+      },
+      {
+        title: '旧事故',
+        text: '他以前带过一个新人，出过一次本可以避免的事故。自那以后，他做判断更快了，但也更难真正放松。',
+        unlock: { type: 'boss_kills', target: 1 }
+      },
+      {
+        title: '黑咖啡',
+        text: '他喝咖啡不加糖，家里冰箱里长期放着能量饮料和即食鸡胸。生活不体面，但够清醒，至少撑得住第二天再来。',
+        unlock: { type: 'score', target: 2000 }
+      },
+      {
+        title: '把怒气压住',
+        text: '别人以为他冷，其实只是把怒气关得很紧。真正危险的时候，他反而最平静，因为所有慌张都已经提前演练过。',
+        unlock: { type: 'combo', target: 20 }
+      },
+      {
+        title: '天亮之后',
+        text: '他继续参赛，是想证明自己不必永远活在应急状态里。能在天亮之后也继续往上走，才算真的从旧事里出来。',
+        unlock: { type: 'height', target: 2200 }
+      },
+    ],
+    bonuses: {
+      chargeMax: 1,
+      moveSpeed: 0.24,
+      playerCoinPickup: 5
+    }
+  },
+  superman: {
+    price: 0,
+    desc: '救援飞手出身，长期面对极端天气和突发事故，高空判断力近乎本能。',
+    role: '高空型选手',
+    skillLabel: '逆风修正',
+    unlock: {
+      type: 'height',
+      target: 2000
+    },
+    chapters: [
+      {
+        title: '海风平台',
+        text: '周擎以前做海上救援飞手，最怕的不是风大，是风向突然变。很多决定只能在几秒里下完，犹豫一次可能就是人命。',
+        unlock: { type: 'default', label: '角色解锁后开放' }
+      },
+      {
+        title: '耳鸣',
+        text: '他退下来后有阵子总耳鸣，晚上躺着也像还能听见桨叶切风的声音。安静对他来说反而比噪声更难适应。',
+        unlock: { type: 'height', target: 2400 }
+      },
+      {
+        title: '天气图',
+        text: '他现在看云层和风向的速度仍然很快，像职业没离开过。别人看背景，他看的是风险和还能不能再往前一点。',
+        unlock: { type: 'boss_kills', target: 5 }
+      },
+      {
+        title: '没接住的人',
+        text: '每个救援队员心里都压着几个没接住的人，他也一样。不是每次拼命都有结果，这件事他花了很久才学会承认。',
+        unlock: { type: 'score', target: 5000 }
+      },
+      {
+        title: '回到地面',
+        text: '退役后最难的是重新过普通日子。超市、地铁、排队付款，这些慢下来的人间秩序，他重新学了差不多一年。',
+        unlock: { type: 'runs', target: 100 }
+      },
+      {
+        title: '仍愿升空',
+        text: '他参赛不是怀旧，而是不想把自己活成只会回忆过去的人。真正的强大，不是曾经飞得高，而是现在还愿意再起跳。',
+        unlock: { type: 'height', target: 5000 }
+      },
+    ],
+    bonuses: {
+      chargeMax: 2,
+      moveSpeed: 0.22,
+      playerCoinPickup: 9
     }
   }
 };
@@ -537,6 +943,7 @@ function getDefaultProgress() {
     trailLengthLevel: 0,
     itemInventory: {},
     equippedItemId: null,
+    uiThemeId: uiTheme.DEFAULT_THEME_ID,
     achievements: {},
     worldview: worldview.getDefaultState(),
     achievementStats: {
@@ -604,6 +1011,7 @@ function resetProgress() {
 }
 
 function normalizeProgress(progress) {
+  const previousVersion = progress && typeof progress.version === 'number' ? progress.version : 0;
   const next = Object.assign(getDefaultProgress(), progress || {});
   next.coins = Math.max(0, Math.floor(next.coins || 0));
   next.lifetimeCoinsEarned = Math.max(0, Math.floor(next.lifetimeCoinsEarned || 0));
@@ -614,6 +1022,7 @@ function normalizeProgress(progress) {
   next.equippedCapabilities = next.equippedCapabilities || {};
   next.enabledCapabilities = next.enabledCapabilities || {};
   next.achievements = next.achievements || {};
+  next.uiThemeId = uiTheme.getThemeIdFromProgress(next);
   next.worldview = worldview.normalizeState(next.worldview);
   next.achievementStats = Object.assign(getDefaultProgress().achievementStats, next.achievementStats || {});
 
@@ -644,13 +1053,19 @@ function normalizeProgress(progress) {
   }
   stats.lastPlayDate = today;
 
-  const defaultCharacterId = getDefaultCharacterId();
-  // 默认全解锁：所有角色都自动解锁
-  const allCharacterIds = getCharacterRows().map(function(row) { return row.JumpFolder; });
-  next.unlockedCharacters = normalizeUnlockList(next.unlockedCharacters, allCharacterIds);
-  if (!next.selectedCharacterId || next.unlockedCharacters.indexOf(next.selectedCharacterId) === -1) {
-    next.selectedCharacterId = next.unlockedCharacters[0] || defaultCharacterId;
+  // v5 起角色改为按条件解锁，清理旧版“默认全解锁”遗留状态。
+  if (previousVersion > 0 && previousVersion < 5) {
+    next.unlockedCharacters = [];
+    next.selectedCharacterId = null;
+    getCharacterRows().forEach(function(row) {
+      const capabilityId = getCapabilityId(CAPABILITY_TYPES.CHARACTER, row.JumpFolder);
+      if (row.JumpFolder !== getDefaultCharacterId()) {
+        delete next.ownedCapabilities[capabilityId];
+      }
+    });
   }
+
+  next.unlockedCharacters = normalizeUnlockList(next.unlockedCharacters, []);
 
   next.unlockedPets = normalizeUnlockList(next.unlockedPets, []);
   next.selectedPetId = next.unlockedPets.indexOf(next.selectedPetId) >= 0 ? next.selectedPetId : null;
@@ -676,7 +1091,9 @@ function normalizeProgress(progress) {
   }
 
   migrateLegacyCapabilityState(next);
+  unlockEligibleCharacters(next);
   normalizeCapabilityState(next);
+  checkAndUnlockAchievementsInternal(next, ['daily']);
 
   next.version = PROGRESS_VERSION;
   return next;
@@ -823,6 +1240,158 @@ function getEconomyRows() {
   return tableManager.getAll('EconomyConfig');
 }
 
+function getAchievementByKey(key) {
+  const rows = tableManager.getAll('Achievements');
+  for (let i = 0; i < rows.length; i++) {
+    if (rows[i].Key === key) {
+      return rows[i];
+    }
+  }
+  return null;
+}
+
+function isAchievementUnlocked(progress, key) {
+  const normalized = progress && progress.achievements ? progress : normalizeProgress(progress);
+  return !!(normalized.achievements && normalized.achievements[key] && normalized.achievements[key].unlocked);
+}
+
+function getRequirementProgress(progress, requirement) {
+  const normalized = progress && progress.achievementStats ? progress : normalizeProgress(progress);
+  const rule = requirement || { type: 'default' };
+
+  if (rule.type === 'default') {
+    return {
+      met: true,
+      current: 1,
+      target: 1,
+      label: rule.label || '初始解锁',
+      progressText: rule.label || '初始解锁'
+    };
+  }
+
+  if (rule.type === 'height') {
+    const currentHeight = Math.max(0, Math.floor((normalized.achievementStats || {}).highestScore || 0));
+    const targetHeight = Math.max(0, Math.floor(rule.target || 0));
+    return {
+      met: currentHeight >= targetHeight,
+      current: currentHeight,
+      target: targetHeight,
+      label: '达到 ' + targetHeight + 'm',
+      progressText: '高度 ' + currentHeight + '/' + targetHeight + 'm'
+    };
+  }
+
+  if (rule.type === 'achievement') {
+    const achievement = getAchievementByKey(rule.achievementKey);
+    const name = achievement ? achievement.Name : (rule.achievementKey || '指定成就');
+    const unlocked = achievement ? isAchievementUnlocked(normalized, achievement.Key) : false;
+    return {
+      met: unlocked,
+      current: unlocked ? 1 : 0,
+      target: 1,
+      label: '达成成就：' + name,
+      progressText: unlocked ? ('已达成 ' + name) : ('未达成 ' + name)
+    };
+  }
+
+  if (rule.type === 'combo' || rule.type === 'runs' || rule.type === 'coins_collected' ||
+      rule.type === 'boss_kills' || rule.type === 'score' || rule.type === 'perfect_landings') {
+    const fieldMap = {
+      combo: 'highestCombo',
+      runs: 'totalRuns',
+      coins_collected: 'totalCoinsCollected',
+      boss_kills: 'bossKills',
+      score: 'highestScore',
+      perfect_landings: 'perfectPlatforms'
+    };
+    const labelMap = {
+      combo: '最高连击',
+      runs: '累计场次',
+      coins_collected: '累计金币',
+      boss_kills: 'Boss 击杀',
+      score: '最高得分',
+      perfect_landings: '完美落地'
+    };
+    const target = Math.max(0, Math.floor(rule.target || 0));
+    const current = rule.type === 'boss_kills'
+      ? Math.max(0, Math.floor(normalized.bossKills || 0))
+      : Math.max(0, Math.floor((normalized.achievementStats || {})[fieldMap[rule.type]] || 0));
+    return {
+      met: current >= target,
+      current: current,
+      target: target,
+      label: labelMap[rule.type] + '达到 ' + target,
+      progressText: labelMap[rule.type] + ' ' + current + '/' + target
+    };
+  }
+
+  return {
+    met: false,
+    current: 0,
+    target: 1,
+    label: rule.label || '未知条件',
+    progressText: rule.label || '未知条件'
+  };
+}
+
+function getCharacterMeta(characterId) {
+  return CHARACTER_META[characterId] || {};
+}
+
+function getCharacterUnlockStatus(progress, characterId) {
+  const normalized = progress && progress.ownedCapabilities ? progress : normalizeProgress(progress);
+  const meta = getCharacterMeta(characterId);
+  const requirement = getRequirementProgress(normalized, meta.unlock);
+  const unlocked = isCapabilityOwned(normalized, getCapabilityId(CAPABILITY_TYPES.CHARACTER, characterId));
+  return {
+    unlocked: unlocked,
+    label: unlocked ? '已解锁' : requirement.label,
+    progressText: unlocked ? '档案与角色已开放' : requirement.progressText,
+    met: unlocked || requirement.met
+  };
+}
+
+function getCharacterProfile(progress, characterId) {
+  const normalized = progress && progress.ownedCapabilities ? progress : normalizeProgress(progress);
+  const character = getCharacterById(characterId);
+  const meta = getCharacterMeta(characterId);
+  const unlockStatus = getCharacterUnlockStatus(normalized, characterId);
+  const chapters = (meta.chapters || []).map(function(chapter, index) {
+    const requirement = index === 0
+      ? getRequirementProgress(normalized, Object.assign({ type: 'default' }, chapter.unlock || {}))
+      : getRequirementProgress(normalized, chapter.unlock);
+    return {
+      title: chapter.title,
+      text: chapter.text,
+      unlocked: unlockStatus.unlocked && requirement.met,
+      requirementLabel: requirement.label,
+      progressText: requirement.progressText
+    };
+  });
+
+  return Object.assign({}, character, {
+    role: meta.role || '角色',
+    skillLabel: meta.skillLabel || '均衡',
+    unlockStatus: unlockStatus,
+    chapters: chapters
+  });
+}
+
+function unlockEligibleCharacters(progress) {
+  const normalized = progress;
+  getCapabilitiesByType(CAPABILITY_TYPES.CHARACTER).forEach(function(capability) {
+    if (capability.defaultOwned) {
+      normalized.ownedCapabilities[capability.id] = true;
+      return;
+    }
+    const meta = getCharacterMeta(capability.entityId);
+    const requirement = getRequirementProgress(normalized, meta.unlock);
+    if (requirement.met) {
+      normalized.ownedCapabilities[capability.id] = true;
+    }
+  });
+}
+
 function getUpgradeRows() {
   return tableManager.getAll('Upgrades');
 }
@@ -931,12 +1500,14 @@ function getCharacterById(characterId) {
     return item.JumpFolder === characterId;
   });
   if (!row) return null;
-  const meta = CHARACTER_META[characterId] || {};
+  const meta = getCharacterMeta(characterId);
   return {
     id: row.JumpFolder,
     name: row.Name,
     price: meta.price || 0,
     desc: meta.desc || '可切换的角色外观与轻差异体验。',
+    role: meta.role || '角色',
+    skillLabel: meta.skillLabel || '均衡',
     bonuses: Object.assign({
       chargeMax: 0,
       moveSpeed: 0,
@@ -951,12 +1522,16 @@ function getCharacterCatalog(progress) {
     const character = getCharacterById(capability.entityId);
     const unlocked = isCapabilityOwned(normalized, capability.id);
     const selected = isCapabilityEquipped(normalized, capability.id);
+    const profile = getCharacterProfile(normalized, capability.entityId);
     return Object.assign({}, character, {
       kind: 'character',
       capabilityId: capability.id,
       unlocked: unlocked,
       selected: selected,
-      affordable: !unlocked && normalized.coins >= character.price
+      affordable: false,
+      unlockLabel: profile.unlockStatus.label,
+      unlockProgressText: profile.unlockStatus.progressText,
+      chapters: profile.chapters
     });
   });
 }
@@ -966,7 +1541,21 @@ function isCharacterUnlocked(progress, characterId) {
 }
 
 function purchaseCharacter(progress, characterId) {
-  return purchaseCapability(progress, getCapabilityId(CAPABILITY_TYPES.CHARACTER, characterId));
+  const normalized = normalizeProgress(progress);
+  const capabilityId = getCapabilityId(CAPABILITY_TYPES.CHARACTER, characterId);
+  if (isCapabilityOwned(normalized, capabilityId)) {
+    return {
+      success: true,
+      progress: normalized,
+      message: '角色已解锁'
+    };
+  }
+  const unlockStatus = getCharacterUnlockStatus(normalized, characterId);
+  return {
+    success: false,
+    reason: 'requirement',
+    message: unlockStatus.label + '，' + unlockStatus.progressText
+  };
 }
 
 function equipCharacter(progress, characterId) {
@@ -1213,6 +1802,7 @@ function awardBossDrop(progress, rewardText) {
   normalized.coins += coins;
   normalized.lifetimeCoinsEarned += coins;
   normalized.bossKills += 1;
+  checkAndUnlockAchievementsInternal(normalized, ['boss_kills']);
   saveProgress(normalized);
 
   return {
@@ -1535,6 +2125,7 @@ function addCoinsCollected(progress, amount) {
 function recordPerfectLanding(progress) {
   const normalized = normalizeProgress(progress);
   normalized.achievementStats.perfectPlatforms += 1;
+  checkAndUnlockAchievementsInternal(normalized, ['perfect_landings']);
   saveProgress(normalized);
   return { progress: normalized };
 }
@@ -1580,6 +2171,13 @@ function getCurrentTitle(progress) {
   return achievementSystem.getCurrentTitle(progress);
 }
 
+function setUITheme(progress, themeId) {
+  const normalized = normalizeProgress(progress);
+  normalized.uiThemeId = uiTheme.getThemeIdFromProgress({ uiThemeId: themeId });
+  saveProgress(normalized);
+  return normalized;
+}
+
 module.exports = {
   STORAGE_KEY,
   BASE_GROWTH_DURATION_MS,
@@ -1602,6 +2200,7 @@ module.exports = {
   addCoinsCollected,
   recordPerfectLanding,
   getCurrentTitle,
+  setUITheme,
   applyUpgradesToGame,
   applyCapabilitiesToGame,
   getCapabilityCatalog,
@@ -1621,6 +2220,8 @@ module.exports = {
   getSelectedPetId,
   getSkillCatalog,
   getCharacterCatalog,
+  getCharacterProfile,
+  getCharacterUnlockStatus,
   isCharacterUnlocked,
   purchaseCharacter,
   equipCharacter,

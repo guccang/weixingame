@@ -1,4 +1,5 @@
 const gameConstants = require('./constants');
+const { GAME_MODES } = gameConstants;
 const debugRuntime = require('./debugRuntime');
 const { landmarks } = require('./landmarks');
 const PickupSystem = require('./run/pickupSystem');
@@ -91,6 +92,12 @@ class RunDirector {
   }
 
   getActiveTheme() {
+    if (this.game &&
+        this.game.gameMode &&
+        this.game.gameMode.gameMode === GAME_MODES.CHALLENGE &&
+        this.game.gameMode.selectedLandmark) {
+      return this.game.gameMode.selectedLandmark;
+    }
     if (!this.isFeatureEnabled('themes')) return null;
     if (!this.activeThemeEvent) return null;
     const score = Math.max(0, this.game.score || 0);
@@ -104,7 +111,9 @@ class RunDirector {
     const themeEvent = this.getActiveTheme();
     if (!themeEvent) return null;
     const score = Math.max(0, heightScore || 0);
-    if (score < themeEvent.startHeight || score > themeEvent.endHeight) {
+    if (typeof themeEvent.startHeight === 'number' &&
+        typeof themeEvent.endHeight === 'number' &&
+        (score < themeEvent.startHeight || score > themeEvent.endHeight)) {
       return null;
     }
     return themeEvent;
@@ -439,6 +448,14 @@ class RunDirector {
   }
 
   updateThemeEvent(score) {
+    if (this.game &&
+        this.game.gameMode &&
+        this.game.gameMode.gameMode === GAME_MODES.CHALLENGE &&
+        this.game.gameMode.selectedLandmark) {
+      this.activeThemeEvent = null;
+      return;
+    }
+
     if (this.activeThemeEvent && score > this.activeThemeEvent.endHeight) {
       this.activeThemeEvent = null;
     }
@@ -516,6 +533,38 @@ class RunDirector {
         text: '风险平台 +' + rewardCoins + ' 金币',
         color: '#ff7675'
       });
+      return;
+    }
+
+    if (platform.specialType === 'charge_sink') {
+      if (platform.lastChargeSinkTriggered) {
+        this.game.spawnParticles(
+          this.game.player.x + this.game.player.w / 2,
+          this.game.player.y + this.game.player.h,
+          '#7ce7ff',
+          14
+        );
+        if (this.game.barrage) {
+          this.game.barrage.show(
+            this.game.player.x - 54,
+            this.game.player.y - this.game.cameraY - 90,
+            '沉降弹射！',
+            '#7ce7ff'
+          );
+        }
+      }
+      return;
+    }
+
+    if (platform.specialType === 'one_way') {
+      if (this.game.barrage) {
+        this.game.barrage.show(
+          this.game.player.x - 44,
+          this.game.player.y - this.game.cameraY - 80,
+          '切入成功',
+          '#ffd166'
+        );
+      }
       return;
     }
 

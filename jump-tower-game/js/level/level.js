@@ -17,6 +17,11 @@ class LevelGenerator {
     this.nextDynamicCoinY = 0;
     this.difficultyManager = null;
     this.runDirector = null;
+    this.spawnMemory = {
+      laneIndex: 0,
+      edgeSide: 1,
+      lastX: 0
+    };
   }
 
   setDifficultyManager(difficultyManager) {
@@ -34,10 +39,22 @@ class LevelGenerator {
 
   getPlatformGap(scoreHeight) {
     const profile = this.getDifficultyProfile(scoreHeight);
+    const themeProfile = this.getThemeSpawnProfile(scoreHeight);
+    const themePlatformConfig = themeProfile ? themeProfile.platformConfig : null;
+    const themeGap = themePlatformConfig && typeof themePlatformConfig.baseGap === 'number'
+      ? Math.max(
+        42,
+        themePlatformConfig.baseGap + (Math.random() - 0.5) * Math.max(0, themePlatformConfig.gapVariance || 0)
+      )
+      : null;
     if (!profile) {
-      return 80 + Math.random() * 60;
+      return themeGap || (80 + Math.random() * 60);
     }
-    return profile.platformGapMin + Math.random() * (profile.platformGapMax - profile.platformGapMin);
+    const profileGap = profile.platformGapMin + Math.random() * (profile.platformGapMax - profile.platformGapMin);
+    if (themeGap === null) {
+      return profileGap;
+    }
+    return profileGap * 0.4 + themeGap * 0.6;
   }
 
   applyPlatformDifficulty(platform, scoreHeight) {
@@ -74,10 +91,59 @@ class LevelGenerator {
     return debugRuntime.resolvePlatformBaseType(this.getDebugProfile(), pickedType);
   }
 
+  getPlatformX(W, previousPlatform, scoreHeight) {
+    const themeProfile = this.getThemeSpawnProfile(scoreHeight);
+    const config = themeProfile ? themeProfile.platformConfig : null;
+    const platformWidth = previousPlatform ? previousPlatform.w : 100;
+    const minX = 10;
+    const maxX = Math.max(minX, W - platformWidth - 10);
+    if (!config || !config.horizontalPattern) {
+      return Math.random() * (maxX - minX) + minX;
+    }
+
+    const laneCount = Math.max(2, Math.round(config.laneCount || 3));
+    const jitter = Math.max(0, config.horizontalJitter || 0);
+    const laneWidth = laneCount <= 1 ? 0 : (maxX - minX) / (laneCount - 1);
+    let laneIndex = this.spawnMemory.laneIndex || 0;
+
+    switch (config.horizontalPattern) {
+      case 'lanes':
+        laneIndex = Math.max(0, Math.min(laneCount - 1, laneIndex + (Math.random() < 0.5 ? -1 : 1)));
+        if (Math.random() < 0.24) {
+          laneIndex = Math.floor(Math.random() * laneCount);
+        }
+        break;
+      case 'alternating':
+        laneIndex = laneCount - 1 - laneIndex;
+        if (Math.random() < 0.2) {
+          laneIndex = Math.max(0, Math.min(laneCount - 1, laneIndex + (Math.random() < 0.5 ? -1 : 1)));
+        }
+        break;
+      case 'edgeBounce':
+        this.spawnMemory.edgeSide = this.spawnMemory.edgeSide > 0 ? -1 : 1;
+        laneIndex = this.spawnMemory.edgeSide > 0 ? laneCount - 1 : 0;
+        if (Math.random() < 0.3) {
+          laneIndex = this.spawnMemory.edgeSide > 0 ? laneCount - 2 : 1;
+        }
+        break;
+      default:
+        laneIndex = Math.floor(Math.random() * laneCount);
+        break;
+    }
+
+    this.spawnMemory.laneIndex = laneIndex;
+    const laneCenter = minX + laneWidth * laneIndex;
+    const jitteredX = laneCenter + (Math.random() - 0.5) * jitter * 2;
+    const safeX = Math.max(minX, Math.min(maxX, jitteredX));
+    this.spawnMemory.lastX = safeX;
+    return safeX;
+  }
+
   applyPlatformSpecial(platform, W, scoreHeight, themeProfile) {
     if (!platform || platform.type === 'ground') return platform;
 
     const debugProfile = this.getDebugProfile();
+    const forcedMode = debugProfile ? debugProfile.platformMode : 'normal';
     if (!debugRuntime.allowsPlatformSpecial(debugProfile, 'charge') &&
         !debugRuntime.allowsPlatformSpecial(debugProfile, 'resonance') &&
         !debugRuntime.allowsPlatformSpecial(debugProfile, 'risk')) {
@@ -92,9 +158,12 @@ class LevelGenerator {
     const chargeChance = Math.max(0, config.chargeChance + boostBias);
     const resonanceChance = Math.max(0, config.resonanceChance + movingBias);
     const riskChance = Math.max(0, config.riskChance + crumbleBias);
+    const specialWeights = themePlatformConfig && themePlatformConfig.specialWeights
+      ? themePlatformConfig.specialWeights
+      : {};
+    const oneWayChance = Math.max(0, specialWeights.oneWay || config.oneWayChance || 0);
+    const chargeSinkChance = Math.max(0, specialWeights.chargeSink || config.chargeSinkChance || 0);
     const roll = Math.random();
-
-    const forcedMode = debugProfile ? debugProfile.platformMode : 'normal';
 
     if ((forcedMode === 'charge_only' || (roll < chargeChance && platform.type !== 'crumble')) &&
         platform.type !== 'crumble' &&
@@ -124,6 +193,26 @@ class LevelGenerator {
       platform.riskRewardCoins = Math.max(1, Math.round(config.riskRewardCoins));
       platform.w = Math.max(54, platform.w * Math.max(0.45, config.riskWidthScale));
       platform.x = Math.max(8, Math.min(W - platform.w - 8, platform.x));
+      return platform;
+    }
+
+    if (forcedMode === 'charge_only' || forcedMode === 'resonance_only' || forcedMode === 'risk_only') {
+      return platform;
+    }
+
+    const postClassicRoll = Math.max(0, roll - (chargeChance + resonanceChance + riskChance));
+    if (postClassicRoll < oneWayChance && platform.type !== 'boost') {
+      platform.specialType = 'one_way';
+      platform.specialConsumed = false;
+      platform.oneWayArmed = false;
+      return platform;
+    }
+
+    if (postClassicRoll < oneWayChance + chargeSinkChance && platform.type !== 'crumble' && platform.type !== 'boost') {
+      platform.specialType = 'charge_sink';
+      platform.specialConsumed = false;
+      platform.chargeSinkCost = Math.max(1, Math.round(config.chargeSinkCost));
+      platform.chargeSinkBoostScale = Math.max(1.05, config.chargeSinkBoostScale || 1.22);
       return platform;
     }
 
@@ -426,16 +515,16 @@ class LevelGenerator {
     // moving类型：移动的台子
     // boost类型：弹跳台子（暂时用moving资源）
     for (let i = 0; i < 12; i++) {
-      let px = Math.random() * (W - 100) + 10;
+      const prevPlatform = platforms.length > 0 ? platforms[platforms.length - 1] : null;
       let py = H - 100 - i * 70;
       const heightScore = Math.max(0, -py / 10);
+      let px = this.getPlatformX(W, prevPlatform, heightScore);
       let type = i < 3 ? 'normal' : this.pickPlatformType(heightScore);
       const platform = this.applyPlatformDifficulty(
         platformPhysics.createPlatformWithSkin(px, py, type),
         heightScore
       );
       this.decorateGeneratedPlatform(platform, W, heightScore);
-      const prevPlatform = platforms.length > 0 ? platforms[platforms.length - 1] : null;
       this.attachRandomCoin(platform, -py);
       platforms.push(this.attachRandomMushroom(platform, -py));
       this.maybeSpawnFloatingCoin(W, py + 24, py + 78, prevPlatform, platform);
@@ -458,9 +547,9 @@ class LevelGenerator {
       const lastP = this.platforms[this.platforms.length - 1];
       const lastHeightScore = Math.max(0, -lastP.y / 10);
       let ny = lastP.y - this.getPlatformGap(lastHeightScore);
-      let nx = Math.random() * (W - 100) + 10;
       const h = -ny;
       const heightScore = Math.max(0, h / 10);
+      let nx = this.getPlatformX(W, lastP, heightScore);
       const type = this.pickPlatformType(heightScore);
 
       const platform = this.applyPlatformDifficulty(
@@ -502,6 +591,11 @@ class LevelGenerator {
     this.platforms = [];
     this.coins = [];
     this.nextDynamicCoinY = 0;
+    this.spawnMemory = {
+      laneIndex: 0,
+      edgeSide: 1,
+      lastX: 0
+    };
   }
 }
 

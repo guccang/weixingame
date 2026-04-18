@@ -101,8 +101,14 @@ function checkCollision(player, platform, time, isChargingDash) {
  * @returns {number} 跳跃力度
  */
 function handlePlatformJump(player, platform, physics) {
-  // 使用表格配置的弹跳力
   const bounceMultiplier = platform.bounceForce || 1.0;
+  if (platform.type === 'boost') {
+    const boostBaseForce = Math.min(
+      physics.BOOST_JUMP_FORCE || physics.JUMP_FORCE * 1.7,
+      physics.JUMP_FORCE * bounceMultiplier
+    );
+    return Math.min(boostBaseForce, physics.JUMP_FORCE * 1.9);
+  }
   return physics.JUMP_FORCE * bounceMultiplier;
 }
 

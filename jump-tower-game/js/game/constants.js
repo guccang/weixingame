@@ -156,9 +156,13 @@ function getRunEventConfig() {
       chargeChance: getConfigValue('PLATFORM_SPECIAL_CHARGE_CHANCE', 0.12),
       resonanceChance: getConfigValue('PLATFORM_SPECIAL_RESONANCE_CHANCE', 0.14),
       riskChance: getConfigValue('PLATFORM_SPECIAL_RISK_CHANCE', 0.1),
+      oneWayChance: getConfigValue('PLATFORM_SPECIAL_ONE_WAY_CHANCE', 0.08),
+      chargeSinkChance: getConfigValue('PLATFORM_SPECIAL_CHARGE_SINK_CHANCE', 0.06),
       riskWidthScale: getConfigValue('PLATFORM_SPECIAL_RISK_WIDTH_SCALE', 0.72),
       riskRewardCoins: getConfigValue('PLATFORM_SPECIAL_RISK_REWARD_COINS', 5),
       chargeBonus: getConfigValue('PLATFORM_SPECIAL_CHARGE_BONUS', 1),
+      chargeSinkCost: getConfigValue('PLATFORM_SPECIAL_CHARGE_SINK_COST', 1),
+      chargeSinkBoostScale: getConfigValue('PLATFORM_SPECIAL_CHARGE_SINK_BOOST_SCALE', 1.24),
       resonanceStreakRequirement: getConfigValue('PLATFORM_RESONANCE_STREAK_REQUIREMENT', 3),
       resonanceBonusForce: getConfigValue('PLATFORM_RESONANCE_BONUS_FORCE', 4.5)
     },
