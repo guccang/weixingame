@@ -1,0 +1,128 @@
+{
+  "id": "achievementPanel",
+  "desc": "成就面板",
+  "vars": {},
+  "elements": [
+    {
+      "id": "achBg",
+      "type": "glassPanel",
+      "anchor": { "x": "center", "y": "top" },
+      "offset": { "x": 0, "y": 76 },
+      "size": { "width": 332, "height": 520 },
+      "style": {
+        "radius": 22,
+        "glow": "$panelGlow",
+        "shadowBlur": 12,
+        "stroke": "$panelStroke",
+        "innerStroke": "$panelInnerStroke",
+        "stops": "$panelStrongStops",
+        "consume": true
+      }
+    },
+    {
+      "id": "achTitle",
+      "type": "text",
+      "anchor": { "x": "center", "y": "top" },
+      "offset": { "x": 0, "y": 96 },
+      "size": { "width": 200, "height": 30 },
+      "style": { "fontSize": 24, "fontWeight": "700", "textAlign": "center", "color": "$cardLabel", "text": "成就" }
+    },
+    {
+      "id": "achCurrentTitle",
+      "type": "text",
+      "anchor": { "x": "center", "y": "top" },
+      "offset": { "x": 0, "y": 120 },
+      "size": { "width": 260, "height": 18 },
+      "style": { "fontSize": 14, "textAlign": "center", "color": "$cardMeta", "text": "当前称号: 初心者" }
+    },
+    {
+      "id": "achUnlockCount",
+      "type": "text",
+      "anchor": { "x": "center", "y": "top" },
+      "offset": { "x": 0, "y": 142 },
+      "size": { "width": 200, "height": 16 },
+      "style": { "fontSize": 12, "textAlign": "center", "color": "$cardSubtle", "text": "已解锁: 3 / 20" }
+    },
+    {
+      "id": "achClose",
+      "type": "closeButton",
+      "anchor": { "x": "right", "y": "top" },
+      "offset": { "x": -62, "y": 88 },
+      "size": { "width": 26, "height": 26 },
+      "style": { "glow": "$panelGlow", "stroke": "$panelStroke" },
+      "action": { "type": "close-panel", "panel": "showAchievementPanel" }
+    },
+    {
+      "id": "achCard0",
+      "type": "roundRect",
+      "anchor": { "x": "center", "y": "top" },
+      "offset": { "x": 0, "y": 172 },
+      "size": { "width": 296, "height": 46 },
+      "style": { "radius": 14, "fill": "rgba(255,255,255,0.10)" }
+    },
+    {
+      "id": "achCard0Name",
+      "type": "text",
+      "anchor": { "x": "left", "y": "top" },
+      "offset": { "x": 73, "y": 180 },
+      "size": { "width": 180, "height": 18 },
+      "style": { "fontSize": 14, "fontWeight": "700", "color": "$cardLabel", "text": "★ 初次跳跃" }
+    },
+    {
+      "id": "achCard0Desc",
+      "type": "text",
+      "anchor": { "x": "left", "y": "top" },
+      "offset": { "x": 73, "y": 198 },
+      "size": { "width": 180, "height": 14 },
+      "style": { "fontSize": 11, "color": "$cardSubtle", "text": "完成第一次跳跃" }
+    },
+    {
+      "id": "achCard1",
+      "type": "roundRect",
+      "anchor": { "x": "center", "y": "top" },
+      "offset": { "x": 0, "y": 224 },
+      "size": { "width": 296, "height": 46 },
+      "style": { "radius": 14, "fill": "$cardFill" }
+    },
+    {
+      "id": "achCard2",
+      "type": "roundRect",
+      "anchor": { "x": "center", "y": "top" },
+      "offset": { "x": 0, "y": 276 },
+      "size": { "width": 296, "height": 46 },
+      "style": { "radius": 14, "fill": "$cardFill" }
+    },
+    {
+      "id": "achCard3",
+      "type": "roundRect",
+      "anchor": { "x": "center", "y": "top" },
+      "offset": { "x": 0, "y": 328 },
+      "size": { "width": 296, "height": 46 },
+      "style": { "radius": 14, "fill": "$cardFill" }
+    },
+    {
+      "id": "achCard4",
+      "type": "roundRect",
+      "anchor": { "x": "center", "y": "top" },
+      "offset": { "x": 0, "y": 380 },
+      "size": { "width": 296, "height": 46 },
+      "style": { "radius": 14, "fill": "$cardFill" }
+    },
+    {
+      "id": "achCard5",
+      "type": "roundRect",
+      "anchor": { "x": "center", "y": "top" },
+      "offset": { "x": 0, "y": 432 },
+      "size": { "width": 296, "height": 46 },
+      "style": { "radius": 14, "fill": "$cardFill" }
+    },
+    {
+      "id": "achCard6",
+      "type": "roundRect",
+      "anchor": { "x": "center", "y": "top" },
+      "offset": { "x": 0, "y": 484 },
+      "size": { "width": 296, "height": 46 },
+      "style": { "radius": 14, "fill": "$cardFill" }
+    }
+  ]
+}

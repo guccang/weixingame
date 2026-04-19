@@ -1,0 +1,96 @@
+{
+  "id": "petPanel",
+  "desc": "宠物舱面板",
+  "vars": {},
+  "elements": [
+    {
+      "id": "petBg",
+      "type": "glassPanel",
+      "anchor": { "x": "center", "y": "top" },
+      "offset": { "x": 0, "y": 76 },
+      "size": { "width": 327, "height": 520 },
+      "style": {
+        "radius": 22,
+        "glow": "$panelGlow",
+        "shadowBlur": 12,
+        "stroke": "$panelStroke",
+        "innerStroke": "$panelInnerStroke",
+        "stops": "$panelStrongStops",
+        "consume": true
+      }
+    },
+    {
+      "id": "petTitle",
+      "type": "text",
+      "anchor": { "x": "center", "y": "top" },
+      "offset": { "x": 0, "y": 96 },
+      "size": { "width": 200, "height": 30 },
+      "style": { "fontSize": 24, "fontWeight": "700", "textAlign": "center", "color": "$cardLabel", "text": "宠物舱" }
+    },
+    {
+      "id": "petCoins",
+      "type": "text",
+      "anchor": { "x": "center", "y": "top" },
+      "offset": { "x": 0, "y": 120 },
+      "size": { "width": 200, "height": 18 },
+      "style": { "fontSize": 13, "textAlign": "center", "color": "$cardSubtle", "text": "当前金币: 0" }
+    },
+    {
+      "id": "petActive",
+      "type": "text",
+      "anchor": { "x": "center", "y": "top" },
+      "offset": { "x": 0, "y": 140 },
+      "size": { "width": 200, "height": 16 },
+      "style": { "fontSize": 12, "textAlign": "center", "color": "$cardMeta", "text": "当前出战: 无" }
+    },
+    {
+      "id": "petClose",
+      "type": "closeButton",
+      "anchor": { "x": "right", "y": "top" },
+      "offset": { "x": -64, "y": 88 },
+      "size": { "width": 26, "height": 26 },
+      "style": { "glow": "$panelGlow", "stroke": "$panelStroke" },
+      "action": { "type": "close-panel", "panel": "showPetPanel" }
+    },
+    {
+      "id": "petCard0",
+      "type": "roundRect",
+      "anchor": { "x": "center", "y": "top" },
+      "offset": { "x": 0, "y": 172 },
+      "size": { "width": 291, "height": 58 },
+      "style": { "radius": 14, "fill": "$cardFill" }
+    },
+    {
+      "id": "petCard1",
+      "type": "roundRect",
+      "anchor": { "x": "center", "y": "top" },
+      "offset": { "x": 0, "y": 238 },
+      "size": { "width": 291, "height": 58 },
+      "style": { "radius": 14, "fill": "$cardFill" }
+    },
+    {
+      "id": "petCard2",
+      "type": "roundRect",
+      "anchor": { "x": "center", "y": "top" },
+      "offset": { "x": 0, "y": 304 },
+      "size": { "width": 291, "height": 58 },
+      "style": { "radius": 14, "fill": "$cardFill" }
+    },
+    {
+      "id": "petCard3",
+      "type": "roundRect",
+      "anchor": { "x": "center", "y": "top" },
+      "offset": { "x": 0, "y": 370 },
+      "size": { "width": 291, "height": 58 },
+      "style": { "radius": 14, "fill": "$cardFill" }
+    },
+    {
+      "id": "petCard4",
+      "type": "roundRect",
+      "anchor": { "x": "center", "y": "top" },
+      "offset": { "x": 0, "y": 436 },
+      "size": { "width": 291, "height": 58 },
+      "style": { "radius": 14, "fill": "$cardFill" }
+    }
+  ]
+}

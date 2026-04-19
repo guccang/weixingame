@@ -1,0 +1,206 @@
+{
+  "id": "gameOverScreen",
+  "desc": "游戏结束界面 - 结算面板",
+  "vars": {},
+  "elements": [
+    {
+      "id": "goBg",
+      "type": "glassPanel",
+      "anchor": { "x": "center", "y": "center" },
+      "offset": { "x": 0, "y": 0 },
+      "size": { "width": 347, "height": 574 },
+      "style": {
+        "radius": 34,
+        "innerStroke": "rgba(255,255,255,0.06)",
+        "shadowBlur": 24,
+        "glow": "rgba(112,196,255,0.14)",
+        "stroke": "rgba(212,231,255,0.16)",
+        "stops": [[0, "rgba(21,34,56,0.94)"], [1, "rgba(9,15,27,0.94)"]],
+        "consume": true
+      }
+    },
+    {
+      "id": "goBadgeLeft",
+      "type": "badge",
+      "anchor": { "x": "center", "y": "center" },
+      "offset": { "x": -100, "y": -260 },
+      "size": { "width": 130, "height": 30 },
+      "style": { "text": "RUN SUMMARY", "dotColor": "#7cf3c8", "color": "#f5fbff" }
+    },
+    {
+      "id": "goBadgeRight",
+      "type": "badge",
+      "anchor": { "x": "center", "y": "center" },
+      "offset": { "x": 80, "y": -260 },
+      "size": { "width": 102, "height": 30 },
+      "style": { "text": "无尽模式", "color": "#7cf3c8", "glow": "rgba(124,231,255,0.12)", "stroke": "rgba(124,231,255,0.18)" }
+    },
+    {
+      "id": "goTitle",
+      "type": "text",
+      "anchor": { "x": "center", "y": "center" },
+      "offset": { "x": -80, "y": -222 },
+      "size": { "width": 200, "height": 36 },
+      "style": { "fontSize": 32, "fontWeight": "700", "color": "#ffffff", "text": "挑战结束" }
+    },
+    {
+      "id": "goSummary",
+      "type": "text",
+      "anchor": { "x": "center", "y": "center" },
+      "offset": { "x": -80, "y": -182 },
+      "size": { "width": 260, "height": 20 },
+      "style": { "fontSize": 16, "fontWeight": "700", "color": "#7cf3c8", "text": "本局高度 520 m" }
+    },
+    {
+      "id": "goMetric0",
+      "type": "metricCard",
+      "anchor": { "x": "center", "y": "center" },
+      "offset": { "x": -108, "y": -148 },
+      "size": { "width": 100, "height": 62 },
+      "style": { "label": "最终高度", "value": "520 m", "valueColor": "#ffffff" }
+    },
+    {
+      "id": "goMetric1",
+      "type": "metricCard",
+      "anchor": { "x": "center", "y": "center" },
+      "offset": { "x": -2, "y": -148 },
+      "size": { "width": 100, "height": 62 },
+      "style": { "label": "最高连跳", "value": "12", "valueColor": "#ffd88a" }
+    },
+    {
+      "id": "goMetric2",
+      "type": "metricCard",
+      "anchor": { "x": "center", "y": "center" },
+      "offset": { "x": 104, "y": -148 },
+      "size": { "width": 100, "height": 62 },
+      "style": { "label": "模式", "value": "持续冲层", "valueColor": "#7cf3c8" }
+    },
+    {
+      "id": "goMessageBox",
+      "type": "glassPanel",
+      "anchor": { "x": "center", "y": "center" },
+      "offset": { "x": 0, "y": -52 },
+      "size": { "width": 311, "height": 96 },
+      "style": {
+        "radius": 22,
+        "shadowBlur": 10,
+        "glow": "rgba(124,231,255,0.08)",
+        "stroke": "rgba(255,255,255,0.1)",
+        "stops": [[0, "rgba(19,30,48,0.82)"], [1, "rgba(10,17,29,0.84)"]]
+      },
+      "children": [
+        {
+          "id": "goMsgLabel",
+          "type": "text",
+          "anchor": { "x": "left", "y": "top" },
+          "offset": { "x": 34, "y": -28 },
+          "size": { "width": 100, "height": 14 },
+          "style": { "fontSize": 11, "fontWeight": "600", "color": "rgba(199,214,235,0.68)", "text": "赛事点评" }
+        },
+        {
+          "id": "goMsgText",
+          "type": "text",
+          "anchor": { "x": "left", "y": "top" },
+          "offset": { "x": 34, "y": -8 },
+          "size": { "width": 260, "height": 40 },
+          "style": { "fontSize": 14, "fontWeight": "600", "color": "#ffffff", "text": "节奏已经起来了，选手的爆发力开始显现。" }
+        }
+      ]
+    },
+    {
+      "id": "goRewardBox",
+      "type": "glassPanel",
+      "anchor": { "x": "center", "y": "center" },
+      "offset": { "x": 0, "y": 72 },
+      "size": { "width": 311, "height": 148 },
+      "style": {
+        "radius": 24,
+        "shadowBlur": 12,
+        "glow": "rgba(255,209,102,0.12)",
+        "stroke": "rgba(255,255,255,0.1)",
+        "stops": [[0, "rgba(49,39,18,0.82)"], [1, "rgba(23,18,9,0.84)"]]
+      },
+      "children": [
+        {
+          "id": "goRewardLabel",
+          "type": "text",
+          "anchor": { "x": "left", "y": "top" },
+          "offset": { "x": 34, "y": 22 },
+          "size": { "width": 100, "height": 16 },
+          "style": { "fontSize": 12, "fontWeight": "700", "color": "#ffe4a3", "text": "本局奖励" }
+        },
+        {
+          "id": "goRewardTotal",
+          "type": "text",
+          "anchor": { "x": "left", "y": "top" },
+          "offset": { "x": 34, "y": 42 },
+          "size": { "width": 140, "height": 32 },
+          "style": { "fontSize": 28, "fontWeight": "700", "color": "#ffffff", "text": "+128" }
+        },
+        {
+          "id": "goRewardBalance",
+          "type": "text",
+          "anchor": { "x": "left", "y": "top" },
+          "offset": { "x": 34, "y": 76 },
+          "size": { "width": 140, "height": 16 },
+          "style": { "fontSize": 12, "fontWeight": "600", "color": "#ffd166", "text": "当前金币 1024" }
+        },
+        {
+          "id": "goChip0",
+          "type": "glassPanel",
+          "anchor": { "x": "left", "y": "top" },
+          "offset": { "x": 34, "y": 102 },
+          "size": { "width": 130, "height": 42 },
+          "style": { "radius": 16, "shadowBlur": 8, "glow": "rgba(124,231,255,0.06)", "stroke": "rgba(255,255,255,0.08)", "stops": [[0, "rgba(20,31,50,0.78)"], [1, "rgba(11,18,31,0.8)"]] }
+        },
+        {
+          "id": "goChip1",
+          "type": "glassPanel",
+          "anchor": { "x": "left", "y": "top" },
+          "offset": { "x": 172, "y": 102 },
+          "size": { "width": 130, "height": 42 },
+          "style": { "radius": 16, "shadowBlur": 8, "glow": "rgba(124,231,255,0.06)", "stroke": "rgba(255,255,255,0.08)", "stops": [[0, "rgba(20,31,50,0.78)"], [1, "rgba(11,18,31,0.8)"]] }
+        }
+      ]
+    },
+    {
+      "id": "goRestartBtn",
+      "type": "actionButton",
+      "anchor": { "x": "center", "y": "center" },
+      "offset": { "x": -108, "y": 240 },
+      "size": { "width": 100, "height": 48 },
+      "style": { "fontSize": 15, "fontWeight": "700", "textColor": "#03121f", "shadowColor": "rgba(66,214,242,0.24)", "text": "再来一局" },
+      "action": { "type": "game-restart" }
+    },
+    {
+      "id": "goShareBtn",
+      "type": "actionButton",
+      "anchor": { "x": "center", "y": "center" },
+      "offset": { "x": 0, "y": 240 },
+      "size": { "width": 100, "height": 48 },
+      "style": {
+        "fontSize": 15, "fontWeight": "700",
+        "textColor": "#ffffff",
+        "shadowColor": "rgba(255,145,120,0.22)",
+        "stops": [[0, "#ff9a71"], [0.55, "#ff7d8a"], [1, "#d85dff"]],
+        "text": "转发"
+      },
+      "action": { "type": "game-share" }
+    },
+    {
+      "id": "goHomeBtn",
+      "type": "actionButton",
+      "anchor": { "x": "center", "y": "center" },
+      "offset": { "x": 108, "y": 240 },
+      "size": { "width": 100, "height": 48 },
+      "style": {
+        "fontSize": 15, "fontWeight": "700",
+        "textColor": "#ffffff",
+        "shadowColor": "rgba(74,144,255,0.2)",
+        "stops": [[0, "#7ab8ff"], [0.55, "#4f8fff"], [1, "#3158e8"]],
+        "text": "返回主页"
+      },
+      "action": { "type": "game-home" }
+    }
+  ]
+}

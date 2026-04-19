@@ -1,0 +1,169 @@
+{
+  "id": "settingsPanel",
+  "desc": "界面设置面板 - 主题切换",
+  "vars": {},
+  "elements": [
+    {
+      "id": "settingsBg",
+      "type": "glassPanel",
+      "anchor": { "x": "center", "y": "center" },
+      "offset": { "x": 0, "y": -20 },
+      "size": { "width": 331, "height": 432 },
+      "style": {
+        "radius": 26,
+        "glow": "$panelGlow",
+        "shadowBlur": 14,
+        "stroke": "$panelStroke",
+        "innerStroke": "$panelInnerStroke",
+        "stops": "$panelStrongStops",
+        "consume": true
+      }
+    },
+    {
+      "id": "settingsTitle",
+      "type": "text",
+      "anchor": { "x": "center", "y": "center" },
+      "offset": { "x": 0, "y": -206 },
+      "size": { "width": 200, "height": 30 },
+      "style": { "fontSize": 24, "fontWeight": "700", "textAlign": "center", "color": "$cardLabel", "text": "界面设置" }
+    },
+    {
+      "id": "settingsDesc",
+      "type": "text",
+      "anchor": { "x": "center", "y": "center" },
+      "offset": { "x": 0, "y": -182 },
+      "size": { "width": 280, "height": 18 },
+      "style": { "fontSize": 13, "textAlign": "center", "color": "$cardSubtle", "text": "切换整体 UI 质感和配色，立即生效。" }
+    },
+    {
+      "id": "settingsClose",
+      "type": "closeButton",
+      "anchor": { "x": "right", "y": "center" },
+      "offset": { "x": -62, "y": -218 },
+      "size": { "width": 26, "height": 26 },
+      "style": { "glow": "$panelGlow", "stroke": "$panelStroke" },
+      "action": { "type": "close-panel", "panel": "showSettingsPanel" }
+    },
+    {
+      "id": "themeCard.mist",
+      "type": "glassPanel",
+      "anchor": { "x": "center", "y": "center" },
+      "offset": { "x": 0, "y": -130 },
+      "size": { "width": 295, "height": 88 },
+      "style": { "radius": 18, "glow": "$panelGlow", "shadowBlur": 12, "stroke": "$panelStroke", "stops": "$panelMutedStops" },
+      "children": [
+        {
+          "id": "themeCard.mist.name",
+          "type": "text",
+          "anchor": { "x": "left", "y": "top" },
+          "offset": { "x": 56, "y": -106 },
+          "size": { "width": 120, "height": 20 },
+          "style": { "fontSize": 17, "fontWeight": "700", "color": "$cardLabel", "text": "雾青" }
+        },
+        {
+          "id": "themeCard.mist.desc",
+          "type": "text",
+          "anchor": { "x": "left", "y": "top" },
+          "offset": { "x": 56, "y": -84 },
+          "size": { "width": 160, "height": 16 },
+          "style": { "fontSize": 12, "color": "$cardSubtle", "text": "清冷通透的雾面质感" }
+        }
+      ]
+    },
+    {
+      "id": "themeCard.mist.btn",
+      "type": "actionButton",
+      "anchor": { "x": "right", "y": "center" },
+      "offset": { "x": -72, "y": -130 },
+      "size": { "width": 74, "height": 34 },
+      "style": {
+        "radius": 17,
+        "fontSize": 14,
+        "fontWeight": "700",
+        "textColor": "$buttonText",
+        "shadowColor": "$buttonShadow",
+        "stops": "$buttonPrimaryStops",
+        "text": "当前"
+      },
+      "action": { "type": "close-panel", "panel": "showSettingsPanel" }
+    },
+    {
+      "id": "themeCard.dawn",
+      "type": "glassPanel",
+      "anchor": { "x": "center", "y": "center" },
+      "offset": { "x": 0, "y": -30 },
+      "size": { "width": 295, "height": 88 },
+      "style": { "radius": 18, "glow": "rgba(255,255,255,0.03)", "shadowBlur": 6, "stroke": "rgba(255,255,255,0.08)", "stops": "$panelMutedStops" },
+      "children": [
+        {
+          "id": "themeCard.dawn.name",
+          "type": "text",
+          "anchor": { "x": "left", "y": "top" },
+          "offset": { "x": 56, "y": -6 },
+          "size": { "width": 120, "height": 20 },
+          "style": { "fontSize": 17, "fontWeight": "700", "color": "$cardLabel", "text": "晨砂" }
+        },
+        {
+          "id": "themeCard.dawn.desc",
+          "type": "text",
+          "anchor": { "x": "left", "y": "top" },
+          "offset": { "x": 56, "y": 16 },
+          "size": { "width": 160, "height": 16 },
+          "style": { "fontSize": 12, "color": "$cardSubtle", "text": "温暖柔和的沙漠色调" }
+        }
+      ]
+    },
+    {
+      "id": "themeCard.dawn.btn",
+      "type": "actionButton",
+      "anchor": { "x": "right", "y": "center" },
+      "offset": { "x": -72, "y": -30 },
+      "size": { "width": 74, "height": 34 },
+      "style": {
+        "radius": 17, "fontSize": 14, "fontWeight": "700",
+        "textColor": "$buttonText", "shadowColor": "$buttonShadow",
+        "stops": "$buttonPrimaryStops", "text": "应用"
+      },
+      "action": { "type": "set-ui-theme", "themeId": "dawn" }
+    },
+    {
+      "id": "themeCard.moss",
+      "type": "glassPanel",
+      "anchor": { "x": "center", "y": "center" },
+      "offset": { "x": 0, "y": 70 },
+      "size": { "width": 295, "height": 88 },
+      "style": { "radius": 18, "glow": "rgba(255,255,255,0.03)", "shadowBlur": 6, "stroke": "rgba(255,255,255,0.08)", "stops": "$panelMutedStops" },
+      "children": [
+        {
+          "id": "themeCard.moss.name",
+          "type": "text",
+          "anchor": { "x": "left", "y": "top" },
+          "offset": { "x": 56, "y": 94 },
+          "size": { "width": 120, "height": 20 },
+          "style": { "fontSize": 17, "fontWeight": "700", "color": "$cardLabel", "text": "苔岩" }
+        },
+        {
+          "id": "themeCard.moss.desc",
+          "type": "text",
+          "anchor": { "x": "left", "y": "top" },
+          "offset": { "x": 56, "y": 116 },
+          "size": { "width": 160, "height": 16 },
+          "style": { "fontSize": 12, "color": "$cardSubtle", "text": "沉稳自然的苔藓质感" }
+        }
+      ]
+    },
+    {
+      "id": "themeCard.moss.btn",
+      "type": "actionButton",
+      "anchor": { "x": "right", "y": "center" },
+      "offset": { "x": -72, "y": 70 },
+      "size": { "width": 74, "height": 34 },
+      "style": {
+        "radius": 17, "fontSize": 14, "fontWeight": "700",
+        "textColor": "$buttonText", "shadowColor": "$buttonShadow",
+        "stops": "$buttonPrimaryStops", "text": "应用"
+      },
+      "action": { "type": "set-ui-theme", "themeId": "moss" }
+    }
+  ]
+}

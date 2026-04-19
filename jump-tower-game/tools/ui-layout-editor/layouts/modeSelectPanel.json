@@ -1,0 +1,178 @@
+{
+  "id": "modeSelectPanel",
+  "desc": "模式选择面板",
+  "vars": {},
+  "elements": [
+    {
+      "id": "modeBg",
+      "type": "glassPanel",
+      "anchor": { "x": "center", "y": "center" },
+      "offset": { "x": 0, "y": 0 },
+      "size": { "width": 351, "height": 540 },
+      "style": {
+        "radius": 30,
+        "innerStroke": "rgba(255,255,255,0.06)",
+        "shadowBlur": 22,
+        "glow": "rgba(122,201,255,0.12)",
+        "stroke": "rgba(207,230,255,0.18)",
+        "stops": [[0, "rgba(24,29,47,0.94)"], [1, "rgba(10,14,25,0.94)"]],
+        "consume": true
+      }
+    },
+    {
+      "id": "modeBadge",
+      "type": "badge",
+      "anchor": { "x": "center", "y": "center" },
+      "offset": { "x": -110, "y": -244 },
+      "size": { "width": 120, "height": 30 },
+      "style": { "text": "MODE SELECT", "dotColor": "#7cf3c8", "color": "#f5fbff" }
+    },
+    {
+      "id": "modeTitle",
+      "type": "text",
+      "anchor": { "x": "center", "y": "center" },
+      "offset": { "x": -90, "y": -202 },
+      "size": { "width": 200, "height": 32 },
+      "style": { "fontSize": 28, "fontWeight": "700", "color": "#ffffff", "text": "选择玩法" }
+    },
+    {
+      "id": "modeDesc",
+      "type": "text",
+      "anchor": { "x": "center", "y": "center" },
+      "offset": { "x": -50, "y": -168 },
+      "size": { "width": 280, "height": 18 },
+      "style": { "fontSize": 13, "fontWeight": "500", "color": "rgba(214,227,245,0.72)", "text": "不同规则会影响开局流程和挑战节奏。" }
+    },
+    {
+      "id": "modeClose",
+      "type": "closeButton",
+      "anchor": { "x": "right", "y": "center" },
+      "offset": { "x": -38, "y": -244 },
+      "size": { "width": 30, "height": 30 },
+      "action": { "type": "panel-back" }
+    },
+    {
+      "id": "modeEndless",
+      "type": "glassPanel",
+      "anchor": { "x": "center", "y": "center" },
+      "offset": { "x": 0, "y": -108 },
+      "size": { "width": 319, "height": 78 },
+      "style": {
+        "radius": 22,
+        "shadowBlur": 12,
+        "glow": "rgba(124,231,255,0.08)",
+        "stroke": "rgba(255,255,255,0.1)",
+        "stops": [[0, "rgba(18,28,44,0.86)"], [1, "rgba(10,17,28,0.86)"]]
+      },
+      "action": { "type": "mode-select", "modeName": "endless" },
+      "children": [
+        {
+          "id": "modeEndless.label",
+          "type": "text",
+          "anchor": { "x": "left", "y": "top" },
+          "offset": { "x": 56, "y": -84 },
+          "size": { "width": 160, "height": 22 },
+          "style": { "fontSize": 17, "fontWeight": "700", "color": "#ffffff", "text": "无尽模式" }
+        },
+        {
+          "id": "modeEndless.desc",
+          "type": "text",
+          "anchor": { "x": "left", "y": "top" },
+          "offset": { "x": 56, "y": -60 },
+          "size": { "width": 240, "height": 16 },
+          "style": { "fontSize": 12, "fontWeight": "500", "color": "rgba(199,214,235,0.72)", "text": "连续攀爬，适合刷纪录和熟悉手感。" }
+        },
+        {
+          "id": "modeEndless.tag",
+          "type": "badge",
+          "anchor": { "x": "right", "y": "top" },
+          "offset": { "x": -56, "y": -84 },
+          "size": { "width": 68, "height": 24 },
+          "style": { "text": "长线挑战", "color": "#6ef1cb", "glow": "rgba(255,255,255,0.04)", "stroke": "rgba(255,255,255,0.08)" }
+        }
+      ]
+    },
+    {
+      "id": "modeChallenge",
+      "type": "glassPanel",
+      "anchor": { "x": "center", "y": "center" },
+      "offset": { "x": 0, "y": -18 },
+      "size": { "width": 319, "height": 78 },
+      "style": {
+        "radius": 22,
+        "shadowBlur": 12,
+        "glow": "rgba(124,231,255,0.08)",
+        "stroke": "rgba(255,255,255,0.1)",
+        "stops": [[0, "rgba(18,28,44,0.86)"], [1, "rgba(10,17,28,0.86)"]]
+      },
+      "action": { "type": "mode-select", "modeName": "challenge" },
+      "children": [
+        {
+          "id": "modeChallenge.label",
+          "type": "text",
+          "anchor": { "x": "left", "y": "top" },
+          "offset": { "x": 56, "y": 6 },
+          "size": { "width": 160, "height": 22 },
+          "style": { "fontSize": 17, "fontWeight": "700", "color": "#ffffff", "text": "闯关模式" }
+        },
+        {
+          "id": "modeChallenge.desc",
+          "type": "text",
+          "anchor": { "x": "left", "y": "top" },
+          "offset": { "x": 56, "y": 30 },
+          "size": { "width": 240, "height": 16 },
+          "style": { "fontSize": 12, "fontWeight": "500", "color": "rgba(199,214,235,0.72)", "text": "按地标逐个攻克，路线和难度更明确。" }
+        },
+        {
+          "id": "modeChallenge.tag",
+          "type": "badge",
+          "anchor": { "x": "right", "y": "top" },
+          "offset": { "x": -56, "y": 6 },
+          "size": { "width": 68, "height": 24 },
+          "style": { "text": "目标导向", "color": "#ffb680", "glow": "rgba(255,255,255,0.04)", "stroke": "rgba(255,255,255,0.08)" }
+        }
+      ]
+    },
+    {
+      "id": "modeTimeAttack",
+      "type": "glassPanel",
+      "anchor": { "x": "center", "y": "center" },
+      "offset": { "x": 0, "y": 72 },
+      "size": { "width": 319, "height": 78 },
+      "style": {
+        "radius": 22,
+        "shadowBlur": 12,
+        "glow": "rgba(124,231,255,0.08)",
+        "stroke": "rgba(255,255,255,0.1)",
+        "stops": [[0, "rgba(18,28,44,0.86)"], [1, "rgba(10,17,28,0.86)"]]
+      },
+      "action": { "type": "mode-select", "modeName": "timeAttack" },
+      "children": [
+        {
+          "id": "modeTimeAttack.label",
+          "type": "text",
+          "anchor": { "x": "left", "y": "top" },
+          "offset": { "x": 56, "y": 96 },
+          "size": { "width": 160, "height": 22 },
+          "style": { "fontSize": 17, "fontWeight": "700", "color": "#ffffff", "text": "竞速模式" }
+        },
+        {
+          "id": "modeTimeAttack.desc",
+          "type": "text",
+          "anchor": { "x": "left", "y": "top" },
+          "offset": { "x": 56, "y": 120 },
+          "size": { "width": 240, "height": 16 },
+          "style": { "fontSize": 12, "fontWeight": "500", "color": "rgba(199,214,235,0.72)", "text": "倒计时内冲更高，适合短局高压挑战。" }
+        },
+        {
+          "id": "modeTimeAttack.tag",
+          "type": "badge",
+          "anchor": { "x": "right", "y": "top" },
+          "offset": { "x": -56, "y": 96 },
+          "size": { "width": 68, "height": 24 },
+          "style": { "text": "快节奏", "color": "#7ce7ff", "glow": "rgba(255,255,255,0.04)", "stroke": "rgba(255,255,255,0.08)" }
+        }
+      ]
+    }
+  ]
+}

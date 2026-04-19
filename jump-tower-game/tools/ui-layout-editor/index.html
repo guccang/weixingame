@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UI Layout Editor - Jump Tower Game</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #0e1117; --surface: #161b22; --border: #30363d;
+  --text: #e6edf3; --text-muted: #8b949e; --accent: #7cc9b8;
+  --accent-dim: rgba(124,201,184,0.15); --danger: #f85149;
+}
+body { font-family: -apple-system, 'PingFang SC', sans-serif; background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; }
+#app { display: grid; grid-template-rows: 42px 1fr; grid-template-columns: 220px 1fr 260px; height: 100vh; }
+
+/* Toolbar */
+#toolbar { grid-column: 1/-1; display: flex; align-items: center; gap: 8px; padding: 0 12px; background: var(--surface); border-bottom: 1px solid var(--border); }
+#toolbar .group { display: flex; align-items: center; gap: 6px; }
+#toolbar .sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
+#toolbar select, #toolbar button { background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; }
+#toolbar select:hover, #toolbar button:hover { border-color: var(--accent); }
+#toolbar button.primary { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+#toolbar .title { font-weight: 700; font-size: 13px; color: var(--accent); margin-right: 8px; }
+#toolbar label { font-size: 11px; color: var(--text-muted); }
+
+/* Tree Panel */
+#tree-panel { background: var(--surface); border-right: 1px solid var(--border); overflow-y: auto; padding: 8px 0; }
+#tree-panel .panel-header { padding: 6px 12px; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center; }
+#tree-panel .panel-header button { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 16px; line-height: 1; padding: 2px 4px; }
+#element-tree { list-style: none; }
+#element-tree li { padding: 4px 12px 4px 16px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; user-select: none; }
+#element-tree li:hover { background: rgba(255,255,255,0.04); }
+#element-tree li.selected { background: var(--accent-dim); color: var(--accent); }
+#element-tree li .type-tag { font-size: 9px; padding: 1px 5px; border-radius: 3px; background: rgba(255,255,255,0.06); color: var(--text-muted); }
+#element-tree li.depth-1 { padding-left: 28px; }
+#element-tree li.depth-2 { padding-left: 40px; }
+
+/* Canvas Area */
+#canvas-area { position: relative; display: flex; align-items: center; justify-content: center; background: #0a0d12; overflow: hidden; }
+#canvas-area canvas { box-shadow: 0 0 40px rgba(0,0,0,0.5); }
+#canvas-info { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); font-size: 11px; color: var(--text-muted); background: var(--surface); padding: 3px 10px; border-radius: 4px; border: 1px solid var(--border); }
+
+/* Property Panel */
+#prop-panel { background: var(--surface); border-left: 1px solid var(--border); overflow-y: auto; padding: 0; }
+#prop-panel .panel-header { padding: 8px 12px; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--surface); z-index: 1; }
+#prop-panel .section { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+#prop-panel .section-title { font-size: 10px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; }
+#prop-panel .field { display: flex; align-items: center; margin-bottom: 5px; }
+#prop-panel .field label { width: 70px; font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
+#prop-panel .field input, #prop-panel .field select { flex: 1; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 3px 6px; font-size: 11px; }
+#prop-panel .field input:focus, #prop-panel .field select:focus { outline: none; border-color: var(--accent); }
+#prop-panel .field input[type="number"] { width: 60px; }
+#prop-panel .field .pair { display: flex; gap: 4px; flex: 1; }
+#prop-panel .field .pair input { flex: 1; }
+#prop-panel .empty-hint { padding: 20px 12px; text-align: center; color: var(--text-muted); font-size: 12px; }
+#prop-panel .color-preview { width: 16px; height: 16px; border-radius: 3px; border: 1px solid var(--border); flex-shrink: 0; margin-left: 4px; }
+
+/* Add Element Menu */
+#add-menu { position: absolute; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 4px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); z-index: 100; display: none; min-width: 160px; }
+#add-menu .item { padding: 6px 12px; font-size: 12px; cursor: pointer; border-radius: 4px; }
+#add-menu .item:hover { background: var(--accent-dim); color: var(--accent); }
+
+/* Theme Swatches */
+.theme-swatches { display: flex; gap: 4px; margin-left: 4px; }
+.theme-swatch { width: 14px; height: 14px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
+.theme-swatch.active { border-color: var(--accent); }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="toolbar">
+    <span class="title">UI Layout Editor</span>
+    <div class="sep"></div>
+    <div class="group">
+      <label>Device</label>
+      <select id="device-select">
+        <option value="375x667">iPhone SE (375x667)</option>
+        <option value="375x812" selected>iPhone X (375x812)</option>
+        <option value="390x844">iPhone 14 (390x844)</option>
+        <option value="414x896">iPhone 11 (414x896)</option>
+        <option value="768x1024">iPad (768x1024)</option>
+      </select>
+    </div>
+    <div class="sep"></div>
+    <div class="group">
+      <label>Theme</label>
+      <select id="theme-select">
+        <option value="mist">Mist</option>
+        <option value="dawn">Dawn</option>
+        <option value="moss">Moss</option>
+      </select>
+      <div class="theme-swatches" id="theme-swatches"></div>
+    </div>
+    <div class="sep"></div>
+    <div class="group">
+      <label>Layout</label>
+      <select id="layout-select">
+        <option value="">-- Demo --</option>
+        <option value="startScreen" selected>startScreen 主页</option>
+        <option value="shopPanel">shopPanel 工坊</option>
+        <option value="petPanel">petPanel 宠物</option>
+        <option value="achievementPanel">achievementPanel 成就</option>
+        <option value="settingsPanel">settingsPanel 设置</option>
+        <option value="modeSelectPanel">modeSelectPanel 模式</option>
+        <option value="gameOverScreen">gameOverScreen 结算</option>
+        <option value="gameHUD">gameHUD 游戏HUD</option>
+      </select>
+    </div>
+    <div class="sep"></div>
+    <div class="group">
+      <button id="btn-import">Import JSON</button>
+      <button id="btn-export" class="primary">Export JSON</button>
+    </div>
+    <div class="sep"></div>
+    <div class="group">
+      <button id="btn-undo" title="Ctrl+Z">Undo</button>
+      <button id="btn-redo" title="Ctrl+Shift+Z">Redo</button>
+    </div>
+    <div style="flex:1"></div>
+    <div class="group">
+      <label id="zoom-label">100%</label>
+    </div>
+  </div>
+
+  <div id="tree-panel">
+    <div class="panel-header">
+      Elements
+      <button id="btn-add-element" title="Add Element">+</button>
+    </div>
+    <ul id="element-tree"></ul>
+  </div>
+
+  <div id="canvas-area">
+    <canvas id="editor-canvas"></canvas>
+    <div id="canvas-info">375 x 812</div>
+  </div>
+
+  <div id="prop-panel">
+    <div class="panel-header">Properties</div>
+    <div id="prop-content">
+      <div class="empty-hint">Select an element to edit</div>
+    </div>
+  </div>
+</div>
+
+<div id="add-menu">
+  <div class="item" data-type="glassPanel">Glass Panel</div>
+  <div class="item" data-type="text">Text</div>
+  <div class="item" data-type="actionButton">Action Button</div>
+  <div class="item" data-type="closeButton">Close Button</div>
+  <div class="item" data-type="badge">Badge</div>
+  <div class="item" data-type="iconTile">Icon Tile</div>
+  <div class="item" data-type="metricCard">Metric Card</div>
+  <div class="item" data-type="roundRect">Round Rect</div>
+  <div class="item" data-type="rect">Rect</div>
+  <div class="item" data-type="image">Image 图片占位</div>
+  <div class="item" data-type="scrollList">Scroll List 滚动列表</div>
+  <div class="item" data-type="flex">Flex Container</div>
+</div>
+
+<input type="file" id="file-import" accept=".json,.js" style="display:none">
+
+<script src="theme-preview.js"></script>
+<script src="canvas-renderer.js"></script>
+<script src="tree-panel.js"></script>
+<script src="property-panel.js"></script>
+<script src="export.js"></script>
+<script src="editor.js"></script>
+</body>
+</html>

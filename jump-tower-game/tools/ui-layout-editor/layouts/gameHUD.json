@@ -1,0 +1,183 @@
+{
+  "id": "gameHUD",
+  "desc": "游戏中HUD - 左侧数据面板 + 右侧蓄力条 + 底部buff/目标",
+  "vars": {},
+  "elements": [
+    {
+      "id": "hudLeftPanel",
+      "type": "roundRect",
+      "anchor": { "x": "left", "y": "top" },
+      "offset": { "x": 12, "y": 36 },
+      "size": { "width": 132, "height": 128 },
+      "style": { "radius": 18, "fill": "$hudPanel" }
+    },
+    {
+      "id": "hudStatHeight",
+      "type": "roundRect",
+      "anchor": { "x": "left", "y": "top" },
+      "offset": { "x": 22, "y": 48 },
+      "size": { "width": 22, "height": 22 },
+      "style": { "radius": 11, "fill": "rgba(199,239,227,0.14)" }
+    },
+    {
+      "id": "hudStatHeightLabel",
+      "type": "text",
+      "anchor": { "x": "left", "y": "top" },
+      "offset": { "x": 62, "y": 47 },
+      "size": { "width": 60, "height": 12 },
+      "style": { "fontSize": 11, "color": "$hudSubtle", "text": "高度" }
+    },
+    {
+      "id": "hudStatHeightValue",
+      "type": "text",
+      "anchor": { "x": "left", "y": "top" },
+      "offset": { "x": 62, "y": 60 },
+      "size": { "width": 60, "height": 16 },
+      "style": { "fontSize": 14, "fontWeight": "700", "color": "$hudText", "text": "520m" }
+    },
+    {
+      "id": "hudStatCombo",
+      "type": "roundRect",
+      "anchor": { "x": "left", "y": "top" },
+      "offset": { "x": 22, "y": 86 },
+      "size": { "width": 22, "height": 22 },
+      "style": { "radius": 11, "fill": "rgba(124,201,184,0.14)" }
+    },
+    {
+      "id": "hudStatComboLabel",
+      "type": "text",
+      "anchor": { "x": "left", "y": "top" },
+      "offset": { "x": 62, "y": 85 },
+      "size": { "width": 60, "height": 12 },
+      "style": { "fontSize": 11, "color": "$hudSubtle", "text": "连跳" }
+    },
+    {
+      "id": "hudStatComboValue",
+      "type": "text",
+      "anchor": { "x": "left", "y": "top" },
+      "offset": { "x": 62, "y": 98 },
+      "size": { "width": 60, "height": 16 },
+      "style": { "fontSize": 14, "fontWeight": "700", "color": "$hudText", "text": "8" }
+    },
+    {
+      "id": "hudStatCoins",
+      "type": "roundRect",
+      "anchor": { "x": "left", "y": "top" },
+      "offset": { "x": 22, "y": 124 },
+      "size": { "width": 22, "height": 22 },
+      "style": { "radius": 11, "fill": "rgba(217,225,192,0.14)" }
+    },
+    {
+      "id": "hudStatCoinsLabel",
+      "type": "text",
+      "anchor": { "x": "left", "y": "top" },
+      "offset": { "x": 62, "y": 123 },
+      "size": { "width": 60, "height": 12 },
+      "style": { "fontSize": 11, "color": "$hudSubtle", "text": "金币" }
+    },
+    {
+      "id": "hudStatCoinsValue",
+      "type": "text",
+      "anchor": { "x": "left", "y": "top" },
+      "offset": { "x": 62, "y": 136 },
+      "size": { "width": 60, "height": 16 },
+      "style": { "fontSize": 14, "fontWeight": "700", "color": "$hudText", "text": "24" }
+    },
+    {
+      "id": "hudChargeBarBg",
+      "type": "roundRect",
+      "anchor": { "x": "right", "y": "top" },
+      "offset": { "x": -15, "y": 30 },
+      "size": { "width": 140, "height": 34 },
+      "style": { "radius": 14, "fill": "$hudPanel" }
+    },
+    {
+      "id": "hudChargeBarTrack",
+      "type": "rect",
+      "anchor": { "x": "right", "y": "top" },
+      "offset": { "x": -25, "y": 41 },
+      "size": { "width": 120, "height": 12 },
+      "style": { "fill": "rgba(255,255,255,0.16)" }
+    },
+    {
+      "id": "hudChargeBarFill",
+      "type": "rect",
+      "anchor": { "x": "right", "y": "top" },
+      "offset": { "x": -25, "y": 41 },
+      "size": { "width": 72, "height": 12 },
+      "style": { "fill": "$accentSoft" }
+    },
+    {
+      "id": "hudChargeLabel",
+      "type": "text",
+      "anchor": { "x": "right", "y": "top" },
+      "offset": { "x": -15, "y": 58 },
+      "size": { "width": 120, "height": 16 },
+      "style": { "fontSize": 14, "fontWeight": "700", "textAlign": "right", "color": "$hudSubtle", "text": "蓄力 3/6" }
+    },
+    {
+      "id": "hudGoalPanel",
+      "type": "roundRect",
+      "anchor": { "x": "left", "y": "bottom" },
+      "offset": { "x": 14, "y": -38 },
+      "size": { "width": 158, "height": 56 },
+      "style": { "radius": 12, "fill": "$hudPanel" }
+    },
+    {
+      "id": "hudGoalTitle",
+      "type": "text",
+      "anchor": { "x": "left", "y": "bottom" },
+      "offset": { "x": 26, "y": -74 },
+      "size": { "width": 130, "height": 16 },
+      "style": { "fontSize": 14, "fontWeight": "700", "color": "$accent", "text": "到达 200m" }
+    },
+    {
+      "id": "hudGoalDesc",
+      "type": "text",
+      "anchor": { "x": "left", "y": "bottom" },
+      "offset": { "x": 26, "y": -56 },
+      "size": { "width": 130, "height": 14 },
+      "style": { "fontSize": 12, "color": "$hudSubtle", "text": "高度 120/200" }
+    },
+    {
+      "id": "hudGoalReward",
+      "type": "text",
+      "anchor": { "x": "left", "y": "bottom" },
+      "offset": { "x": 26, "y": -42 },
+      "size": { "width": 130, "height": 14 },
+      "style": { "fontSize": 12, "color": "$cardMeta", "text": "奖励 +10" }
+    },
+    {
+      "id": "hudBuffChip0",
+      "type": "roundRect",
+      "anchor": { "x": "right", "y": "bottom" },
+      "offset": { "x": -14, "y": -90 },
+      "size": { "width": 92, "height": 20 },
+      "style": { "radius": 10, "fill": "rgba(110,241,203,0.14)" }
+    },
+    {
+      "id": "hudBuffChip1",
+      "type": "roundRect",
+      "anchor": { "x": "right", "y": "bottom" },
+      "offset": { "x": -14, "y": -64 },
+      "size": { "width": 92, "height": 20 },
+      "style": { "radius": 10, "fill": "rgba(124,231,255,0.14)" }
+    },
+    {
+      "id": "hudThemePill",
+      "type": "roundRect",
+      "anchor": { "x": "center", "y": "top" },
+      "offset": { "x": 0, "y": 36 },
+      "size": { "width": 140, "height": 26 },
+      "style": { "radius": 13, "fill": "rgba(124,201,184,0.16)" }
+    },
+    {
+      "id": "hudThemePillText",
+      "type": "text",
+      "anchor": { "x": "center", "y": "top" },
+      "offset": { "x": 0, "y": 40 },
+      "size": { "width": 120, "height": 18 },
+      "style": { "fontSize": 13, "fontWeight": "700", "textAlign": "center", "color": "$hudText", "text": "晨光空域" }
+    }
+  ]
+}

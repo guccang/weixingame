@@ -69,7 +69,7 @@ class LayoutEngine {
     // 第一遍：计算非flex元素的bounds
     if (layout.elements) {
       layout.elements.forEach((el, index) => {
-        const resolved = this._resolveElement(el, W, H, W, H);
+        const resolved = this._resolveElement(el, W, H, W, H, 0, 0);
         if (resolved) {
           resolvedElements[el.id || `element_${index}`] = resolved;
           elementsList.push(resolved);
@@ -95,7 +95,7 @@ class LayoutEngine {
    * @param {number} screenH - 屏幕总高度
    * @returns {Object} 解析后的元素，包含bounds和原始配置
    */
-  _resolveElement(el, containerW, containerH, screenW, screenH) {
+  _resolveElement(el, containerW, containerH, screenW, screenH, originX = 0, originY = 0) {
     // 如果引用模板，先合并模板配置
     let config = el;
     if (el.template && this.templates[el.template]) {
@@ -114,8 +114,8 @@ class LayoutEngine {
 
     // 最终位置
     const bounds = {
-      x: anchorPoint.x + offset.x,
-      y: anchorPoint.y + offset.y,
+      x: originX + anchorPoint.x + offset.x,
+      y: originY + anchorPoint.y + offset.y,
       width: size.width,
       height: size.height
     };
@@ -139,7 +139,7 @@ class LayoutEngine {
     // 处理普通子元素
     if (config.children && config.type !== 'flex') {
       result.children = config.children.map(child =>
-        this._resolveElement(child, size.width, size.height, screenW, screenH)
+        this._resolveElement(child, size.width, size.height, screenW, screenH, bounds.x, bounds.y)
       );
     }
 
@@ -283,6 +283,7 @@ class LayoutEngine {
     let currentPos = startPos;
     return resolvedChildren.map(child => {
       const size = child._resolvedSize;
+      const offset = this._resolveOffset(child.offset, parentBounds.width, parentBounds.height);
 
       // 交叉轴对齐
       let crossPos = 0;
@@ -304,15 +305,35 @@ class LayoutEngine {
         id: child.id,
         type: child.type,
         bounds: {
-          x: parentBounds.x + bounds.x,
-          y: parentBounds.y + bounds.y,
+          x: parentBounds.x + bounds.x + offset.x,
+          y: parentBounds.y + bounds.y + offset.y,
           width: bounds.width,
           height: bounds.height
         },
         style: child.style || {},
         textKey: child.textKey,
         imageKey: child.imageKey,
-        action: child.action
+        action: child.action,
+        children: child.children && child.type === 'flex'
+          ? this._resolveFlexChildren(child, {
+              x: parentBounds.x + bounds.x + offset.x,
+              y: parentBounds.y + bounds.y + offset.y,
+              width: bounds.width,
+              height: bounds.height
+            }, screenW, screenH)
+          : (child.children
+            ? child.children.map(grandChild =>
+                this._resolveElement(
+                  grandChild,
+                  size.width,
+                  size.height,
+                  screenW,
+                  screenH,
+                  parentBounds.x + bounds.x + offset.x,
+                  parentBounds.y + bounds.y + offset.y
+                )
+              )
+            : undefined)
       };
     });
   }

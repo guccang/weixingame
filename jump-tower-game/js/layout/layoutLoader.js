@@ -5,11 +5,17 @@
 
 const LayoutEngine = require('./layoutEngine');
 const startScreenLayout = require('./configs/startScreenLayout');
+const shopPanelLayout = require('./configs/shopPanelLayout');
+const settingsPanelLayout = require('./configs/settingsPanelLayout');
+const gameOverLayout = require('./configs/gameOverLayout');
 
 const LAYOUT_FILES = {
   startScreen: startScreenLayout,
   'startScreen.json': startScreenLayout,
-  'startScreenLayout.js': startScreenLayout
+  'startScreenLayout.js': startScreenLayout,
+  shopPanel: shopPanelLayout,
+  settingsPanel: settingsPanelLayout,
+  gameOverScreen: gameOverLayout
 };
 
 class LayoutLoader {
@@ -26,6 +32,9 @@ class LayoutLoader {
    */
   _initLayouts() {
     this.loadLayoutFile('startScreen', 'startScreen.json');
+    this.loadLayoutFile('shopPanel', 'shopPanel');
+    this.loadLayoutFile('settingsPanel', 'settingsPanel');
+    this.loadLayoutFile('gameOverScreen', 'gameOverScreen');
     console.log('[LayoutLoader] Initialized layouts from JSON');
   }
 

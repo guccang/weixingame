@@ -1,0 +1,176 @@
+{
+  "id": "shopPanel",
+  "desc": "成长工坊面板 (W=375 基准)",
+  "vars": {},
+  "elements": [
+    {
+      "id": "shopBg",
+      "type": "glassPanel",
+      "anchor": { "x": "center", "y": "top" },
+      "offset": { "x": 0, "y": 76 },
+      "size": { "width": 327, "height": 520 },
+      "style": {
+        "radius": 22,
+        "glow": "$panelGlow",
+        "shadowBlur": 12,
+        "stroke": "$panelStroke",
+        "innerStroke": "$panelInnerStroke",
+        "stops": "$panelStrongStops",
+        "consume": true
+      }
+    },
+    {
+      "id": "shopTitle",
+      "type": "text",
+      "anchor": { "x": "center", "y": "top" },
+      "offset": { "x": 0, "y": 96 },
+      "size": { "width": 200, "height": 30 },
+      "style": { "fontSize": 24, "fontWeight": "700", "textAlign": "center", "color": "$cardLabel", "text": "成长工坊" }
+    },
+    {
+      "id": "shopCoins",
+      "type": "text",
+      "anchor": { "x": "center", "y": "top" },
+      "offset": { "x": 0, "y": 122 },
+      "size": { "width": 200, "height": 20 },
+      "style": { "fontSize": 16, "fontWeight": "700", "textAlign": "center", "color": "$cardMeta", "text": "当前金币: 0" }
+    },
+    {
+      "id": "shopClose",
+      "type": "closeButton",
+      "anchor": { "x": "right", "y": "top" },
+      "offset": { "x": -64, "y": 88 },
+      "size": { "width": 26, "height": 26 },
+      "style": { "glow": "$panelGlow", "stroke": "$panelStroke" },
+      "action": { "type": "close-panel", "panel": "showShopPanel" }
+    },
+    {
+      "id": "shopResetBtn",
+      "type": "roundRect",
+      "anchor": { "x": "left", "y": "top" },
+      "offset": { "x": 40, "y": 90 },
+      "size": { "width": 76, "height": 24 },
+      "style": { "radius": 12, "fill": "$buttonDanger" },
+      "action": { "type": "shop-action", "actionName": "reset-progress" }
+    },
+    {
+      "id": "shopResetLabel",
+      "type": "text",
+      "anchor": { "x": "left", "y": "top" },
+      "offset": { "x": 40, "y": 92 },
+      "size": { "width": 76, "height": 20 },
+      "style": { "fontSize": 11, "fontWeight": "700", "textAlign": "center", "color": "#fffaf7", "text": "清空存档" }
+    },
+    {
+      "id": "shopTabs",
+      "type": "flex",
+      "anchor": { "x": "center", "y": "top" },
+      "offset": { "x": 0, "y": 152 },
+      "size": { "width": 291, "height": 28 },
+      "flex": { "direction": "row", "gap": 6, "justify": "center", "align": "center" },
+      "children": [
+        {
+          "id": "tab.upgrades",
+          "type": "roundRect",
+          "size": { "width": 68, "height": 28 },
+          "style": { "radius": 14, "fill": "$accentSoft" },
+          "action": { "type": "shop-tab", "tabId": "upgrades" }
+        },
+        {
+          "id": "tab.skills",
+          "type": "roundRect",
+          "size": { "width": 68, "height": 28 },
+          "style": { "radius": 14, "fill": "$chipFill" },
+          "action": { "type": "shop-tab", "tabId": "skills" }
+        },
+        {
+          "id": "tab.trails",
+          "type": "roundRect",
+          "size": { "width": 68, "height": 28 },
+          "style": { "radius": 14, "fill": "$chipFill" },
+          "action": { "type": "shop-tab", "tabId": "trails" }
+        },
+        {
+          "id": "tab.items",
+          "type": "roundRect",
+          "size": { "width": 68, "height": 28 },
+          "style": { "radius": 14, "fill": "$chipFill" },
+          "action": { "type": "shop-tab", "tabId": "items" }
+        }
+      ]
+    },
+    {
+      "id": "shopCard0",
+      "type": "roundRect",
+      "anchor": { "x": "center", "y": "top" },
+      "offset": { "x": 0, "y": 192 },
+      "size": { "width": 291, "height": 52 },
+      "style": { "radius": 14, "fill": "$cardFill" }
+    },
+    {
+      "id": "shopCard0Title",
+      "type": "text",
+      "anchor": { "x": "left", "y": "top" },
+      "offset": { "x": 54, "y": 198 },
+      "size": { "width": 180, "height": 18 },
+      "style": { "fontSize": 14, "fontWeight": "700", "color": "$cardLabel", "text": "跳跃力 Lv.1/5" }
+    },
+    {
+      "id": "shopCard0Desc",
+      "type": "text",
+      "anchor": { "x": "left", "y": "top" },
+      "offset": { "x": 54, "y": 218 },
+      "size": { "width": 180, "height": 14 },
+      "style": { "fontSize": 12, "color": "$cardSubtle", "text": "基础跳跃力 +10%" }
+    },
+    {
+      "id": "shopCard0Btn",
+      "type": "roundRect",
+      "anchor": { "x": "right", "y": "top" },
+      "offset": { "x": -58, "y": 210 },
+      "size": { "width": 82, "height": 24 },
+      "style": { "radius": 12, "fill": "#00b894" },
+      "action": { "type": "shop-action", "actionName": "buy-upgrade", "itemId": "jumpPower" }
+    },
+    {
+      "id": "shopCard1",
+      "type": "roundRect",
+      "anchor": { "x": "center", "y": "top" },
+      "offset": { "x": 0, "y": 252 },
+      "size": { "width": 291, "height": 52 },
+      "style": { "radius": 14, "fill": "$cardFill" }
+    },
+    {
+      "id": "shopCard2",
+      "type": "roundRect",
+      "anchor": { "x": "center", "y": "top" },
+      "offset": { "x": 0, "y": 312 },
+      "size": { "width": 291, "height": 52 },
+      "style": { "radius": 14, "fill": "$cardFill" }
+    },
+    {
+      "id": "shopCard3",
+      "type": "roundRect",
+      "anchor": { "x": "center", "y": "top" },
+      "offset": { "x": 0, "y": 372 },
+      "size": { "width": 291, "height": 52 },
+      "style": { "radius": 14, "fill": "$cardFill" }
+    },
+    {
+      "id": "shopCard4",
+      "type": "roundRect",
+      "anchor": { "x": "center", "y": "top" },
+      "offset": { "x": 0, "y": 432 },
+      "size": { "width": 291, "height": 52 },
+      "style": { "radius": 14, "fill": "$cardFill" }
+    },
+    {
+      "id": "shopCard5",
+      "type": "roundRect",
+      "anchor": { "x": "center", "y": "top" },
+      "offset": { "x": 0, "y": 492 },
+      "size": { "width": 291, "height": 52 },
+      "style": { "radius": 14, "fill": "$cardFill" }
+    }
+  ]
+}
