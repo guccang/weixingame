@@ -118,6 +118,51 @@ function drawRankAvatar(ctx, x, y, size, item, accent) {
   ctx.restore();
 }
 
+function drawSelfProfileCard(ctx, x, y, w, h, game) {
+  const wxUserInfo = game.wxUserInfo || {};
+  const localBest = (((game.progression || {}).achievementStats || {}).highestScore) || 0;
+  const liveScore = Math.max(0, Math.floor(game.score || 0));
+  const bestScore = Math.max(localBest, liveScore);
+  const item = {
+    nickname: wxUserInfo.nickName || game.playerName || '匿名用户',
+    avatarUrl: wxUserInfo.avatarUrl || ''
+  };
+
+  drawGlassPanel(ctx, x, y, w, h, {
+    radius: 22,
+    shadowBlur: 12,
+    glow: 'rgba(124, 231, 255, 0.12)',
+    stroke: 'rgba(124, 231, 255, 0.18)',
+    stops: [
+      [0, 'rgba(21, 34, 52, 0.9)'],
+      [1, 'rgba(10, 18, 30, 0.9)']
+    ]
+  });
+
+  drawRankAvatar(ctx, x + 14, y + 14, 42, item, '#7ce7ff');
+
+  ctx.save();
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.fillStyle = '#ffffff';
+  ctx.font = font(16, '700');
+  ctx.fillText(fitText(ctx, item.nickname, w - 156), x + 68, y + 14);
+
+  ctx.fillStyle = 'rgba(199, 214, 235, 0.72)';
+  ctx.font = font(11, '500');
+  ctx.fillText('我的微信信息', x + 68, y + 38);
+
+  ctx.textAlign = 'right';
+  ctx.fillStyle = '#7ce7ff';
+  ctx.font = font(20, '700');
+  ctx.fillText(String(bestScore) + ' m', x + w - 14, y + 18);
+
+  ctx.fillStyle = 'rgba(199, 214, 235, 0.72)';
+  ctx.font = font(11, '500');
+  ctx.fillText('我的积分', x + w - 14, y + 42);
+  ctx.restore();
+}
+
 /**
  * 绘制排行榜面板
  */
@@ -176,7 +221,10 @@ function drawLeaderboardPanel(ctx, game, W, H) {
   ctx.fillText('查看当前云端成绩，继续冲更高纪录。', contentX, panelY + 98);
   ctx.restore();
 
-  const metricY = panelY + 128;
+  const profileY = panelY + 128;
+  drawSelfProfileCard(ctx, contentX, profileY, contentW, 70, game);
+
+  const metricY = profileY + 82;
   const metricGap = 10;
   const metricW = (contentW - metricGap * 2) / 3;
   drawMetricCard(ctx, contentX, metricY, metricW, 60, '上榜人数', String(rankList.length), {
@@ -257,18 +305,25 @@ function drawLeaderboardPanel(ctx, game, W, H) {
     const tone = getRankTone(i);
     const rankText = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : String(i + 1);
 
+    const isSelf = !!item.isSelf;
+
     drawGlassPanel(ctx, contentX, y, contentW, rowH, {
       radius: 20,
       shadowBlur: 10,
-      glow: tone.glow,
-      stroke: i < 3 ? 'rgba(255, 255, 255, 0.14)' : 'rgba(255, 255, 255, 0.1)',
-      stops: i < 3 ? [
+      glow: isSelf ? 'rgba(124, 231, 255, 0.14)' : tone.glow,
+      stroke: isSelf
+        ? 'rgba(124, 231, 255, 0.24)'
+        : (i < 3 ? 'rgba(255, 255, 255, 0.14)' : 'rgba(255, 255, 255, 0.1)'),
+      stops: isSelf ? [
+        [0, 'rgba(17, 42, 58, 0.9)'],
+        [1, 'rgba(8, 24, 36, 0.88)']
+      ] : (i < 3 ? [
         [0, 'rgba(36, 38, 50, 0.9)'],
         [1, 'rgba(17, 18, 27, 0.88)']
       ] : [
         [0, 'rgba(18, 28, 44, 0.84)'],
         [1, 'rgba(10, 17, 28, 0.84)']
-      ]
+      ])
     });
 
     ctx.save();
@@ -290,7 +345,7 @@ function drawLeaderboardPanel(ctx, game, W, H) {
 
     ctx.fillStyle = 'rgba(199, 214, 235, 0.68)';
     ctx.font = font(11, '500');
-    ctx.fillText('好友成绩', contentX + 90, y + 36);
+    ctx.fillText(isSelf ? '我自己' : '好友成绩', contentX + 90, y + 36);
 
     ctx.textAlign = 'right';
     ctx.fillStyle = tone.accent;

@@ -1592,28 +1592,93 @@ class Game {
   fetchRankList() {
     const cloudStorage = require('./runtime/cloudStorage');
     const _this = this;
+    const selfEntry = this.getCurrentUserRankEntry();
     this.rankLoading = true;
-    this.rankList = [];
+    this.rankList = selfEntry ? [selfEntry] : [];
 
     // 使用云数据库获取排行榜
     cloudStorage.getAllRankList(function(success, rankData) {
       _this.rankLoading = false;
       if (success && rankData) {
-        var formattedList = [];
-        for (var i = 0; i < rankData.length; i++) {
-          var item = rankData[i];
-          formattedList.push({
-            rank: i + 1,
-            nickname: item.nickname || '匿名用户',
-            avatarUrl: item.avatarUrl || '',
-            score: item.bestScore || item.score || 0
-          });
-        }
-        _this.rankList = formattedList;
+        _this.rankList = _this.mergeRankListWithCurrentUser(rankData);
       } else {
         console.log('获取排行榜失败');
+        _this.rankList = selfEntry ? [selfEntry] : [];
       }
     });
+  }
+
+  getCurrentUserRankEntry() {
+    const stats = ((this.progression || {}).achievementStats || {});
+    const bestScore = Math.max(
+      0,
+      Math.floor(Math.max(stats.highestScore || 0, this.score || 0))
+    );
+    const wxUserInfo = this.wxUserInfo || {};
+    const nickname = wxUserInfo.nickName || this.playerName || '匿名用户';
+    const avatarUrl = wxUserInfo.avatarUrl || '';
+    const identity = avatarUrl || nickname;
+
+    if (!identity && bestScore <= 0) {
+      return null;
+    }
+
+    return {
+      rank: 0,
+      nickname: nickname,
+      avatarUrl: avatarUrl,
+      score: bestScore,
+      isSelf: true,
+      identity: identity
+    };
+  }
+
+  mergeRankListWithCurrentUser(rankData) {
+    const formattedList = [];
+    const selfEntry = this.getCurrentUserRankEntry();
+    const selfIdentity = selfEntry ? selfEntry.identity : '';
+    let hasSelf = false;
+
+    for (var i = 0; i < rankData.length; i++) {
+      var item = rankData[i] || {};
+      var nickname = item.nickname || '匿名用户';
+      var avatarUrl = item.avatarUrl || '';
+      var score = item.bestScore || item.score || 0;
+      var identity = avatarUrl || nickname;
+      var isSelf = !!selfEntry && !!identity && identity === selfIdentity;
+
+      if (isSelf) {
+        hasSelf = true;
+      }
+
+      formattedList.push({
+        nickname: nickname,
+        avatarUrl: avatarUrl,
+        score: score,
+        isSelf: isSelf,
+        identity: identity
+      });
+    }
+
+    if (selfEntry && !hasSelf) {
+      formattedList.push({
+        nickname: selfEntry.nickname,
+        avatarUrl: selfEntry.avatarUrl,
+        score: selfEntry.score,
+        isSelf: true,
+        identity: selfEntry.identity
+      });
+    }
+
+    formattedList.sort(function(a, b) {
+      return (b.score || 0) - (a.score || 0);
+    });
+
+    for (var j = 0; j < formattedList.length; j++) {
+      formattedList[j].rank = j + 1;
+    }
+
+    return formattedList;
   }
 
   goToHome() {

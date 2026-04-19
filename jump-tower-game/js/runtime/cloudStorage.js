@@ -6,6 +6,7 @@ const { getConfig } = require('../resource/envConfig');
 
 const DB_NAME = 'jumpdatabase'; // 云数据库名称
 const COLLECTION_NAME = 'jumpdatabase'; // 集合名称
+const USER_KEY_STORAGE = 'jump_tower_cloud_user_key_v1';
 
 let db = null;
 
@@ -22,7 +23,72 @@ function initCloudDB() {
 
 // 检查云数据库API是否可用
 function isCloudDBAvailable() {
-  return wx && wx.cloud && typeof wx.cloud.database === 'function';
+  return typeof wx !== 'undefined' && wx.cloud && typeof wx.cloud.database === 'function';
+}
+
+function getStorageSyncSafe(key) {
+  if (typeof wx === 'undefined' || typeof wx.getStorageSync !== 'function') {
+    return '';
+  }
+
+  try {
+    return wx.getStorageSync(key);
+  } catch (err) {
+    console.warn('[cloudStorage] 读取本地存储失败', err);
+    return '';
+  }
+}
+
+function setStorageSyncSafe(key, value) {
+  if (typeof wx === 'undefined' || typeof wx.setStorageSync !== 'function') {
+    return;
+  }
+
+  try {
+    wx.setStorageSync(key, value);
+  } catch (err) {
+    console.warn('[cloudStorage] 写入本地存储失败', err);
+  }
+}
+
+function createLocalUserKey() {
+  const timestamp = Date.now().toString(36);
+  const random = Math.floor(Math.random() * 0xffffff).toString(36);
+  return 'local_' + timestamp + '_' + random;
+}
+
+function getOrCreateUserKey() {
+  const cached = getStorageSyncSafe(USER_KEY_STORAGE);
+  if (cached) {
+    return String(cached);
+  }
+
+  const created = createLocalUserKey();
+  setStorageSyncSafe(USER_KEY_STORAGE, created);
+  return created;
+}
+
+function normalizeNickname(nickname, userKey) {
+  const trimmed = nickname ? String(nickname).trim() : '';
+  if (trimmed && trimmed !== '匿名用户' && trimmed !== '秀彬') {
+    return trimmed;
+  }
+
+  const suffix = String(userKey || '').slice(-6) || 'guest';
+  return '玩家' + suffix;
+}
+
+function buildRecordPayload(gameData) {
+  const userKey = getOrCreateUserKey();
+  return {
+    userKey: userKey,
+    nickname: normalizeNickname(gameData.nickname, userKey),
+    avatarUrl: gameData.avatarUrl || '',
+    gameMode: gameData.gameMode,
+    score: gameData.score || 0,
+    time: gameData.time || 0,
+    combo: gameData.combo || 0
+  };
 }
 
 /**
@@ -44,97 +110,107 @@ function saveGameRecord(gameData, callback) {
     return;
   }
 
-  // 未登录玩家跳过存储
-  var nickname = gameData.nickname;
-  if (!nickname || nickname === '匿名用户' || nickname === '秀彬') {
-    console.log('未登录玩家，跳过存储');
-    if (callback) callback(false, null);
-    return;
-  }
-
   initCloudDB();
 
-  var gameMode = gameData.gameMode;
-  var score = gameData.score || 0;
-  var time = gameData.time || 0;
-  var combo = gameData.combo || 0;
-  var avatarUrl = gameData.avatarUrl || '';
+  var recordPayload = buildRecordPayload(gameData || {});
+  var userKey = recordPayload.userKey;
+  var nickname = recordPayload.nickname;
+  var gameMode = recordPayload.gameMode;
+  var score = recordPayload.score;
+  var time = recordPayload.time;
+  var combo = recordPayload.combo;
+  var avatarUrl = recordPayload.avatarUrl;
   var now = Date.now();
 
   var collection = db.collection(COLLECTION_NAME);
 
-  // 使用昵称作为唯一标识查询
+  function updateExistingRecord(existing) {
+    var updateData = {
+      userKey: userKey,
+      nickname: nickname,
+      gameMode: gameMode,
+      score: score,
+      totalTime: (existing.totalTime || 0) + time,
+      maxCombo: Math.max(combo, existing.maxCombo || 0),
+      playCount: (existing.playCount || 0) + 1,
+      updateTime: now,
+      avatarUrl: avatarUrl
+    };
+
+    updateData.bestScore = score > (existing.bestScore || 0)
+      ? score
+      : (existing.bestScore || 0);
+
+    updateData.bestChallenge = gameMode === 'challenge' && score > (existing.bestChallenge || 0)
+      ? score
+      : (existing.bestChallenge || 0);
+
+    updateData.bestTimeAttack = gameMode === 'timeAttack' && score > (existing.bestTimeAttack || 0)
+      ? score
+      : (existing.bestTimeAttack || 0);
+
+    collection.doc(existing._id).update({
+      data: updateData
+    }).then(function(updateRes) {
+      console.log('云数据库更新成功', updateRes);
+      if (callback) callback(true, updateData);
+    }).catch(function(err) {
+      console.error('云数据库更新失败', err);
+      if (callback) callback(false, null);
+    });
+  }
+
+  function addNewRecord() {
+    var newRecord = {
+      userKey: userKey,
+      nickname: nickname,
+      gameMode: gameMode,
+      score: score,
+      bestScore: score,
+      bestChallenge: gameMode === 'challenge' ? score : 0,
+      bestTimeAttack: gameMode === 'timeAttack' ? score : 0,
+      totalTime: time,
+      maxCombo: combo,
+      playCount: 1,
+      avatarUrl: avatarUrl,
+      createTime: now,
+      updateTime: now
+    };
+
+    collection.add({
+      data: newRecord
+    }).then(function(addRes) {
+      console.log('云数据库新增成功', addRes);
+      if (callback) callback(true, newRecord);
+    }).catch(function(err) {
+      console.error('云数据库新增失败', err);
+      if (callback) callback(false, null);
+    });
+  }
+
+  function queryLegacyRecord() {
+    collection.where({
+      nickname: nickname
+    }).get().then(function(res) {
+      if (res.data && res.data.length > 0) {
+        updateExistingRecord(res.data[0]);
+        return;
+      }
+      addNewRecord();
+    }).catch(function(err) {
+      console.error('云数据库旧记录查询失败', err);
+      addNewRecord();
+    });
+  }
+
   collection.where({
-    nickname: nickname
+    userKey: userKey
   }).get().then(function(res) {
     if (res.data && res.data.length > 0) {
-      // 更新现有记录
-      var existing = res.data[0];
-      var updateData = {
-        gameMode: gameMode,
-        score: score,
-        totalTime: (existing.totalTime || 0) + time,
-        maxCombo: Math.max(combo, existing.maxCombo || 0),
-        playCount: (existing.playCount || 0) + 1,
-        updateTime: now,
-        avatarUrl: avatarUrl
-      };
-
-      // 更新最佳成绩
-      if (score > (existing.bestScore || 0)) {
-        updateData.bestScore = score;
-      } else {
-        updateData.bestScore = existing.bestScore;
-      }
-
-      if (gameMode === 'challenge' && score > (existing.bestChallenge || 0)) {
-        updateData.bestChallenge = score;
-      } else {
-        updateData.bestChallenge = existing.bestChallenge || 0;
-      }
-
-      if (gameMode === 'timeAttack' && score > (existing.bestTimeAttack || 0)) {
-        updateData.bestTimeAttack = score;
-      } else {
-        updateData.bestTimeAttack = existing.bestTimeAttack || 0;
-      }
-
-      collection.doc(existing._id).update({
-        data: updateData
-      }).then(function(updateRes) {
-        console.log('云数据库更新成功', updateRes);
-        if (callback) callback(true, updateData);
-      }).catch(function(err) {
-        console.error('云数据库更新失败', err);
-        if (callback) callback(false, null);
-      });
-    } else {
-      // 新增记录
-      var newRecord = {
-        nickname: nickname,
-        gameMode: gameMode,
-        score: score,
-        bestScore: score,
-        bestChallenge: gameMode === 'challenge' ? score : 0,
-        bestTimeAttack: gameMode === 'timeAttack' ? score : 0,
-        totalTime: time,
-        maxCombo: combo,
-        playCount: 1,
-        avatarUrl: avatarUrl,
-        createTime: now,
-        updateTime: now
-      };
-
-      collection.add({
-        data: newRecord
-      }).then(function(addRes) {
-        console.log('云数据库新增成功', addRes);
-        if (callback) callback(true, newRecord);
-      }).catch(function(err) {
-        console.error('云数据库新增失败', err);
-        if (callback) callback(false, null);
-      });
+      updateExistingRecord(res.data[0]);
+      return;
     }
+    queryLegacyRecord();
   }).catch(function(err) {
     console.error('云数据库查询失败', err);
     if (callback) callback(false, null);
